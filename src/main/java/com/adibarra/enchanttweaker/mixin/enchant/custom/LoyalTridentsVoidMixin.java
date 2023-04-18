@@ -11,6 +11,10 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * @description Lets tridents with Loyalty enchant return when thrown into the void.
+ * @environment Server
+ */
 @Mixin(value=TridentEntity.class, priority=1543)
 public abstract class LoyalTridentsVoidMixin extends Entity {
 
@@ -24,10 +28,6 @@ public abstract class LoyalTridentsVoidMixin extends Entity {
         super(entityType, world);
     }
 
-    /**
-     * @description Makes tridents with loyalty enchantment return to the player when thrown into the void.
-     * @environment Server
-     */
     @Override
     protected void tickInVoid() {
         if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("loyal_tridents_void", true)) {

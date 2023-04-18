@@ -11,6 +11,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @description Modify enchantment level cap.
+ * @environment Server
+ */
 @Mixin(value=LuckEnchantment.class, priority=1543)
 public abstract class LuckMixin extends Enchantment {
 
@@ -26,10 +30,6 @@ public abstract class LuckMixin extends Enchantment {
         ENCHANTS.put(Enchantments.LUCK_OF_THE_SEA, "luck_of_the_sea");
     }
 
-    /**
-     * @description Modify enchantment level cap.
-     * @environment Server
-     */
     @ModifyReturnValue(method="getMaxLevel()I", at=@At("RETURN"))
     private int modifyMaxLevel(int original) {
         if(EnchantTweaker.isEnabled()) {

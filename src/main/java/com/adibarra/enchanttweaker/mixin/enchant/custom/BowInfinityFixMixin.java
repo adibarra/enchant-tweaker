@@ -13,13 +13,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * @description Lets bows with Infinity enchant shoot without arrows.
+ * @environment Server
+ */
 @Mixin(value=BowItem.class, priority=1543)
 public abstract class BowInfinityFixMixin {
 
-    /**
-     * @description Allow bows with infinity enchant to shoot without arrows.
-     * @environment Server
-     */
     @Inject(method="use", at=@At("HEAD"), cancellable=true)
     public void enchanttweaker$bowInfinityFix(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("bow_infinity_fix", true)) {

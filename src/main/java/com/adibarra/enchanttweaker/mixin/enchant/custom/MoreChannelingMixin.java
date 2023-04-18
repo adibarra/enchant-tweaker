@@ -13,6 +13,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * @description Lets Channeling enchant work in rain at level 2.
+ * @environment Server
+ */
 @Mixin(value=TridentEntity.class, priority=1543)
 public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
 
@@ -23,10 +27,6 @@ public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
         super(entityType, world);
     }
 
-    /**
-     * @description Changes channeling enchantment behavior depending on level.
-     * @environment Server
-     */
     @ModifyExpressionValue(method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V", at=@At(value="INVOKE", target="Lnet/minecraft/world/World;isThundering()Z"))
     private boolean moreChanneling(boolean original) {
         if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("more_channeling", true)) {

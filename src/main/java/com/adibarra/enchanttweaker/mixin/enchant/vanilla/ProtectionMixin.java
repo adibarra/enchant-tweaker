@@ -9,16 +9,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * @description Modify enchantment level cap.
+ * @environment Server
+ */
 @Mixin(value=ProtectionEnchantment.class, priority=1543)
 public abstract class ProtectionMixin {
 
     @Shadow @Final
     public ProtectionEnchantment.Type protectionType;
 
-    /**
-     * @description Modify enchantment level cap.
-     * @environment Server
-     */
     @ModifyReturnValue(method="getMaxLevel()I", at=@At("RETURN"))
     private int modifyMaxLevel(int original) {
         if(EnchantTweaker.isEnabled()) {

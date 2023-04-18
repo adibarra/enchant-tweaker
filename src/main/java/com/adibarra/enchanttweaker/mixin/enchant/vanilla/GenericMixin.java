@@ -10,6 +10,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @description Modify enchantment level cap.
+ * @environment Server
+ */
 @Mixin(value={
         AquaAffinityEnchantment.class, BindingCurseEnchantment.class, ChannelingEnchantment.class,
         DepthStriderEnchantment.class, EfficiencyEnchantment.class,   FireAspectEnchantment.class,
@@ -57,10 +61,6 @@ public abstract class GenericMixin {
         ENCHANTS.put(VanishingCurseEnchantment.class, "curse_of_vanishing");
     }
 
-    /**
-     * @description Modify enchantment level cap.
-     * @environment Server
-     */
     @ModifyReturnValue(method="getMaxLevel()I", at=@At("RETURN"))
     private int modifyMaxLevel(int original) {
         if(EnchantTweaker.isEnabled()) {

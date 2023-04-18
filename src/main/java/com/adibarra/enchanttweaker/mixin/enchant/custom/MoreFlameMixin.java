@@ -13,15 +13,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * @description Scales the burn time of the Flame enchant based on its level.
+ * @environment Server
+ */
 @Mixin(value=PersistentProjectileEntity.class, priority=1543)
 public abstract class MoreFlameMixin {
 
     private int flameLevel = 1;
 
-    /**
-     * @description Capture the flame level of the bow.
-     * @environment Server
-     */
     @Inject(method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V", at=@At("HEAD"))
     private void captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
         if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("more_flame", true)) {
@@ -29,10 +29,6 @@ public abstract class MoreFlameMixin {
         }
     }
 
-    /**
-     * @description Use the flame level to change the burn time of the flame enchantment.
-     * @environment Server
-     */
     @ModifyConstant(method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V", constant=@Constant(intValue=5))
     private int decoder(int original) {
         if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("more_flame", true)) {

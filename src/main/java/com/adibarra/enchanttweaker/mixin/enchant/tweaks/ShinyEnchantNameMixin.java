@@ -14,6 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Random;
 
+/**
+ * @description Makes the enchantment name yellow when at max level.
+ * Also adds a 'charged' effect. Ignores curse enchantments.
+ * @note Uses the client's mod config for max enchantment levels.
+ * @environment Client
+ */
 @Mixin(value=Enchantment.class, priority=1543)
 public abstract class ShinyEnchantNameMixin {
 
@@ -23,12 +29,6 @@ public abstract class ShinyEnchantNameMixin {
 	@Shadow
 	public abstract boolean isCursed();
 
-	/**
-	 * @description Make the enchantment name yellow when at max level.
-	 * Also adds a 'charged' effect. Ignores curse enchantments.
-	 * @note Uses the client's mod config for max enchantment levels.
-	 * @environment Client
-	 */
 	@Inject(method="getName", at=@At(value="TAIL"), locals=LocalCapture.CAPTURE_FAILSOFT)
 	private void getName(int level, CallbackInfoReturnable<Text> cir, MutableText mutableText) {
 		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("shiny_enchant_name", true)) {
