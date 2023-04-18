@@ -23,7 +23,7 @@ public abstract class MoreFlameMixin {
      * @environment Server
      */
     @Inject(method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V", at=@At("HEAD"))
-    private void calculateFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
+    private void captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
         if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("more_flame", true)) {
             flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) entityHitResult.getEntity());
         }
