@@ -40,12 +40,12 @@ public class SimpleConfig {
     private static final Logger LOGGER = LogManager.getLogger("SimpleConfig");
     private final HashMap<String, String> config = new HashMap<>();
     private final ConfigRequest request;
+    private boolean broken = false;
 
     public interface DefaultConfig {
         String get( String namespace );
 
-        @SuppressWarnings("SameReturnValue")
-        static String empty(String namespace ) {
+        static String empty( String namespace ) {
             return "";
         }
     }
@@ -106,7 +106,6 @@ public class SimpleConfig {
     private void createConfig() throws IOException {
 
         // try creating missing files
-        //noinspection ResultOfMethodCallIgnored
         request.file.getParentFile().mkdirs();
         Files.createFile( request.file.toPath() );
 
@@ -147,16 +146,19 @@ public class SimpleConfig {
                 createConfig();
             } catch (IOException e) {
                 LOGGER.error( identifier + " failed to generate!" );
-                LOGGER.error( e );
+                LOGGER.trace( e );
+                broken = true;
             }
         }
 
-        try {
-            loadConfig();
-        } catch (Exception e) {
-            LOGGER.error( identifier + " failed to load!" );
-            LOGGER.error( e );
-
+        if( !broken ) {
+            try {
+                loadConfig();
+            } catch (Exception e) {
+                LOGGER.error( identifier + " failed to load!" );
+                LOGGER.trace( e );
+                broken = true;
+            }
         }
 
     }
@@ -225,6 +227,17 @@ public class SimpleConfig {
         } catch (Exception e) {
             return def;
         }
+    }
+
+    /**
+     * If any error occurred during loading or reading from the config
+     * a 'broken' flag is set, indicating that the config's state
+     * is undefined and should be discarded using `delete()`
+     *
+     * @return the 'broken' flag of the configuration
+     */
+    public boolean isBroken() {
+        return broken;
     }
 
     /**

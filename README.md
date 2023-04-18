@@ -1,9 +1,15 @@
-# Fabric Example Mod
 
-## Setup
+Feature breakdown:
 
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
+    Modded server only:
+        Increased enchantment levels 
+        Extra roman numerals
+        Custom enchantments:
+            bowInfinityFix
+            moreChanneling
+        Tweaked enchantments:
+            ...
 
-## License
-
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+    
+    Modded server + client:
+        Shiny max enchantment names

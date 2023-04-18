@@ -1,44 +1,28 @@
 {
-  "schemaVersion": 1,
-  "id": "enchant-tweaker",
-  "version": "${version}",
-
-  "name": "Enchant Tweaker",
-  "description": "Tweak settings for many enchantment related things",
-  "authors": [
-    "adibarra"
-  ],
-  "contact": {
-    "homepage": "https://modrinth.com/mod/enchant-tweaker",
-    "sources": "https://github.com/adibarra/enchant-tweaker",
-    "issues": "https://github.com/adibarra/enchant-tweaker/issues"
-  },
-
-  "license": "CC0-1.0",
-  "icon": "assets/enchanttweaker/icon.png",
-
-  "environment": "*",
-  "entrypoints": {
-    "preLaunch": [
-      "com.adibarra.enchanttweaker.EnchantTweakerPreLaunchEntry"
-    ],
-    "main": [
-      "com.adibarra.enchanttweaker.EnchantTweaker"
-    ]
-  },
-  "mixins": [
-    "EnchantTweaker.mixins.json"
-  ],
-
-  "accessWidener" : "enchanttweaker.accesswidener",
-
-  "depends": {
-    "fabricloader": ">=0.14.9",
-    "fabric-api": "*",
-    "minecraft": "~1.19",
-    "java": ">=17"
-  },
-  "suggests": {
-    "another-mod": "*"
-  }
+	"schemaVersion": 1,
+	"id": "enchanttweaker",
+	"version": "${version}",
+	"name": "Enchant Tweaker",
+	"description": "Tweak settings for many enchantment related things.",
+	"authors": ["adibarra"],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/enchant-tweaker",
+		"sources": "https://github.com/adibarra/enchant-tweaker",
+		"issues": "https://github.com/adibarra/enchant-tweaker/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/enchanttweaker/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"preLaunch": ["com.adibarra.enchanttweaker.EnchantTweakerPreLaunchEntry"],
+		"main": ["com.adibarra.enchanttweaker.EnchantTweaker"]
+	},
+	"mixins": ["enchanttweaker.mixins.json"],
+	"accessWidener": "enchanttweaker.accesswidener",
+	"depends": {
+		"fabricloader": ">=0.14.19",
+		"minecraft": "~1.19.2",
+		"java": ">=17",
+		"fabric-api": "*"
+	}
 }

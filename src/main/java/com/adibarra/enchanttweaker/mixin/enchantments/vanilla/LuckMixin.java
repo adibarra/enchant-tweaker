@@ -1,40 +1,42 @@
 package com.adibarra.enchanttweaker.mixin.enchantments.vanilla;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.enchantment.LuckEnchantment;
+import com.adibarra.enchanttweaker.utils.Utils;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import net.minecraft.enchantment.*;
+import net.minecraft.entity.EquipmentSlot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Mixin(value=LuckEnchantment.class, priority=1543)
-public abstract class LuckMixin {
+public abstract class LuckMixin extends Enchantment {
+
+    protected LuckMixin(Rarity weight, EnchantmentTarget type, EquipmentSlot[] slotTypes) {
+        super(weight, type, slotTypes);
+    }
+
+    private final static Map<Enchantment, String> ENCHANTS = new HashMap<>();
+
+    static {
+        ENCHANTS.put(Enchantments.LOOTING,         "looting");
+        ENCHANTS.put(Enchantments.FORTUNE,         "fortune");
+        ENCHANTS.put(Enchantments.LUCK_OF_THE_SEA, "luck_of_the_sea");
+    }
 
     /**
-     * @author adibarra
-     * @reason Modify enchantment level cap
+     * @description Modify enchantment level cap
+     * @environment Server
      */
-    @Inject(method="getMaxLevel()I", at=@At("HEAD"), cancellable=true)
-    public void enchanttweaker$getMaxLevel(CallbackInfoReturnable<Integer> cir) {
-        int looting_level_cap = EnchantTweaker.getConfig().getOrDefault("looting", -1);
-        int fortune_level_cap = EnchantTweaker.getConfig().getOrDefault("fortune", -1);
-        int luck_of_the_sea_level_cap = EnchantTweaker.getConfig().getOrDefault("luck_of_the_sea", -1);
-
-        if(EnchantTweaker.MOD_ENABLED) {
-            if (((Object)this) == Enchantments.LOOTING) {
-                if (looting_level_cap != -1) {
-                    cir.setReturnValue(looting_level_cap);
-                }
-            } else if (((Object)this) == Enchantments.FORTUNE) {
-                if (fortune_level_cap != -1) {
-                    cir.setReturnValue(fortune_level_cap);
-                }
-            } else if (((Object)this) == Enchantments.LUCK_OF_THE_SEA) {
-                if (luck_of_the_sea_level_cap != -1) {
-                    cir.setReturnValue(luck_of_the_sea_level_cap);
-                }
-            }
+    @ModifyReturnValue(method="getMaxLevel()I", at=@At("RETURN"))
+    private int modifyMaxLevel(int original) {
+        if(EnchantTweaker.isEnabled()) {
+            int lvl_cap = EnchantTweaker.getConfig().getOrDefault(ENCHANTS.get(this), original);
+            if (lvl_cap == -1) return original;
+            return Utils.clamp(lvl_cap, 0, 255);
         }
+        return original;
     }
 }
