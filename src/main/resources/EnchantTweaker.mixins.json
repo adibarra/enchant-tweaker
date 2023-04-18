@@ -4,17 +4,21 @@
   "plugin": "com.adibarra.enchanttweaker.EnchantTweakerMixinPlugin",
   "required": true,
   "server": [
-    "enchantments.custom.BowInfinityFixMixin",
-    "enchantments.custom.MoreChannelingMixin",
-    "enchantments.vanilla.DamageMixin",
-    "enchantments.vanilla.GenericMixin",
-    "enchantments.vanilla.LuckMixin",
-    "enchantments.vanilla.ProtectionMixin"
+    "enchant.custom.BowInfinityFixMixin",
+    "enchant.custom.MoreChannelingMixin",
+    "enchant.vanilla.DamageMixin",
+    "enchant.vanilla.GenericMixin",
+    "enchant.vanilla.LuckMixin",
+    "enchant.vanilla.ProtectionMixin"
   ],
   "client": [
-    "enchantments.tweaks.ShinyEnchantNameMixin"
+    "enchant.tweaks.ShinyEnchantNameMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-	}
+  },
+  "mixins": [
+    "enchant.custom.MoreFlameDecoderMixin",
+    "enchant.custom.MoreFlameEncoderMixin"
+  ]
 }

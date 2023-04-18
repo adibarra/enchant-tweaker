@@ -1,4 +1,4 @@
-package com.adibarra.enchanttweaker.mixin.enchantments.vanilla;
+package com.adibarra.enchanttweaker.mixin.enchant.vanilla;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.adibarra.enchanttweaker.utils.Utils;
@@ -16,7 +16,7 @@ public abstract class ProtectionMixin {
     public ProtectionEnchantment.Type protectionType;
 
     /**
-     * @description Modify enchantment level cap
+     * @description Modify enchantment level cap.
      * @environment Server
      */
     @ModifyReturnValue(method="getMaxLevel()I", at=@At("RETURN"))

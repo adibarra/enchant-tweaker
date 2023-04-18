@@ -16,7 +16,7 @@ public final class EnchantTweakerMixinPlugin implements IMixinConfigPlugin {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("EnchantTweaker");
     private static final Map<String, Supplier<Boolean>> CONFLICTS = ImmutableMap.of(
-            "com.adibarra.enchanttweaker.mixin.enchantments.tweaks.ShinyEnchantNameMixin", () -> true
+            // "com.adibarra.enchanttweaker.mixin.enchant.tweaks.ShinyEnchantNameMixin", () -> true
     );
 
     @Override
