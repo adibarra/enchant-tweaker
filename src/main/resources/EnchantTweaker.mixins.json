@@ -18,6 +18,7 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "enchant.custom.LoyalTridentsVoidMixin",
     "enchant.custom.MoreFlameDecoderMixin",
     "enchant.custom.MoreFlameEncoderMixin"
   ]
