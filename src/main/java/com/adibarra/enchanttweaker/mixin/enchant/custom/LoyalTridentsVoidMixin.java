@@ -14,8 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(value=TridentEntity.class, priority=1543)
 public abstract class LoyalTridentsVoidMixin extends Entity {
 
-    @Final
-    @Shadow
+    @Final @Shadow
     private static TrackedData<Byte> LOYALTY;
 
     @Shadow

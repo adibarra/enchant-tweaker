@@ -5,7 +5,10 @@
   "required": true,
   "server": [
     "enchant.custom.BowInfinityFixMixin",
+    "enchant.custom.LoyalTridentsVoidMixin",
     "enchant.custom.MoreChannelingMixin",
+    "enchant.custom.MoreFlameDecoderMixin",
+    "enchant.custom.MoreFlameEncoderMixin",
     "enchant.vanilla.DamageMixin",
     "enchant.vanilla.GenericMixin",
     "enchant.vanilla.LuckMixin",
@@ -16,10 +19,5 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "mixins": [
-    "enchant.custom.LoyalTridentsVoidMixin",
-    "enchant.custom.MoreFlameDecoderMixin",
-    "enchant.custom.MoreFlameEncoderMixin"
-  ]
+  }
 }
