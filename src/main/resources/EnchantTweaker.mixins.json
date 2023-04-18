@@ -9,6 +9,7 @@
     "enchant.custom.MoreChannelingMixin",
     "enchant.custom.MoreFlameMixin",
     "enchant.custom.MoreMendingMixin",
+    "enchant.custom.MoreMultishotMixin",
     "enchant.vanilla.DamageMixin",
     "enchant.vanilla.GenericMixin",
     "enchant.vanilla.LuckMixin",
