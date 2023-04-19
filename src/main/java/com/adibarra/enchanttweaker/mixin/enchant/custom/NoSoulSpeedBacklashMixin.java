@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public abstract class NoSoulSpeedBacklashMixin {
 
 	/**
-	 * @description Disable soul speed armor damage when moving.
+	 * @description Disable Soul Speed enchant armor self-damage backlash.
 	 * @environment Server
 	 */
 	@ModifyConstant(method="addSoulSpeedBoostIfNeeded()V", constant=@Constant(intValue=1))

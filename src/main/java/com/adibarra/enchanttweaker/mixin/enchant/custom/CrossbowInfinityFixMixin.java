@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-// TODO: This is a work in progress. As such, it is flagged as a conflict in EnchantTweakerMixinPlugin.
+// TODO: WIP This is a work in progress. As such, it is flagged as a conflict in EnchantTweakerMixinPlugin.
 
 /**
  * @description Lets crossbows with Infinity enchant shoot without arrows.
