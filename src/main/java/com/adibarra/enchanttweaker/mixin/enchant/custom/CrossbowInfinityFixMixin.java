@@ -2,21 +2,10 @@ package com.adibarra.enchanttweaker.mixin.enchant.custom;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BowItem;
 import net.minecraft.item.CrossbowItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 // TODO: WIP This is a work in progress. As such, it is flagged as a conflict in EnchantTweakerMixinPlugin.
 

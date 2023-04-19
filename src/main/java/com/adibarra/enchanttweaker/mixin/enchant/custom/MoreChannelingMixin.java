@@ -23,6 +23,7 @@ public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
     @Shadow
     private ItemStack tridentStack;
 
+    @SuppressWarnings("unused")
     protected MoreChannelingMixin(EntityType<? extends PersistentProjectileEntity> entityType, World world) {
         super(entityType, world);
     }

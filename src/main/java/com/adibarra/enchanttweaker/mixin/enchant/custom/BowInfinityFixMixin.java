@@ -2,17 +2,9 @@ package com.adibarra.enchanttweaker.mixin.enchant.custom;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.enchantment.*;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BowItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * @description Lets bows with Infinity enchant shoot without arrows.

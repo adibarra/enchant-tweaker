@@ -24,7 +24,8 @@ public class EnchantTweaker implements ModInitializer {
          LOGGER.info(String.format("Enchant Tweaker %sabled\033[0m!", MOD_ENABLED ? "\033[32mEn" : "\033[31mDis"));
     }
 
-    public static String getDefaultConfig(String filename) {
+    @SuppressWarnings({"SameReturnValue", "unused"})
+	public static String getDefaultConfig(String filename) {
 		return """
 		####################################################################################################
 		####  Enchant Tweaker Config

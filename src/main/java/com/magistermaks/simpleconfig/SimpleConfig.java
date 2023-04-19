@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Scanner;
 
+@SuppressWarnings("ALL")
 public class SimpleConfig {
 
     private static final Logger LOGGER = LogManager.getLogger("SimpleConfig");

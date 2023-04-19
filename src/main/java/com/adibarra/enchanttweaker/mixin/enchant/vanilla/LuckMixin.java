@@ -18,6 +18,7 @@ import java.util.Map;
 @Mixin(value=LuckEnchantment.class, priority=1543)
 public abstract class LuckMixin extends Enchantment {
 
+    @SuppressWarnings("unused")
     protected LuckMixin(Rarity weight, EnchantmentTarget type, EquipmentSlot[] slotTypes) {
         super(weight, type, slotTypes);
     }

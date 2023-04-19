@@ -28,9 +28,11 @@ import java.util.List;
 @Mixin(value=CrossbowItem.class, priority=1543)
 public abstract class MoreMultishotMixin {
 
+    @SuppressWarnings("EmptyMethod")
     @Shadow
     private static void shoot(World world, LivingEntity shooter, Hand hand, ItemStack crossbow, ItemStack projectile, float soundPitch, boolean creative, float speed, float divergence, float simulated) { /* dummy */ }
 
+    @SuppressWarnings("EmptyMethod")
     @Shadow
     private static void postShoot(World world, LivingEntity entity, ItemStack stack) { /* dummy */ }
 

@@ -21,6 +21,7 @@ public abstract class LoyalTridentsVoidMixin extends Entity {
     @Final @Shadow
     private static TrackedData<Byte> LOYALTY;
 
+    @SuppressWarnings("unused")
     @Shadow
     private boolean dealtDamage;
 
