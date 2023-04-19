@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.enchant.custom;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.enchantment.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BowItem;
@@ -20,14 +21,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value=BowItem.class, priority=1543)
 public abstract class BowInfinityFixMixin {
 
-    @Inject(method="use", at=@At("HEAD"), cancellable=true)
-    public void enchanttweaker$bowInfinityFix(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
-        if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("bow_infinity_fix", true)) {
-            ItemStack bow = user.getStackInHand(hand);
-            if(EnchantmentHelper.getLevel(Enchantments.INFINITY, bow) > 0) {
-                user.setCurrentHand(hand);
-                cir.setReturnValue(TypedActionResult.consume(bow));
-            }
-        }
+    @ModifyExpressionValue(method="use", at=@At(value="INVOKE", target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
+    private boolean bowInfinityFix(boolean original) {
+        return original && !EnchantTweaker.getConfig().getOrDefault("bow_infinity_fix", true);
     }
 }
