@@ -11,6 +11,7 @@
     "enchant.custom.MoreFlameMixin",
     "enchant.custom.MoreMendingMixin",
     "enchant.custom.MoreMultishotMixin",
+    "enchant.custom.NoSoulSpeedBacklashMixin",
     "enchant.vanilla.DamageMixin",
     "enchant.vanilla.GenericMixin",
     "enchant.vanilla.LuckMixin",
