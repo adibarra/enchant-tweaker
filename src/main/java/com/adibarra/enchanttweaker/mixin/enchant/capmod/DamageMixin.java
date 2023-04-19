@@ -1,4 +1,4 @@
-package com.adibarra.enchanttweaker.mixin.enchant.vanilla;
+package com.adibarra.enchanttweaker.mixin.enchant.capmod;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.adibarra.enchanttweaker.utils.Utils;

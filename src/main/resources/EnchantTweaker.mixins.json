@@ -4,19 +4,20 @@
   "plugin": "com.adibarra.enchanttweaker.EnchantTweakerMixinPlugin",
   "required": true,
   "server": [
-    "enchant.custom.BowInfinityFixMixin",
-    "enchant.custom.CrossbowInfinityFixMixin",
-    "enchant.custom.LoyalTridentsVoidMixin",
-    "enchant.custom.MoreChannelingMixin",
-    "enchant.custom.MoreFlameMixin",
-    "enchant.custom.MoreMendingMixin",
-    "enchant.custom.MoreMultishotMixin",
-    "enchant.custom.NoSoulSpeedBacklashMixin",
-    "enchant.custom.NoThornsBacklashMixin",
-    "enchant.vanilla.DamageMixin",
-    "enchant.vanilla.GenericMixin",
-    "enchant.vanilla.LuckMixin",
-    "enchant.vanilla.ProtectionMixin"
+    "enchant.enhanced.MoreChannelingMixin",
+    "enchant.enhanced.MoreFlameMixin",
+    "enchant.enhanced.MoreMendingMixin",
+    "enchant.enhanced.MoreMultishotMixin",
+    "enchant.capmod.DamageMixin",
+    "enchant.capmod.GenericMixin",
+    "enchant.capmod.LuckMixin",
+    "enchant.capmod.ProtectionMixin",
+    "enchant.tweaks.BowInfinityFixMixin",
+    "enchant.tweaks.CrossbowInfinityFixMixin",
+    "enchant.tweaks.LoyalTridentsVoidMixin",
+    "enchant.tweaks.NoSoulSpeedBacklashMixin",
+    "enchant.tweaks.NoThornsBacklashMixin"
+
   ],
   "client": [
     "enchant.tweaks.ShinyEnchantNameMixin"
