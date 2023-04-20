@@ -13,6 +13,7 @@
     "enchant.capmod.LuckMixin",
     "enchant.capmod.ProtectionMixin",
     "enchant.tweaks.AxesNotToolsMixin",
+    "enchant.tweaks.AxeWeaponsMixin",
     "enchant.tweaks.BowInfinityFixMixin",
     "enchant.tweaks.CrossbowInfinityFixMixin",
     "enchant.tweaks.LoyalTridentsVoidMixin",
