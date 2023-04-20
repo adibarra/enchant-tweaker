@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 public class EnchantTweaker implements ModInitializer {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("EnchantTweaker");
+	private static final Logger LOGGER = LoggerFactory.getLogger("EnchantTweaker");
 
 	private static SimpleConfig CONFIG;
 
@@ -15,14 +15,26 @@ public class EnchantTweaker implements ModInitializer {
 
     @Override
     public void onInitialize() {
-		 EnchantTweaker.CONFIG = SimpleConfig
-				.of("enchant-tweaker")
-				.provider(EnchantTweaker::getDefaultConfig)
-				.request();
-		 EnchantTweaker.MOD_ENABLED = getConfig().getOrDefault("mod_enabled", true);
+		reloadConfig();
+		LOGGER.info(String.format("Enchant Tweaker %sabled\033[0m!", MOD_ENABLED ? "\033[32mEn" : "\033[31mDis"));
+		if (MOD_ENABLED) {
+			Commands.registerCommands();
+			for (String mixin : EnchantTweakerMixinPlugin.getConflicts().keySet()) {
+				if (EnchantTweakerMixinPlugin.getConflicts().get(mixin).condition().getAsBoolean())
+					LOGGER.info("[COMPAT] Disabled " + mixin + " due to " + EnchantTweakerMixinPlugin.getConflicts().get(mixin).reason());
+			}
+			int active_mixins = EnchantTweakerMixinPlugin.getNumMixins() - EnchantTweakerMixinPlugin.getConflicts().size();
+			LOGGER.info("Enchant Tweaker is ready to go! " + String.format("Applied %d Mixins.", active_mixins));
+		}
+	}
 
-         LOGGER.info(String.format("Enchant Tweaker %sabled\033[0m!", MOD_ENABLED ? "\033[32mEn" : "\033[31mDis"));
-    }
+	public static void reloadConfig() {
+		EnchantTweaker.CONFIG = SimpleConfig
+			.of("enchant-tweaker")
+			.provider(EnchantTweaker::getDefaultConfig)
+			.request();
+		EnchantTweaker.MOD_ENABLED = getConfig().getOrDefault("mod_enabled", true);
+	}
 
     @SuppressWarnings({"SameReturnValue", "unused"})
 	public static String getDefaultConfig(String filename) {
@@ -100,7 +112,7 @@ public class EnchantTweaker implements ModInitializer {
 			####        ##      them to take double durability damage when they are used in combat.
 			####        ##      Enabling this tweak removes the double durability damage penalty.
 			####        ##
-								axe_not_tool=true
+								axes_not_tools=true
 			####        ##
 			####        ########################################
 			####

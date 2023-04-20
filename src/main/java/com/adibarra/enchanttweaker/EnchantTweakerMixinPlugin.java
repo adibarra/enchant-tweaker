@@ -1,12 +1,10 @@
 package com.adibarra.enchanttweaker;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableMap;
+import com.adibarra.enchanttweaker.utils.Utils;
 import org.objectweb.asm.tree.ClassNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+import org.spongepowered.include.com.google.common.collect.ImmutableMap;
 
 import java.util.List;
 import java.util.Map;
@@ -14,19 +12,27 @@ import java.util.Set;
 
 public final class EnchantTweakerMixinPlugin implements IMixinConfigPlugin {
 
-    public static final Logger LOGGER = LoggerFactory.getLogger("EnchantTweaker");
-    private static final Map<String, Supplier<Boolean>> CONFLICTS = ImmutableMap.of(
-        "com.adibarra.enchanttweaker.mixin.enchant.custom.CrossbowInfinityFixMixin", () -> true // TODO: WIP
+    private static int num_mixins = 0;
+
+    private static final Map<String, Utils.Conflict> CONFLICTS = ImmutableMap.of(
+        "CrossbowInfinityFixMixin", new Utils.Conflict(() -> true, "WIP Beta")
     );
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (CONFLICTS.getOrDefault(mixinClassName, () -> false).get()) {
-            LOGGER.info("[Compat] Disabling Mixin: " + mixinClassName.substring(
-                    mixinClassName.lastIndexOf('.') + 1));
-            return false;
-        }
-        return true;
+        num_mixins++;
+        return !CONFLICTS.getOrDefault(
+            mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1),
+            new Utils.Conflict(() -> false, "No conflict")
+        ).condition().getAsBoolean();
+    }
+
+    public static int getNumMixins() {
+        return num_mixins;
+    }
+
+    public static Map<String, Utils.Conflict> getConflicts() {
+        return CONFLICTS;
     }
 
     @Override
