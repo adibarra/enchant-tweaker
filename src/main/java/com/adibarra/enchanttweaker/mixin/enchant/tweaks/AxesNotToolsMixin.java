@@ -1,17 +1,10 @@
 package com.adibarra.enchanttweaker.mixin.enchant.tweaks;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
-		import net.minecraft.entity.EquipmentSlot;
-		import net.minecraft.entity.LivingEntity;
-		import net.minecraft.item.AxeItem;
-		import net.minecraft.item.ItemStack;
-		import net.minecraft.item.MiningToolItem;
-		import org.spongepowered.asm.mixin.Mixin;
-		import org.spongepowered.asm.mixin.injection.At;
+import net.minecraft.item.MiningToolItem;
+import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value=MiningToolItem.class, priority=1543)
 public abstract class AxesNotToolsMixin {
