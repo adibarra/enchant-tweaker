@@ -1,31 +1,31 @@
 {
   "compatibilityLevel": "JAVA_17",
   "package": "com.adibarra.enchanttweaker.mixin",
-  "plugin": "com.adibarra.enchanttweaker.EnchantTweakerMixinPlugin",
+  "plugin": "com.adibarra.enchanttweaker.ETMixinPlugin",
   "required": true,
   "server": [
-    "enchant.capmod.DamageMixin",
-    "enchant.capmod.GenericMixin",
-    "enchant.capmod.LuckMixin",
-    "enchant.capmod.ProtectionMixin",
-    "enchant.enhanced.MoreChannelingMixin",
-    "enchant.enhanced.MoreFlameMixin",
-    "enchant.enhanced.MoreMendingMixin",
-    "enchant.enhanced.MoreMultishotMixin",
-    "enchant.tweaks.AxesNotToolsMixin",
-    "enchant.tweaks.AxeWeaponsMixin",
-    "enchant.tweaks.BowInfinityFixMixin",
-    "enchant.tweaks.CheapNamesMixin",
-    "enchant.tweaks.CrossbowInfinityFixMixin",
-    "enchant.tweaks.GodArmorMixin",
-    "enchant.tweaks.GodWeaponsMixin",
-    "enchant.tweaks.InfiniteMendingMixin",
-    "enchant.tweaks.LoyalTridentsVoidMixin",
-    "enchant.tweaks.NoSoulSpeedBacklashMixin",
-    "enchant.tweaks.NoThornsBacklashMixin"
+    "server.capmod.DamageMixin",
+    "server.capmod.GenericMixin",
+    "server.capmod.LuckMixin",
+    "server.capmod.ProtectionMixin",
+    "server.enhanced.MoreChannelingMixin",
+    "server.enhanced.MoreFlameMixin",
+    "server.enhanced.MoreMendingMixin",
+    "server.enhanced.MoreMultishotMixin",
+    "server.tweaks.AxesNotToolsMixin",
+    "server.tweaks.AxeWeaponsMixin",
+    "server.tweaks.BowInfinityFixMixin",
+    "server.tweaks.CheapNamesMixin",
+    "server.tweaks.CrossbowInfinityFixMixin",
+    "server.tweaks.GodArmorMixin",
+    "server.tweaks.GodWeaponsMixin",
+    "server.tweaks.InfiniteMendingMixin",
+    "server.tweaks.LoyalTridentsVoidMixin",
+    "server.tweaks.NoSoulSpeedBacklashMixin",
+    "server.tweaks.NoThornsBacklashMixin"
   ],
   "client": [
-    "enchant.tweaks.ShinyEnchantNameMixin"
+    "client.tweaks.ShinyNameMixin"
   ],
   "injectors": {
     "defaultRequire": 1

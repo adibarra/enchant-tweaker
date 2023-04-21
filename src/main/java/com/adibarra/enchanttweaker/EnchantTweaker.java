@@ -18,12 +18,12 @@ public class EnchantTweaker implements ModInitializer {
 		reloadConfig();
 		LOGGER.info(String.format("Enchant Tweaker %sabled\033[0m!", MOD_ENABLED ? "\033[32mEn" : "\033[31mDis"));
 		if (MOD_ENABLED) {
-			Commands.registerCommands();
-			for (String mixin : EnchantTweakerMixinPlugin.getConflicts().keySet()) {
-				if (EnchantTweakerMixinPlugin.getConflicts().get(mixin).condition().getAsBoolean())
-					LOGGER.info("[COMPAT] Disabled " + mixin + " due to " + EnchantTweakerMixinPlugin.getConflicts().get(mixin).reason());
+			ETCommands.registerCommands();
+			for (String mixin : ETMixinPlugin.getConflicts().keySet()) {
+				if (ETMixinPlugin.getConflicts().get(mixin).condition().getAsBoolean())
+					LOGGER.info("[COMPAT] Disabled " + mixin + " due to " + ETMixinPlugin.getConflicts().get(mixin).reason());
 			}
-			int active_mixins = EnchantTweakerMixinPlugin.getNumMixins() - EnchantTweakerMixinPlugin.getConflicts().size();
+			int active_mixins = ETMixinPlugin.getNumMixins() - ETMixinPlugin.getConflicts().size();
 			LOGGER.info("Enchant Tweaker is ready to go! " + String.format("Applied %d Mixins.", active_mixins));
 		}
 	}
@@ -178,7 +178,7 @@ public class EnchantTweaker implements ModInitializer {
 			####        ##      trial and error if you are a regular player on a server. Enabling this tweak
 			####        ##      displays tooltips of max level enchantments in yellow with a "charged" effect.
 			####        ##
-								shiny_enchant_name=true
+								shiny_name=true
 			####        ##
 			####        ########################################
 			####

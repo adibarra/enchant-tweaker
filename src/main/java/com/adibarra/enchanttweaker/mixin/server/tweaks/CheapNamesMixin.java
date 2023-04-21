@@ -1,4 +1,4 @@
-package com.adibarra.enchanttweaker.mixin.enchant.tweaks;
+package com.adibarra.enchanttweaker.mixin.server.tweaks;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.entity.player.PlayerInventory;
@@ -21,6 +21,7 @@ public abstract class CheapNamesMixin extends ForgingScreenHandler {
 	@Shadow @Final
 	private Property levelCost;
 
+	@SuppressWarnings("unused")
 	public CheapNamesMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context) {
 		super(type, syncId, playerInventory, context);
 	}

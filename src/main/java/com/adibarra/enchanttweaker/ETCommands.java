@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker;
 
-import com.adibarra.enchanttweaker.utils.Utils;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.CommandManager;
@@ -12,11 +11,9 @@ import java.util.List;
 
 import static com.adibarra.enchanttweaker.EnchantTweaker.reloadConfig;
 
-public class Commands {
+public class ETCommands {
 
 	private static final String[] ALIASES = new String[] { "enchanttweaker", "et" };
-
-	private record Command(String name, String description, String usage, String permission, String[] aliases, String[] subcommands) { }
 
 	private static final List<LiteralCommandNode<ServerCommandSource>> COMMAND_NODES = List.of(
 		CommandManager.literal("reload")
@@ -24,7 +21,7 @@ public class Commands {
 			.executes(context -> {
 				reloadConfig();
 				context.getSource().sendFeedback(
-					Utils.joinText(new Text[] {
+					ETUtils.joinText(new Text[] {
 						Text.literal("[Enchant Tweaker]").formatted(Formatting.GREEN),
 						Text.literal(" Config Reloaded!")
 					}), false);
@@ -47,7 +44,7 @@ public class Commands {
 						.requires(source -> source.hasPermissionLevel(2))
 						.executes(context -> {
 							context.getSource().sendFeedback(
-								Utils.joinText(new Text[] {
+								ETUtils.joinText(new Text[] {
 									Text.literal("[Enchant Tweaker] ").formatted(Formatting.GREEN),
 									Text.literal("Try running ").formatted(Formatting.GRAY),
 									Text.literal("/et help ")
@@ -68,7 +65,7 @@ public class Commands {
 							.requires(source -> source.hasPermissionLevel(2))
 							.executes(context -> {
 								context.getSource().sendFeedback(
-									Utils.joinText(new Text[] {
+									ETUtils.joinText(new Text[] {
 										Text.literal("[Enchant Tweaker]\n").formatted(Formatting.GREEN),
 										Text.literal("/et reload ")
 											.setStyle(Style.EMPTY

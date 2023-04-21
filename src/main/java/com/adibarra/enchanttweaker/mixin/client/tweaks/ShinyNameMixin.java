@@ -1,4 +1,4 @@
-package com.adibarra.enchanttweaker.mixin.enchant.tweaks;
+package com.adibarra.enchanttweaker.mixin.client.tweaks;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.enchantment.Enchantment;
@@ -21,7 +21,7 @@ import java.util.Random;
  * @environment Client
  */
 @Mixin(value=Enchantment.class, priority=1543)
-public abstract class ShinyEnchantNameMixin {
+public abstract class ShinyNameMixin {
 
 	@Shadow
 	public abstract int getMaxLevel();
@@ -31,7 +31,7 @@ public abstract class ShinyEnchantNameMixin {
 
 	@Inject(method="getName", at=@At(value="TAIL"), locals=LocalCapture.CAPTURE_FAILSOFT)
 	private void getName(int level, CallbackInfoReturnable<Text> cir, MutableText mutableText) {
-		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("shiny_enchant_name", true)) {
+		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("shiny_name", true)) {
 			if(level >= this.getMaxLevel() && !this.isCursed()) {
 				mutableText.formatted(Formatting.YELLOW);
 				if (new Random().nextFloat() < 0.005f)
