@@ -146,7 +146,7 @@ public class EnchantTweaker implements ModInitializer {
 			####        ##      the enchant/repair cost for an item will always stay at the minimum value for
 			####        ##      that given procedure.
 			####        ##
-								cheap_enchanting=false
+								prior_work_free=false
 			####        ##
 			####        ########################################
 			####
