@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value=InfinityEnchantment.class, priority=1543)
 public abstract class InfiniteMendingMixin {
 	@Inject(method="canAccept", at=@At("HEAD"), cancellable=true)
-	public void allowInfinityMending(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+	private void allowInfinityMending(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
 		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("infinite_mending", true)) {
 			if (other instanceof MendingEnchantment) {
 				cir.setReturnValue(true);
