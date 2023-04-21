@@ -25,7 +25,9 @@
     "server.tweaks.NoThornsBacklashMixin",
     "server.tweaks.NotTooExpensiveMixin",
     "server.tweaks.PriorWorkFreeMixin",
-    "server.tweaks.PriorWorkCheaperMixin"
+    "server.tweaks.PriorWorkCheaperMixin",
+    "server.tweaks.SturdyAnvilsMixin",
+    "server.tweaks.TridentWeaponsMixin"
   ],
   "client": [
     "client.tweaks.NotTooExpensiveMixin",
