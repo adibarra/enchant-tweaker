@@ -15,6 +15,7 @@
     "enchant.tweaks.AxesNotToolsMixin",
     "enchant.tweaks.AxeWeaponsMixin",
     "enchant.tweaks.BowInfinityFixMixin",
+    "enchant.tweaks.CheapNamesMixin",
     "enchant.tweaks.CrossbowInfinityFixMixin",
     "enchant.tweaks.GodArmorMixin",
     "enchant.tweaks.GodWeaponsMixin",
