@@ -1,4 +1,4 @@
-package com.adibarra.enchanttweaker.mixin.client.tweaks;
+package com.adibarra.enchanttweaker.mixin.client.tweak;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.enchantment.Enchantment;

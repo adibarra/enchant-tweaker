@@ -1,4 +1,4 @@
-package com.adibarra.enchanttweaker.mixin.server.tweaks;
+package com.adibarra.enchanttweaker.mixin.server.anvil;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.item.ItemStack;

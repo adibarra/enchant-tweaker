@@ -4,6 +4,11 @@
   "plugin": "com.adibarra.enchanttweaker.ETMixinPlugin",
   "required": true,
   "server": [
+    "server.anvil.CheapNamesMixin",
+    "server.anvil.NotTooExpensiveMixin",
+    "server.anvil.PriorWorkCheaperMixin",
+    "server.anvil.PriorWorkFreeMixin",
+    "server.anvil.SturdyAnvilsMixin",
     "server.capmod.DamageMixin",
     "server.capmod.GenericMixin",
     "server.capmod.LuckMixin",
@@ -12,26 +17,21 @@
     "server.enhanced.MoreFlameMixin",
     "server.enhanced.MoreMendingMixin",
     "server.enhanced.MoreMultishotMixin",
-    "server.tweaks.AxesNotToolsMixin",
-    "server.tweaks.AxeWeaponsMixin",
-    "server.tweaks.BowInfinityFixMixin",
-    "server.tweaks.CheapNamesMixin",
-    "server.tweaks.CrossbowInfinityFixMixin",
-    "server.tweaks.GodArmorMixin",
-    "server.tweaks.GodWeaponsMixin",
-    "server.tweaks.InfiniteMendingMixin",
-    "server.tweaks.LoyalTridentsVoidMixin",
-    "server.tweaks.NoSoulSpeedBacklashMixin",
-    "server.tweaks.NoThornsBacklashMixin",
-    "server.tweaks.NotTooExpensiveMixin",
-    "server.tweaks.PriorWorkFreeMixin",
-    "server.tweaks.PriorWorkCheaperMixin",
-    "server.tweaks.SturdyAnvilsMixin",
-    "server.tweaks.TridentWeaponsMixin"
+    "server.tweak.AxeWeaponsMixin",
+    "server.tweak.AxesNotToolsMixin",
+    "server.tweak.BowInfinityFixMixin",
+    "server.tweak.CrossbowInfinityFixMixin",
+    "server.tweak.GodArmorMixin",
+    "server.tweak.GodWeaponsMixin",
+    "server.tweak.InfiniteMendingMixin",
+    "server.tweak.LoyalVoidTridentsMixin",
+    "server.tweak.NoSoulSpeedBacklashMixin",
+    "server.tweak.NoThornsBacklashMixin",
+    "server.tweak.TridentWeaponsMixin"
   ],
   "client": [
-    "client.tweaks.NotTooExpensiveMixin",
-    "client.tweaks.ShinyNameMixin"
+    "client.anvil.NotTooExpensiveMixin",
+    "client.tweak.ShinyNameMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,4 +1,4 @@
-package com.adibarra.enchanttweaker.mixin.server.tweaks;
+package com.adibarra.enchanttweaker.mixin.server.tweak;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.entity.EntityType;
@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @environment Server
  */
 @Mixin(value=TridentEntity.class, priority=1543)
-public abstract class LoyalTridentsVoidMixin extends ProjectileEntity {
+public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
 
     @Final @Shadow
     private static TrackedData<Byte> LOYALTY;
@@ -27,7 +27,7 @@ public abstract class LoyalTridentsVoidMixin extends ProjectileEntity {
     @Shadow
     private boolean dealtDamage;
 
-    protected LoyalTridentsVoidMixin(EntityType<ProjectileEntity> entityType, World world) {
+    protected LoyalVoidTridentsMixin(EntityType<ProjectileEntity> entityType, World world) {
         super(entityType, world);
     }
 
@@ -35,7 +35,7 @@ public abstract class LoyalTridentsVoidMixin extends ProjectileEntity {
     private void tick(CallbackInfo ci) {
         if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("loyal_tridents_void", true)) {
             if(dataTracker.get(LOYALTY) > 0 && !this.dealtDamage) {
-                if(this.getY() <= this.world.getBottomY() && !this.world.isClient()) {
+                if(this.getY() <= this.world.getBottomY()) {
                     this.dealtDamage = true;
                     this.setVelocity(0, 0, 0);
                 }
