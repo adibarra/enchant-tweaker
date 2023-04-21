@@ -18,6 +18,7 @@
     "enchant.tweaks.CrossbowInfinityFixMixin",
     "enchant.tweaks.GodArmorMixin",
     "enchant.tweaks.GodWeaponsMixin",
+    "enchant.tweaks.InfiniteMendingMixin",
     "enchant.tweaks.LoyalTridentsVoidMixin",
     "enchant.tweaks.NoSoulSpeedBacklashMixin",
     "enchant.tweaks.NoThornsBacklashMixin"

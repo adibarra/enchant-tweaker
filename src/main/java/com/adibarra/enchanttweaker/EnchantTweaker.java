@@ -81,7 +81,7 @@ public class EnchantTweaker implements ModInitializer {
 			####        ##      Normally you need to choose between having either mending or infinity.
 			####        ##      Enabling this tweak allows both enchantments to coexist.
 			####        ##
-								coexist_inf_mend=true
+								infinite_mending=true
 			####        ##
 			####        ########################################
 			####
