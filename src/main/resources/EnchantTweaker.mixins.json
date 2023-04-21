@@ -20,7 +20,6 @@
     "server.tweak.AxeWeaponsMixin",
     "server.tweak.AxesNotToolsMixin",
     "server.tweak.BowInfinityFixMixin",
-    "server.tweak.CrossbowInfinityFixMixin",
     "server.tweak.GodArmorMixin",
     "server.tweak.GodWeaponsMixin",
     "server.tweak.InfiniteMendingMixin",

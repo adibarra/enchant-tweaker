@@ -13,7 +13,6 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static int num_mixins = 0;
 
     private static final Map<String, ETUtils.Conflict> CONFLICTS = Map.of(
-        "CrossbowInfinityFixMixin", new ETUtils.Conflict(() -> true, "Early WIP, not ready for release."),
         "ShinyNameMixin", new ETUtils.Conflict(() -> true, "Buggy, false positives for color highlighting.")
     );
 
