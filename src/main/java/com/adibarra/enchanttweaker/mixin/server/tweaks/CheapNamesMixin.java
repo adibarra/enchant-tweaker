@@ -22,7 +22,7 @@ public abstract class CheapNamesMixin extends ForgingScreenHandler {
 	private Property levelCost;
 
 	@SuppressWarnings("unused")
-	public CheapNamesMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context) {
+	private CheapNamesMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context) {
 		super(type, syncId, playerInventory, context);
 	}
 

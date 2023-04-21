@@ -20,8 +20,9 @@ public class EnchantTweaker implements ModInitializer {
 		if (MOD_ENABLED) {
 			ETCommands.registerCommands();
 			for (String mixin : ETMixinPlugin.getConflicts().keySet()) {
-				if (ETMixinPlugin.getConflicts().get(mixin).condition().getAsBoolean())
-					LOGGER.info("[COMPAT] Disabled " + mixin + " due to " + ETMixinPlugin.getConflicts().get(mixin).reason());
+				ETUtils.Conflict c = ETMixinPlugin.getConflicts().get(mixin);
+				if (c.condition().getAsBoolean())
+					LOGGER.info("[COMPAT] Disabled " + mixin + ". Reason: " + c.reason());
 			}
 			int active_mixins = ETMixinPlugin.getNumMixins() - ETMixinPlugin.getConflicts().size();
 			LOGGER.info("Enchant Tweaker is ready to go! " + String.format("Applied %d Mixins.", active_mixins));
