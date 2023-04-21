@@ -23,7 +23,9 @@
     "server.tweaks.LoyalTridentsVoidMixin",
     "server.tweaks.NoSoulSpeedBacklashMixin",
     "server.tweaks.NoThornsBacklashMixin",
-    "server.tweaks.NotTooExpensiveMixin"
+    "server.tweaks.NotTooExpensiveMixin",
+    "server.tweaks.PriorWorkFreeMixin",
+    "server.tweaks.PriorWorkCheaperMixin"
   ],
   "client": [
     "client.tweaks.NotTooExpensiveMixin",
