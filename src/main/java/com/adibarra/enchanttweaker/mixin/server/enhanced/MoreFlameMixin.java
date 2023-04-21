@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * @description Scales the burn time of the Flame enchant based on its level.
+ * Adds 2 seconds of burn time per level above 1.
  * @environment Server
  */
 @Mixin(value=PersistentProjectileEntity.class, priority=1543)
@@ -32,7 +33,7 @@ public abstract class MoreFlameMixin {
     @ModifyConstant(method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V", constant=@Constant(intValue=5))
     private int decoder(int original) {
         if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("more_flame", true)) {
-            return flameLevel * original;
+            return 2 * (flameLevel - 1)  + original;
         }
         return original;
     }
