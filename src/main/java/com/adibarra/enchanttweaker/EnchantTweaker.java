@@ -134,7 +134,7 @@ public class EnchantTweaker implements ModInitializer {
 			####        ##      in the anvil changing the level it activates at to one of your choosing.
 			####        ##
 								not_too_expensive=true
-								max_level_cost=2147483647
+								nte_max_cost=2147483647
 			####        ##
 			####        ########################################
 			####
@@ -156,8 +156,8 @@ public class EnchantTweaker implements ModInitializer {
 			####        ##      cost of the next action. Enabling this tweak will let you customize the penalty.
 			####        ##      The multiplier will replace the 2 in the cost formula (next_cost=2*current_cost+1).
 			####        ##
-								cheaper_enchanting=true
-								enchanting_cost_multiplier=1.33
+								prior_work_cheaper=true
+								pw_cost_multiplier=1.33
 			####        ##
 			####        ########################################
 			####
