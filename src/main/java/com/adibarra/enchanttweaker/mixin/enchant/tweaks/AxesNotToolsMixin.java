@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(value=MiningToolItem.class, priority=1543)
 public abstract class AxesNotToolsMixin {
 	@ModifyConstant(method="postHit", constant=@Constant(intValue=2))
-	public int modifySelfDamage(int original, ItemStack stack) {
+	private int modifySelfDamage(int original, ItemStack stack) {
 		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("axes_not_tools", true)) {
 			if(stack.getItem() instanceof AxeItem) {
 				return 1;

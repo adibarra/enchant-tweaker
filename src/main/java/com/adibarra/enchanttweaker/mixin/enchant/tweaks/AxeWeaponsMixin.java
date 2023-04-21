@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value=Enchantment.class, priority=1543)
 public abstract class AxeWeaponsMixin {
 	@Inject(method="isAcceptableItem", at=@At("HEAD"), cancellable=true)
-	public void axeWeapons(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+	private void axeWeapons(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
 		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("axe_weapons", true)) {
 			if(stack.getItem() instanceof AxeItem) {
 				Enchantment enchantment = (Enchantment) (Object) this;
