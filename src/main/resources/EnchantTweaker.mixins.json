@@ -22,9 +22,11 @@
     "server.tweaks.InfiniteMendingMixin",
     "server.tweaks.LoyalTridentsVoidMixin",
     "server.tweaks.NoSoulSpeedBacklashMixin",
-    "server.tweaks.NoThornsBacklashMixin"
+    "server.tweaks.NoThornsBacklashMixin",
+    "server.tweaks.NotTooExpensiveMixin"
   ],
   "client": [
+    "client.tweaks.NotTooExpensiveMixin",
     "client.tweaks.ShinyNameMixin"
   ],
   "injectors": {
