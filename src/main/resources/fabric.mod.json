@@ -3,7 +3,7 @@
 	"id": "enchanttweaker",
 	"version": "${version}",
 	"name": "Enchant Tweaker",
-	"description": "Tweak settings for many enchantment related things.",
+	"description": "Tweak settings for many enchantment related things while keeping the vanilla feel.",
 	"authors": ["adibarra"],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/enchant-tweaker",
