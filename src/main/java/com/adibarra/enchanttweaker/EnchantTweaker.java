@@ -16,7 +16,7 @@ public class EnchantTweaker implements ModInitializer {
     @Override
     public void onInitialize() {
 		reloadConfig();
-		LOGGER.info(String.format("Enchant Tweaker %sabled\033[0m!", MOD_ENABLED ? "\033[32mEn" : "\033[31mDis"));
+		LOGGER.info(String.format("Enchant Tweaker %sabled!", MOD_ENABLED ? "En" : "Dis"));
 		if (MOD_ENABLED) {
 			ETCommands.registerCommands();
 			for (String mixin : ETMixinPlugin.getConflicts().keySet()) {
