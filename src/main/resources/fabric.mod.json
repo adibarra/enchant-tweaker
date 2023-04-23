@@ -18,7 +18,6 @@
 		"main": ["com.adibarra.enchanttweaker.EnchantTweaker"]
 	},
 	"mixins": ["enchanttweaker.mixins.json"],
-	"accessWidener": "enchanttweaker.accesswidener",
 	"depends": {
 		"fabricloader": ">=0.14.19",
 		"minecraft": "~1.19.2",
