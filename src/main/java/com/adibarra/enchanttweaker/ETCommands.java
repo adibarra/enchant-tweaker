@@ -4,12 +4,13 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.*;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 import java.util.List;
-
-import static com.adibarra.enchanttweaker.EnchantTweaker.reloadConfig;
 
 public class ETCommands {
 
@@ -19,7 +20,7 @@ public class ETCommands {
 		CommandManager.literal("reload")
 			.requires(source -> source.hasPermissionLevel(2))
 			.executes(context -> {
-				reloadConfig();
+				EnchantTweaker.reloadConfig();
 				context.getSource().sendFeedback(
 					ETUtils.joinText(new Text[] {
 						Text.literal("[Enchant Tweaker]").formatted(Formatting.GREEN),
