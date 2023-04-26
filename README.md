@@ -85,6 +85,9 @@ Normally boots will take damage when walking on soul sand with Soul Speed. Enabl
 ### No Thorns Backlash
 Normally armor will take damage when Thorns is triggered. Enabling this tweak will prevent your armor from taking damage from the enchantment.
 
+### Shiny Max Enchantment Names
+Normally everyone knows what the max level for an enchantment is, but what about now? Enabling this tweak will color the name of enchantments at max level to be yellow. This tweak is client side only.
+
 ### Trident Weapons
 Allow the addition of some weapon enchantments that normally can not be added to tridents. Enabling this tweak allows you to add the following enchantments to tridents: Sharpness, Smite, Bane of Arthropods, Fire Aspect, Knockback, and Looting.
 

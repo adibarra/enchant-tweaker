@@ -216,6 +216,14 @@ public class EnchantTweaker implements ModInitializer {
 							no_thorns_backlash=true
 				###    ##
 				###    ########################################
+				###    ##  Shiny Max Enchantment Names:
+				###    ##    Normally everyone knows what the max level for an enchantment is, but what about now?
+				###    ##    Enabling this tweak will color the name of enchantments at max level to be yellow.
+				###    ##    This tweak is client side only.
+				###    ##
+							shiny_name=true
+				###    ##
+				###    ########################################
 				###    ##  Trident Weapons:
 				###    ##    Allow the addition of some weapon enchantments that normally can not be added to tridents.
 				###    ##    Enabling this tweak allows you to add the following enchantments to tridents: Sharpness, Smite, Bane of Arthropods, Fire Aspect, Knockback, and Looting.
