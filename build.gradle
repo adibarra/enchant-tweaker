@@ -43,6 +43,7 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.release.set(17)
+	it.options.encoding = "UTF-8"
 }
 
 java {
@@ -53,10 +54,7 @@ java {
 }
 
 jar {
-	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}" }
-	}
-
+	from "LICENSE"
 }
 
 // configure the maven publication
