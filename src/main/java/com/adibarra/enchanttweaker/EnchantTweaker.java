@@ -237,61 +237,60 @@ public class EnchantTweaker implements ModInitializer {
 				###    ########################################
 				###    ##  Armor Enchantments:
 				###    ##
-							protection=10
+							aqua_affinity=-1
 							blast_protection=10
-							fire_protection=10
-							projectile_protection=10
+							depth_strider=-1
 							feather_falling=7
+							fire_protection=10
+							frost_walker=-1
+							projectile_protection=10
+							protection=10
+							respiration=10
 							soul_speed=5
 							swift_sneak=4
 							thorns=5
-							respiration=10
-							depth_strider=-1
-							frost_walker=-1
-							aqua_affinity=-1
 				###    ##
 				###    ########################################
 				###    ##  Curse Enchantments:
 				###    ##
-							curse_of_binding=-1
-							curse_of_vanishing=-1
+							binding_curse=-1
+							vanishing_curse=-1
 				###    ##
 				###    ########################################
 				###    ##  Melee Enchantments:
 				###    ##
+							bane_of_arthropods=10
+							fire_aspect=3
+							impaling=-1
+							knockback=-1
+							looting=5
 							sharpness=10
 							smite=10
-							bane_of_arthropods=10
-							knockback=-1
-							fire_aspect=3
-							looting=5
 							sweeping_edge=5
-							knockback=-1
-							impaling=-1
 				###    ##
 				###    ########################################
 				###    ##  Ranged Enchantments:
 				###    ##
-							power=10
-							punch=-1
+							channeling=2
 							flame=2
 							infinity=-1
+							loyalty=5
 							multishot=3
 							piercing=5
+							power=10
+							punch=-1
 							quick_charge=-1
 							riptide=-1
-							channeling=2
-							loyalty=5
 				###    ##
 				###    ########################################
 				###    ##  Tool Enchantments:
 				###    ##
 							efficiency=10
-							silk_touch=-1
 							fortune=5
 							lure=-1
 							luck_of_the_sea=5
 							mending=3
+							silk_touch=-1
 							unbreaking=10
 				###    ##
 				###    ########################################
