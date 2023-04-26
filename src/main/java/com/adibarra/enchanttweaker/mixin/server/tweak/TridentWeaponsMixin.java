@@ -3,7 +3,6 @@ package com.adibarra.enchanttweaker.mixin.server.tweak;
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.TridentItem;
 import org.spongepowered.asm.mixin.Mixin;
