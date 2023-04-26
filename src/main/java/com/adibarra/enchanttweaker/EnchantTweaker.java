@@ -312,7 +312,4 @@ public class EnchantTweaker implements ModInitializer {
         return EnchantTweaker.MOD_ENABLED;
     }
 
-    public static Logger getLogger() {
-        return EnchantTweaker.LOGGER;
-    }
 }
