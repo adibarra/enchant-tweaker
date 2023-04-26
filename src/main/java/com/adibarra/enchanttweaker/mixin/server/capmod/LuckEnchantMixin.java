@@ -1,9 +1,11 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.adibarra.enchanttweaker.ETUtils;
+import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import net.minecraft.enchantment.*;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentTarget;
+import net.minecraft.enchantment.LuckEnchantment;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.registry.Registries;
 import org.spongepowered.asm.mixin.Mixin;
