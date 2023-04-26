@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
  * @environment Server
  */
 @Mixin(value=DamageEnchantment.class, priority=1543)
-public abstract class DamageMixin {
+public abstract class DamageEnchantMixin {
 
     @Shadow @Final
     public int typeIndex;

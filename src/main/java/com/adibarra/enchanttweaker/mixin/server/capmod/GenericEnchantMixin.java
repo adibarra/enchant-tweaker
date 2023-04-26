@@ -15,50 +15,39 @@ import java.util.Map;
  * @environment Server
  */
 @Mixin(value={
-        AquaAffinityEnchantment.class, BindingCurseEnchantment.class, ChannelingEnchantment.class,
-        DepthStriderEnchantment.class, EfficiencyEnchantment.class,   FireAspectEnchantment.class,
-        FlameEnchantment.class,        FrostWalkerEnchantment.class,  ImpalingEnchantment.class,
-        InfinityEnchantment.class,     KnockbackEnchantment.class,    LoyaltyEnchantment.class,
-        LureEnchantment.class,         MendingEnchantment.class,      MultishotEnchantment.class,
-        PiercingEnchantment.class,     PowerEnchantment.class,        PunchEnchantment.class,
-        QuickChargeEnchantment.class,  RespirationEnchantment.class,  RiptideEnchantment.class,
-        SilkTouchEnchantment.class,    SoulSpeedEnchantment.class,    SweepingEnchantment.class,
-        SwiftSneakEnchantment.class,   ThornsEnchantment.class,       UnbreakingEnchantment.class,
-        VanishingCurseEnchantment.class
+        DepthStriderEnchantment.class, EfficiencyEnchantment.class,  FireAspectEnchantment.class,
+        FrostWalkerEnchantment.class,  ImpalingEnchantment.class,    KnockbackEnchantment.class,
+        LoyaltyEnchantment.class,      LureEnchantment.class,        PiercingEnchantment.class,
+        PowerEnchantment.class,        PunchEnchantment.class,       QuickChargeEnchantment.class,
+        RespirationEnchantment.class,  RiptideEnchantment.class,     SoulSpeedEnchantment.class,
+        SweepingEnchantment.class,     SwiftSneakEnchantment.class,  ThornsEnchantment.class,
+        UnbreakingEnchantment.class
 }, priority=1543)
-public abstract class GenericMixin {
+public abstract class GenericEnchantMixin {
 
     private final static Map<Class<?>, String> ENCHANTS = new HashMap<>();
 
     static {
-        ENCHANTS.put(AquaAffinityEnchantment.class,   "aqua_affinity");
-        ENCHANTS.put(BindingCurseEnchantment.class,   "curse_of_binding");
         ENCHANTS.put(ChannelingEnchantment.class,     "channeling");
         ENCHANTS.put(DepthStriderEnchantment.class,   "depth_strider");
         ENCHANTS.put(EfficiencyEnchantment.class,     "efficiency");
         ENCHANTS.put(FireAspectEnchantment.class,     "fire_aspect");
-        ENCHANTS.put(FlameEnchantment.class,          "flame");
         ENCHANTS.put(FrostWalkerEnchantment.class,    "frost_walker");
         ENCHANTS.put(ImpalingEnchantment.class,       "impaling");
-        ENCHANTS.put(InfinityEnchantment.class,       "infinity");
         ENCHANTS.put(KnockbackEnchantment.class,      "knockback");
         ENCHANTS.put(LoyaltyEnchantment.class,        "loyalty");
         ENCHANTS.put(LureEnchantment.class,           "lure");
-        ENCHANTS.put(MendingEnchantment.class,        "mending");
-        ENCHANTS.put(MultishotEnchantment.class,      "multishot");
         ENCHANTS.put(PiercingEnchantment.class,       "piercing");
         ENCHANTS.put(PowerEnchantment.class,          "power");
         ENCHANTS.put(PunchEnchantment.class,          "punch");
         ENCHANTS.put(QuickChargeEnchantment.class,    "quick_charge");
         ENCHANTS.put(RespirationEnchantment.class,    "respiration");
         ENCHANTS.put(RiptideEnchantment.class,        "riptide");
-        ENCHANTS.put(SilkTouchEnchantment.class,      "silk_touch");
         ENCHANTS.put(SoulSpeedEnchantment.class,      "soul_speed");
         ENCHANTS.put(SweepingEnchantment.class,       "sweeping_edge");
         ENCHANTS.put(SwiftSneakEnchantment.class,     "swift_sneak");
         ENCHANTS.put(ThornsEnchantment.class,         "thorns");
         ENCHANTS.put(UnbreakingEnchantment.class,     "unbreaking");
-        ENCHANTS.put(VanishingCurseEnchantment.class, "curse_of_vanishing");
     }
 
     @ModifyReturnValue(method="getMaxLevel()I", at=@At("RETURN"))

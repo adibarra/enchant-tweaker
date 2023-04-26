@@ -16,10 +16,10 @@ import java.util.Map;
  * @environment Server
  */
 @Mixin(value=LuckEnchantment.class, priority=1543)
-public abstract class LuckMixin extends Enchantment {
+public abstract class LuckEnchantMixin extends Enchantment {
 
     @SuppressWarnings("unused")
-    protected LuckMixin(Rarity weight, EnchantmentTarget type, EquipmentSlot[] slotTypes) {
+    protected LuckEnchantMixin(Rarity weight, EnchantmentTarget type, EquipmentSlot[] slotTypes) {
         super(weight, type, slotTypes);
     }
 
