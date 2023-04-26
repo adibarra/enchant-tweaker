@@ -13,7 +13,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static int num_mixins = 0;
 
     private static final Map<String, ETUtils.Conflict> CONFLICTS = Map.of(
-        "ShinyNameMixin", new ETUtils.Conflict(() -> true, "Buggy. Does not respect modded level caps.")
+        // "MixinName", new ETUtils.Conflict(() -> true, "Because...")
     );
 
     @Override
