@@ -3,7 +3,7 @@
   "package": "com.adibarra.enchanttweaker.mixin",
   "plugin": "com.adibarra.enchanttweaker.ETMixinPlugin",
   "required": true,
-  "server": [
+  "mixins": [
     "server.anvil.CheapNamesMixin",
     "server.anvil.NotTooExpensiveMixin",
     "server.anvil.PriorWorkCheaperMixin",
