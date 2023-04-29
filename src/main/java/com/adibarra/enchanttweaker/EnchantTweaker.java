@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class EnchantTweaker implements ModInitializer {
 
@@ -13,7 +14,7 @@ public class EnchantTweaker implements ModInitializer {
 
     @Override
     public void onInitialize() {
-		if (ETMixinPlugin.getConfig().getOrDefault("mod_enabled", true)) {
+		if (ETMixinPlugin.getConfig().getOrDefault("mod_enabled", false)) {
 			ETCommands.registerCommands();
 			LOGGER.info("Enchant Tweaker is ready to go! Applied {} Mixins.", ETMixinPlugin.getNumMixins());
 		}
@@ -21,9 +22,9 @@ public class EnchantTweaker implements ModInitializer {
 
 	public static String getDefaultConfig(String filename) {
 		try {
-			return Utils.getResourceFileAsString(filename + ".properties");
+			Path path = Path.of("assets", "enchanttweaker", filename + ".properties");
+			return Utils.getResourceFileAsString(path.toString());
 		} catch (IOException e) {
-			LOGGER.error("Failed to load default config file! Report this error here: https://github.com/adibarra/enchant-tweaker/issues", e);
 			throw new RuntimeException(e);
 		}
     }
