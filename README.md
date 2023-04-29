@@ -2,8 +2,16 @@
 Tweak settings for many enchantment related things while keeping the vanilla feel.
 
 
-## Notes
-Client side installation is optional. However, it is recommended because of light modification to the anvil GUI for "NotTooExpensive" to function.
+
+## Installation
+Client-side install is recommended but not required. Some visual QOL improvements and client only tweaks need to be installed on the client to work properly. This means that vanilla clients can join servers with the mod installed and not have any issues.
+
+|              | Client-Side  | Server-Side  |
+|:------------:|:------------:|:------------:|
+| Singleplayer | **Required** |     N/A      |
+| Multiplayer  |   Optional   | **Required** |
+
+
 
 ## Anvil Tweaks
 Some small anvil related tweaks. Lightly alters the anvil's mechanics.
