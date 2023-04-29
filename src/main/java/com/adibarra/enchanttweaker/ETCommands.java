@@ -21,7 +21,7 @@ public class ETCommands {
 		CommandManager.literal("reload")
 			.requires(source -> source.hasPermissionLevel(2))
 			.executes(context -> {
-				EnchantTweaker.reloadConfig();
+				ETMixinPlugin.reloadConfig();
 				context.getSource().sendFeedback(
 					Utils.joinText(new Text[] {
 						Text.literal("[Enchant Tweaker]").formatted(Formatting.GREEN),

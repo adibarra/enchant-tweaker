@@ -1,6 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.Utils;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.enchantment.ProtectionEnchantment;
@@ -24,11 +24,11 @@ public abstract class ProtectionEnchantMixin {
         at=@At("RETURN"))
     private int modifyMaxLevel(int orig) {
         int lvlCap = switch (this.protectionType) {
-            case ALL -> EnchantTweaker.getConfig().getOrDefault("protection", orig);
-            case FIRE -> EnchantTweaker.getConfig().getOrDefault("fire_protection", orig);
-            case FALL -> EnchantTweaker.getConfig().getOrDefault("feather_falling", orig);
-            case EXPLOSION -> EnchantTweaker.getConfig().getOrDefault("blast_protection", orig);
-            case PROJECTILE -> EnchantTweaker.getConfig().getOrDefault("projectile_protection", orig);
+            case ALL -> ETMixinPlugin.getConfig().getOrDefault("protection", orig);
+            case FIRE -> ETMixinPlugin.getConfig().getOrDefault("fire_protection", orig);
+            case FALL -> ETMixinPlugin.getConfig().getOrDefault("feather_falling", orig);
+            case EXPLOSION -> ETMixinPlugin.getConfig().getOrDefault("blast_protection", orig);
+            case PROJECTILE -> ETMixinPlugin.getConfig().getOrDefault("projectile_protection", orig);
             //noinspection UnnecessaryDefault
             default -> orig;
         };

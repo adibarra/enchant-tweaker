@@ -1,8 +1,8 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.Utils;
-import net.minecraft.screen.*;
+import net.minecraft.screen.AnvilScreenHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -18,7 +18,7 @@ public abstract class NotTooExpensiveMixin {
 		method="updateResult()V",
 		constant=@Constant(intValue=40, ordinal=2))
 	private int notTooExpensive(int orig) {
-		int maxCost = EnchantTweaker.getConfig().getOrDefault("nte_max_cost", orig);
+		int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
 		return Utils.clamp(maxCost, 0, Integer.MAX_VALUE);
 	}
 }

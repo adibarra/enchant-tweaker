@@ -1,6 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.Utils;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.enchantment.DamageEnchantment;
@@ -24,9 +24,9 @@ public abstract class DamageEnchantMixin {
         at=@At("RETURN"))
     private int modifyMaxLevel(int orig) {
         int lvlCap = switch (this.typeIndex) {
-            case 0 -> EnchantTweaker.getConfig().getOrDefault("sharpness", orig);
-            case 1 -> EnchantTweaker.getConfig().getOrDefault("smite", orig);
-            case 2 -> EnchantTweaker.getConfig().getOrDefault("bane_of_arthropods", orig);
+            case 0 -> ETMixinPlugin.getConfig().getOrDefault("sharpness", orig);
+            case 1 -> ETMixinPlugin.getConfig().getOrDefault("smite", orig);
+            case 2 -> ETMixinPlugin.getConfig().getOrDefault("bane_of_arthropods", orig);
             default -> orig;
         };
         if (lvlCap < 0) return orig;

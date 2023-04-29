@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.Utils;
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.screen.AnvilScreenHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -19,7 +19,7 @@ public abstract class SturdyAnvilsMixin {
 		method="method_24922(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V",
 		constant=@Constant(floatValue=0.12f))
 	private static float sturdyAnvils(float orig) {
-		double anvilDamageChance = EnchantTweaker.getConfig().getOrDefault("anvil_damage_chance", orig);
+		double anvilDamageChance = ETMixinPlugin.getConfig().getOrDefault("anvil_damage_chance", orig);
 		return Utils.clamp((float) anvilDamageChance, 0f, 1f);
 	}
 }

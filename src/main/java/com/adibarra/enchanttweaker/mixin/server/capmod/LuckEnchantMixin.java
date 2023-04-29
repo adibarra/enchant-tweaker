@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.Utils;
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentTarget;
@@ -30,7 +30,7 @@ public abstract class LuckEnchantMixin extends Enchantment {
     private int modifyMaxLevel(int orig) {
         if (Registry.ENCHANTMENT.getKey(this).isPresent()) {
             String id = Registry.ENCHANTMENT.getKey(this).get().getValue().getPath();
-            int lvlCap = EnchantTweaker.getConfig().getOrDefault(id, orig);
+            int lvlCap = ETMixinPlugin.getConfig().getOrDefault(id, orig);
             if (lvlCap < 0) return orig;
             return Utils.clamp(lvlCap, 0, 255);
         }

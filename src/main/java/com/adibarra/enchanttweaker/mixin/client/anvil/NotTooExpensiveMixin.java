@@ -1,6 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.client.anvil;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.Utils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -20,7 +20,7 @@ public abstract class NotTooExpensiveMixin {
 		method="drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V",
 		constant=@Constant(intValue=40))
 	private int notTooExpensiveClient(int orig) {
-		int max_cost = EnchantTweaker.getConfig().getOrDefault("nte_max_cost", orig);
+		int max_cost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
 		return Utils.clamp(max_cost, 0, Integer.MAX_VALUE);
 	}
 }

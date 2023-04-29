@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker;
 
-import com.adibarra.utils.Utils.Conflict;
 import com.magistermaks.simpleconfig.SimpleConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
@@ -13,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 
 public final class ETMixinPlugin implements IMixinConfigPlugin {
 
@@ -23,6 +23,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static final Map<String, String> KEYS = new HashMap<>();
     private static final Map<String, Conflict> CONFLICTS = new HashMap<>();
     private static final Conflict NO_CONFLICT = new Conflict("No conflict", () -> false);
+    private record Conflict(String reason, BooleanSupplier condition) { }
 
     static {
         CONFLICTS.put("CheapNamesMixin", new Conflict("Mod 'Fabrication & Forgery' detected", () -> {
@@ -61,10 +62,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
-        CONFIG = SimpleConfig
-            .of("enchant-tweaker")
-            .provider(EnchantTweaker::getDefaultConfig)
-            .request();
+        reloadConfig();
         MOD_ENABLED = Boolean.parseBoolean(CONFIG.getOrDefault("mod_enabled", "true"));
         LOGGER.info("EnchantTweaker is {}!{}", MOD_ENABLED ? "enabled" : "disabled", MOD_ENABLED ? "" : " No mixins will be applied.");
     }
@@ -91,6 +89,17 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
 
     public static int getNumMixins() {
         return numMixins;
+    }
+
+    public static void reloadConfig() {
+        CONFIG = SimpleConfig
+            .of("enchant-tweaker")
+            .provider(EnchantTweaker::getDefaultConfig)
+            .request();
+    }
+
+    public static SimpleConfig getConfig() {
+        return CONFIG;
     }
 
     @Override
