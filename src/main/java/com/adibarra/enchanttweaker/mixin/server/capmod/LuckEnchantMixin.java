@@ -7,7 +7,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentTarget;
 import net.minecraft.enchantment.LuckEnchantment;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registries;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -28,8 +28,8 @@ public abstract class LuckEnchantMixin extends Enchantment {
         method="getMaxLevel()I",
         at=@At("RETURN"))
     private int modifyMaxLevel(int orig) {
-        if (Registry.ENCHANTMENT.getKey(this).isPresent()) {
-            String id = Registry.ENCHANTMENT.getKey(this).get().getValue().getPath();
+        if (Registries.ENCHANTMENT.getKey(this).isPresent()) {
+            String id = Registries.ENCHANTMENT.getKey(this).get().getValue().getPath();
             int lvlCap = ETMixinPlugin.getConfig().getOrDefault(id, orig);
             if (lvlCap < 0) return orig;
             return Utils.clamp(lvlCap, 0, 255);

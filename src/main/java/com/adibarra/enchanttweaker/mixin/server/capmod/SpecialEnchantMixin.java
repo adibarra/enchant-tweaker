@@ -4,7 +4,7 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.Utils;
 import net.minecraft.enchantment.*;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registries;
 import org.spongepowered.asm.mixin.Mixin;
 
 /**
@@ -26,8 +26,8 @@ public abstract class SpecialEnchantMixin extends Enchantment {
     @Override
     public int getMaxLevel() {
         int orig = super.getMaxLevel();
-        if (Registry.ENCHANTMENT.getKey(this).isPresent()) {
-            String id = Registry.ENCHANTMENT.getKey(this).get().getValue().getPath();
+        if (Registries.ENCHANTMENT.getKey(this).isPresent()) {
+            String id = Registries.ENCHANTMENT.getKey(this).get().getValue().getPath();
             int lvlCap = ETMixinPlugin.getConfig().getOrDefault(id, orig);
             if (lvlCap < 0) return orig;
             return Utils.clamp(lvlCap, 0, 255);
