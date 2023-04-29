@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(value=LivingEntity.class, priority=1543)
 public abstract class NoSoulSpeedBacklashMixin {
 
+	@SuppressWarnings("SameReturnValue")
 	@ModifyConstant(
 		method="addSoulSpeedBoostIfNeeded()V",
 		constant=@Constant(intValue=1))

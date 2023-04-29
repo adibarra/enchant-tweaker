@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(value=ThornsEnchantment.class, priority=1543)
 public abstract class NoThornsBacklashMixin {
 
+	@SuppressWarnings("SameReturnValue")
 	@ModifyConstant(
 		method="onUserDamaged(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/Entity;I)V",
 		constant=@Constant(intValue=2))
