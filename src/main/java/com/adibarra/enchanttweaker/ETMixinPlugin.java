@@ -1,36 +1,96 @@
 package com.adibarra.enchanttweaker;
 
+import com.adibarra.utils.Utils.Conflict;
+import com.magistermaks.simpleconfig.SimpleConfig;
+import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public final class ETMixinPlugin implements IMixinConfigPlugin {
 
-    private static int num_mixins = 0;
+    private static int numMixins = 0;
+    private static boolean MOD_ENABLED = false;
+    private static SimpleConfig CONFIG;
+    private static final Logger LOGGER = LoggerFactory.getLogger("EnchantTweaker");
+    private static final Map<String, String> KEYS = new HashMap<>();
+    private static final Map<String, Conflict> CONFLICTS = new HashMap<>();
+    private static final Conflict NO_CONFLICT = new Conflict("No conflict", () -> false);
 
-    private static final Map<String, ETUtils.Conflict> CONFLICTS = Map.of(
-        // "MixinName", new ETUtils.Conflict(() -> true, "Because...")
-    );
+    static {
+        CONFLICTS.put("CheapNamesMixin", new Conflict("Mod 'Fabrication & Forgery' detected", () -> {
+            return FabricLoader.getInstance().isModLoaded("fabrication");
+        }));
+
+        KEYS.put("CheapNamesMixin",          "cheap_names");
+        KEYS.put("NotTooExpensiveMixin",     "not_too_expensive");
+        KEYS.put("PriorWorkCheaperMixin",    "prior_work_cheaper");
+        KEYS.put("PriorWorkFreeMixin",       "prior_work_free");
+        KEYS.put("SturdyAnvilsMixin",        "sturdy_anvils");
+
+        KEYS.put("MoreChannelingMixin",      "more_channeling");
+        KEYS.put("MoreFlameMixin",           "more_flame");
+        KEYS.put("MoreMendingMixin",         "more_mending");
+        KEYS.put("MoreMultishotMixin",       "more_multishot");
+
+        KEYS.put("AxesNotToolsMixin",        "axes_not_tools");
+        KEYS.put("AxeWeaponsMixin",          "axe_weapons");
+        KEYS.put("BowInfinityFixMixin",      "bow_infinity_fix");
+        KEYS.put("GodArmorMixin",            "god_armor");
+        KEYS.put("GodWeaponsMixin",          "god_weapons");
+        KEYS.put("InfiniteMendingMixin",     "infinite_mending");
+        KEYS.put("LoyalVoidTridentsMixin",   "loyal_void_tridents");
+        KEYS.put("NoSoulSpeedBacklashMixin", "no_soul_speed_backlash");
+        KEYS.put("NoThornsBacklashMixin",    "no_thorns_backlash");
+        KEYS.put("ShinyNameMixin",           "shiny_name");
+        KEYS.put("TridentWeaponsMixin",      "trident_weapons");
+
+        KEYS.put("DamageEnchantMixin",       "capmod_enabled");
+        KEYS.put("GenericEnchantMixin",      "capmod_enabled");
+        KEYS.put("LuckEnchantMixin",         "capmod_enabled");
+        KEYS.put("ProtectionEnchantMixin",   "capmod_enabled");
+        KEYS.put("SpecialEnchantMixin",      "capmod_enabled");
+    }
+
+    @Override
+    public void onLoad(String mixinPackage) {
+        CONFIG = SimpleConfig
+            .of("enchant-tweaker")
+            .provider(EnchantTweaker::getDefaultConfig)
+            .request();
+        MOD_ENABLED = Boolean.parseBoolean(CONFIG.getOrDefault("mod_enabled", "true"));
+        LOGGER.info("EnchantTweaker is {}!{}", MOD_ENABLED ? "enabled" : "disabled", MOD_ENABLED ? "" : " No mixins will be applied.");
+    }
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        num_mixins++;
-        return !CONFLICTS.getOrDefault(
-            mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1),
-            new ETUtils.Conflict(() -> false, "No conflict")
-        ).condition().getAsBoolean();
+        if (!MOD_ENABLED) return false;
+
+        String mixinName = mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1);
+        Conflict conflict = CONFLICTS.getOrDefault(mixinName, NO_CONFLICT);
+
+        if (conflict.condition().getAsBoolean()) {
+            LOGGER.info("[COMPAT] Mixin {} disabled. Reason: {}", mixinName, conflict.reason());
+            return false;
+        }
+
+        return Boolean.parseBoolean(CONFIG.getOrDefault(KEYS.getOrDefault(mixinName, "false"), "false"));
+    }
+
+    @Override
+    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+        numMixins++;
     }
 
     public static int getNumMixins() {
-        return num_mixins;
-    }
-
-    public static Map<String, ETUtils.Conflict> getConflicts() {
-        return CONFLICTS;
+        return numMixins;
     }
 
     @Override
@@ -47,11 +107,5 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) { }
 
     @Override
-    public void onLoad(String mixinPackage) { }
-
-    @Override
     public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) { }
-
-    @Override
-    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) { }
 }

@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
-import com.adibarra.enchanttweaker.ETUtils;
+import com.adibarra.utils.Utils;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.enchantment.*;
 import org.spongepowered.asm.mixin.Mixin;
@@ -50,13 +50,12 @@ public abstract class GenericEnchantMixin {
         ENCHANTS.put(UnbreakingEnchantment.class,     "unbreaking");
     }
 
-    @ModifyReturnValue(method="getMaxLevel()I", at=@At("RETURN"))
-    private int modifyMaxLevel(int original) {
-        if(EnchantTweaker.isEnabled()) {
-            int lvl_cap = EnchantTweaker.getConfig().getOrDefault(ENCHANTS.get(this.getClass()), original);
-            if (lvl_cap == -1) return original;
-            return ETUtils.clamp(lvl_cap, 0, 255);
-        }
-        return original;
+    @ModifyReturnValue(
+        method="getMaxLevel()I",
+        at=@At("RETURN"))
+    private int modifyMaxLevel(int orig) {
+        int lvlCap = EnchantTweaker.getConfig().getOrDefault(ENCHANTS.get(this.getClass()), orig);
+        if (lvlCap < 0) return orig;
+        return Utils.clamp(lvlCap, 0, 255);
     }
 }

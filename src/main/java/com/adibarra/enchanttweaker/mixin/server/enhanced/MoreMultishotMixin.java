@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
@@ -36,31 +35,30 @@ public abstract class MoreMultishotMixin {
     @Shadow
     private static void postShoot(World world, LivingEntity entity, ItemStack stack) { /* dummy */ }
 
-    private static int multishotLevel;
+    private static int multishotLevel = 0;
 
-    @Inject(method="loadProjectiles(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;)Z", at=@At("HEAD"))
+    @Inject(
+        method="loadProjectiles(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;)Z",
+        at=@At("HEAD"))
     private static void captureMultishotLevel(LivingEntity shooter, ItemStack projectile, CallbackInfoReturnable<Boolean> cir) {
         multishotLevel = EnchantmentHelper.getLevel(Enchantments.MULTISHOT, projectile);
     }
 
-    @ModifyConstant(method="loadProjectiles(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;)Z", constant=@Constant(intValue=3))
+    @ModifyConstant(
+        method="loadProjectiles(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;)Z",
+        constant=@Constant(intValue=3))
     private static int loadProjectiles(int original) {
-        if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("more_multishot", true)) {
-            return multishotLevel * 2 + 1;
-        }
-        return original;
+        return multishotLevel * 2 + 1;
     }
 
     @SuppressWarnings("InvalidInjectorMethodSignature")
     @Inject(
-            method="shootAll",
-            at=@At(
-                    value="INVOKE_ASSIGN",
-                    target="Lnet/minecraft/item/CrossbowItem;getSoundPitches(Lnet/minecraft/util/math/random/Random;)[F"
-            ),
-            locals=LocalCapture.CAPTURE_FAILSOFT,
-            cancellable=true
-    )
+        method="shootAll(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/item/ItemStack;FF)V",
+        at=@At(
+            value="INVOKE_ASSIGN",
+            target="Lnet/minecraft/item/CrossbowItem;getSoundPitches(Lnet/minecraft/util/math/random/Random;)[F"),
+        locals=LocalCapture.CAPTURE_FAILSOFT,
+        cancellable=true)
     private static void shootAll(World world, LivingEntity entity, Hand hand, ItemStack stack, float speed, float divergence, CallbackInfo ci, List<ItemStack> list, float[] fs) {
         float range = Math.max(10.0F, list.size() * 0.2F);
 

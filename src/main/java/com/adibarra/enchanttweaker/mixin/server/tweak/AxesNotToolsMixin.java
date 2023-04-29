@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.MiningToolItem;
@@ -14,13 +13,12 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
  */
 @Mixin(value=MiningToolItem.class, priority=1543)
 public abstract class AxesNotToolsMixin {
-	@ModifyConstant(method="postHit", constant=@Constant(intValue=2))
-	private int modifySelfDamage(int original, ItemStack stack) {
-		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("axes_not_tools", true)) {
-			if(stack.getItem() instanceof AxeItem) {
-				return 1;
-			}
-		}
-		return original;
+
+	@ModifyConstant(
+		method="postHit(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/LivingEntity;)Z",
+		constant=@Constant(intValue=2))
+	private int modifySelfDamage(int orig, ItemStack stack) {
+		boolean isAxe = stack.getItem() instanceof AxeItem;
+		return isAxe ? 1 : orig;
 	}
 }

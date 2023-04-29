@@ -1,10 +1,10 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
-import com.adibarra.enchanttweaker.ETUtils;
+import com.adibarra.utils.Utils;
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.enchantment.*;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.registry.Registries;
+import net.minecraft.util.registry.Registry;
 import org.spongepowered.asm.mixin.Mixin;
 
 /**
@@ -25,13 +25,13 @@ public abstract class SpecialEnchantMixin extends Enchantment {
 
     @Override
     public int getMaxLevel() {
-        int original = super.getMaxLevel();
-        if(EnchantTweaker.isEnabled() && Registries.ENCHANTMENT.getKey(this).isPresent()) {
-            String id = Registries.ENCHANTMENT.getKey(this).get().getValue().getPath();
-            int lvl_cap = EnchantTweaker.getConfig().getOrDefault(id, original);
-            if (lvl_cap == -1) return original;
-            return ETUtils.clamp(lvl_cap, 0, 255);
+        int orig = super.getMaxLevel();
+        if (Registry.ENCHANTMENT.getKey(this).isPresent()) {
+            String id = Registry.ENCHANTMENT.getKey(this).get().getValue().getPath();
+            int lvlCap = EnchantTweaker.getConfig().getOrDefault(id, orig);
+            if (lvlCap < 0) return orig;
+            return Utils.clamp(lvlCap, 0, 255);
         }
-        return original;
+        return orig;
     }
 }

@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
@@ -21,20 +20,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value=PersistentProjectileEntity.class, priority=1543)
 public abstract class MoreFlameMixin {
 
-    private int flameLevel = 1;
+    private int flameLevel = 0;
 
-    @Inject(method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V", at=@At("HEAD"))
+    @Inject(
+        method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
+        at=@At("HEAD"))
     private void captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
-        if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("more_flame", true)) {
-            flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) entityHitResult.getEntity());
-        }
+        flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) entityHitResult.getEntity());
     }
 
-    @ModifyConstant(method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V", constant=@Constant(intValue=5))
-    private int decoder(int original) {
-        if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("more_flame", true)) {
-            return 2 * (flameLevel - 1)  + original;
-        }
-        return original;
+    @ModifyConstant(
+        method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
+        constant=@Constant(intValue=5))
+    private int decoder(int orig) {
+        return 2 * (flameLevel - 1)  + orig;
     }
 }

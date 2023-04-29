@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.client.tweak;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -29,14 +28,15 @@ public abstract class ShinyNameMixin {
 	@Shadow
 	public abstract boolean isCursed();
 
-	@Inject(method="getName", at=@At(value="TAIL"), locals=LocalCapture.CAPTURE_FAILSOFT)
+	@Inject(
+		method="getName(I)Lnet/minecraft/text/Text;",
+		at=@At(value="TAIL"),
+		locals=LocalCapture.CAPTURE_FAILSOFT)
 	private void getName(int level, CallbackInfoReturnable<Text> cir, MutableText mutableText) {
-		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("shiny_name", true)) {
-			if(level >= this.getMaxLevel() && !this.isCursed()) {
-				mutableText.formatted(Formatting.YELLOW);
-				if (new Random().nextFloat() < 0.005f)
-					mutableText.formatted(Formatting.OBFUSCATED);
-			}
+		if (level >= this.getMaxLevel() && !this.isCursed()) {
+			mutableText.formatted(Formatting.YELLOW);
+			if (new Random().nextFloat() < 0.005f)
+				mutableText.formatted(Formatting.OBFUSCATED);
 		}
 	}
 }

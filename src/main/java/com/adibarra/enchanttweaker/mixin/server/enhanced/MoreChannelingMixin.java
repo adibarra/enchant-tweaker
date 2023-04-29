@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -28,13 +27,13 @@ public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
         super(entityType, world);
     }
 
-    @ModifyExpressionValue(method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V", at=@At(value="INVOKE", target="Lnet/minecraft/world/World;isThundering()Z"))
-    private boolean moreChanneling(boolean original) {
-        if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("more_channeling", true)) {
-            if(EnchantmentHelper.getLevel(Enchantments.CHANNELING, this.tridentStack) > 1) {
-                return (original || this.world.isRaining());
-            }
-        }
-        return original;
+    @ModifyExpressionValue(
+        method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
+        at=@At(
+            value="INVOKE",
+            target="Lnet/minecraft/world/World;isThundering()Z"))
+    private boolean moreChanneling(boolean orig) {
+        boolean isChannelingII = EnchantmentHelper.getLevel(Enchantments.CHANNELING, this.tridentStack) > 1;
+        return orig || (isChannelingII && this.world.isRaining());
     }
 }

@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -23,7 +22,6 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
     @Final @Shadow
     private static TrackedData<Byte> LOYALTY;
 
-    @SuppressWarnings("unused")
     @Shadow
     private boolean dealtDamage;
 
@@ -32,15 +30,15 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
         super(entityType, world);
     }
 
-    @Inject(method="tick", at=@At("HEAD"))
+    @Inject(
+        method="tick()V",
+        at=@At("HEAD"))
     private void tick(CallbackInfo ci) {
-        if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("loyal_tridents_void", true)) {
-            if(dataTracker.get(LOYALTY) > 0 && !this.dealtDamage) {
-                if(this.getY() <= this.world.getBottomY()) {
-                    this.dealtDamage = true;
-                    this.setVelocity(0, 0, 0);
-                }
-            }
+        if (dataTracker.get(LOYALTY) == 0 || this.dealtDamage) return;
+
+        if (this.getY() <= this.world.getBottomY()) {
+            this.dealtDamage = true;
+            this.setVelocity(0, 0, 0);
         }
     }
 }

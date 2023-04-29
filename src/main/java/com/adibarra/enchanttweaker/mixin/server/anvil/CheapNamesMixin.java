@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.*;
 import org.jetbrains.annotations.Nullable;
@@ -26,12 +25,12 @@ public abstract class CheapNamesMixin extends ForgingScreenHandler {
 		super(type, syncId, playerInventory, context);
 	}
 
-	@Inject(method="updateResult", at=@At("TAIL"))
-	private void freeNames(CallbackInfo ci) {
-		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("cheap_names", true)) {
-			if(this.input.getStack(1).isEmpty()) {
-				levelCost.set(1);
-			}
+	@Inject(
+		method="updateResult()V",
+		at=@At("TAIL"))
+	private void cheapNames(CallbackInfo ci) {
+		if (this.input.getStack(1).isEmpty()) {
+			levelCost.set(1);
 		}
 	}
 }

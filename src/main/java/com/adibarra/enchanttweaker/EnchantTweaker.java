@@ -11,21 +11,12 @@ public class EnchantTweaker implements ModInitializer {
 
 	private static SimpleConfig CONFIG;
 
-	private static boolean MOD_ENABLED;
-
     @Override
     public void onInitialize() {
 		reloadConfig();
-		LOGGER.info(String.format("Enchant Tweaker %sabled!", MOD_ENABLED ? "En" : "Dis"));
-		if (MOD_ENABLED) {
+		if (getConfig().getOrDefault("mod_enabled", true)) {
 			ETCommands.registerCommands();
-			for (String mixin : ETMixinPlugin.getConflicts().keySet()) {
-				ETUtils.Conflict c = ETMixinPlugin.getConflicts().get(mixin);
-				if (c.condition().getAsBoolean())
-					LOGGER.info("[COMPAT] Disabled " + mixin + ". Reason: " + c.reason());
-			}
-			int active_mixins = ETMixinPlugin.getNumMixins() - ETMixinPlugin.getConflicts().size();
-			LOGGER.info("Enchant Tweaker is ready to go! " + String.format("Applied %d Mixins.", active_mixins));
+			LOGGER.info("Enchant Tweaker is ready to go! Applied {} Mixins.", ETMixinPlugin.getNumMixins());
 		}
 	}
 
@@ -34,10 +25,9 @@ public class EnchantTweaker implements ModInitializer {
 			.of("enchant-tweaker")
 			.provider(EnchantTweaker::getDefaultConfig)
 			.request();
-		EnchantTweaker.MOD_ENABLED = getConfig().getOrDefault("mod_enabled", true);
 	}
 
-    @SuppressWarnings({"SameReturnValue", "unused"})
+    @SuppressWarnings("SameReturnValue")
 	public static String getDefaultConfig(String filename) {
 		return
     		"""
@@ -243,6 +233,14 @@ public class EnchantTweaker implements ModInitializer {
 				###    Accepted values: 1-255, 0 (disabled), -1 (default)
 				###
 				###    ########################################
+				###    ##  Master Switch (Capmod):
+				###    ##   Enable/Disable the ability to modify max enchantment levels.
+				###    ##
+							capmod_enabled=true
+				###    ##
+				###    ########################################
+				###
+				###    ########################################
 				###    ##  Armor Enchantments:
 				###    ##
 							aqua_affinity=-1
@@ -314,9 +312,4 @@ public class EnchantTweaker implements ModInitializer {
     public static SimpleConfig getConfig() {
         return CONFIG;
     }
-
-    public static Boolean isEnabled() {
-        return EnchantTweaker.MOD_ENABLED;
-    }
-
 }

@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.ProtectionEnchantment;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,11 +13,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(value=ProtectionEnchantment.class, priority=1543)
 public abstract class GodArmorMixin {
-	@Inject(method="canAccept", at=@At("HEAD"), cancellable=true)
+
+	@Inject(
+		method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
+		at=@At("HEAD"),
+		cancellable=true)
 	private void allowGodArmor(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
-		if(EnchantTweaker.isEnabled() && EnchantTweaker.getConfig().getOrDefault("god_armor", true)) {
-			if(other instanceof ProtectionEnchantment)
-				cir.setReturnValue(true);
-		}
+		boolean isProtection = other instanceof ProtectionEnchantment;
+		if (isProtection) cir.setReturnValue(true);
 	}
 }

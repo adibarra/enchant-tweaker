@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
-import com.adibarra.enchanttweaker.ETUtils;
+import com.adibarra.utils.Utils;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.enchantment.ProtectionEnchantment;
 import org.spongepowered.asm.mixin.Final;
@@ -19,21 +19,20 @@ public abstract class ProtectionEnchantMixin {
     @Shadow @Final
     public ProtectionEnchantment.Type protectionType;
 
-    @ModifyReturnValue(method="getMaxLevel()I", at=@At("RETURN"))
-    private int modifyMaxLevel(int original) {
-        if(EnchantTweaker.isEnabled()) {
-            int lvl_cap = switch (this.protectionType) {
-                case ALL -> EnchantTweaker.getConfig().getOrDefault("protection", original);
-                case FIRE -> EnchantTweaker.getConfig().getOrDefault("fire_protection", original);
-                case FALL -> EnchantTweaker.getConfig().getOrDefault("feather_falling", original);
-                case EXPLOSION -> EnchantTweaker.getConfig().getOrDefault("blast_protection", original);
-                case PROJECTILE -> EnchantTweaker.getConfig().getOrDefault("projectile_protection", original);
-                //noinspection UnnecessaryDefault
-                default -> -1;
-            };
-            if (lvl_cap == -1) return original;
-            return ETUtils.clamp(lvl_cap, 0, 255);
-        }
-        return original;
+    @ModifyReturnValue(
+        method="getMaxLevel()I",
+        at=@At("RETURN"))
+    private int modifyMaxLevel(int orig) {
+        int lvlCap = switch (this.protectionType) {
+            case ALL -> EnchantTweaker.getConfig().getOrDefault("protection", orig);
+            case FIRE -> EnchantTweaker.getConfig().getOrDefault("fire_protection", orig);
+            case FALL -> EnchantTweaker.getConfig().getOrDefault("feather_falling", orig);
+            case EXPLOSION -> EnchantTweaker.getConfig().getOrDefault("blast_protection", orig);
+            case PROJECTILE -> EnchantTweaker.getConfig().getOrDefault("projectile_protection", orig);
+            //noinspection UnnecessaryDefault
+            default -> orig;
+        };
+        if (lvlCap < 0) return orig;
+        return Utils.clamp(lvlCap, 0, 255);
     }
 }
