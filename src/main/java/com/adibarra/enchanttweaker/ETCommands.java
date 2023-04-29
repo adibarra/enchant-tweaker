@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker;
 
+import com.adibarra.utils.Utils;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.CommandManager;
@@ -22,7 +23,7 @@ public class ETCommands {
 			.executes(context -> {
 				EnchantTweaker.reloadConfig();
 				context.getSource().sendFeedback(
-					ETUtils.joinText(new Text[] {
+					Utils.joinText(new Text[] {
 						Text.literal("[Enchant Tweaker]").formatted(Formatting.GREEN),
 						Text.literal(" Config Reloaded!")
 					}), false);
@@ -45,7 +46,7 @@ public class ETCommands {
 						.requires(source -> source.hasPermissionLevel(2))
 						.executes(context -> {
 							context.getSource().sendFeedback(
-								ETUtils.joinText(new Text[] {
+								Utils.joinText(new Text[] {
 									Text.literal("[Enchant Tweaker] ").formatted(Formatting.GREEN),
 									Text.literal("Try running ").formatted(Formatting.GRAY),
 									Text.literal("/et help ")
@@ -66,7 +67,7 @@ public class ETCommands {
 							.requires(source -> source.hasPermissionLevel(2))
 							.executes(context -> {
 								context.getSource().sendFeedback(
-									ETUtils.joinText(new Text[] {
+									Utils.joinText(new Text[] {
 										Text.literal("[Enchant Tweaker]\n").formatted(Formatting.GREEN),
 										Text.literal("/et reload ")
 											.setStyle(Style.EMPTY

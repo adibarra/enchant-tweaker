@@ -1,11 +1,12 @@
-package com.adibarra.enchanttweaker;
+package com.adibarra.utils;
 
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 import java.util.function.BooleanSupplier;
 
-public class ETUtils {
+@SuppressWarnings("unused")
+public class Utils {
 	public static int clamp(int val, int min, int max) {
 		return Math.max(min, Math.min(max, val));
 	}
@@ -14,7 +15,11 @@ public class ETUtils {
 		return Math.max(min, Math.min(max, val));
 	}
 
-	public record Conflict(BooleanSupplier condition, String reason) { }
+	public static float clamp(float val, float min, float max) {
+		return Math.max(min, Math.min(max, val));
+	}
+
+	public record Conflict(String reason, BooleanSupplier condition) { }
 
 	public static MutableText joinText(Text[] array) {
 		MutableText out = Text.empty();
