@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 
+@SuppressWarnings("CodeBlock2Expr")
 public final class ETMixinPlugin implements IMixinConfigPlugin {
 
     private static int numMixins = 0;
@@ -26,7 +27,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private record Conflict(String reason, BooleanSupplier condition) { }
 
     static {
-        CONFLICTS.put("CheapNamesMixin", new Conflict("Mod 'Fabrication & Forgery' detected", () -> {
+        CONFLICTS.put("NotTooExpensiveMixin", new Conflict("Mod 'Fabrication & Forgery' detected", () -> {
             return FabricLoader.getInstance().isModLoaded("fabrication");
         }));
 

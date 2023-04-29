@@ -21,7 +21,7 @@ public abstract class PriorWorkCheaperMixin {
 		at=@At(value="HEAD"),
 		cancellable=true)
 	private static void priorWorkCheaper(int cost, CallbackInfoReturnable<Integer> cir) {
-		double coefficient = ETMixinPlugin.getConfig().getOrDefault("pw_cost_multiplier", 1.66);
+		double coefficient = ETMixinPlugin.getConfig().getOrDefault("pw_cost_multiplier", 2.0);
 		double newCost = Utils.clamp(coefficient, 0, Double.MAX_VALUE) * cost + 1;
 		cir.setReturnValue((int) Math.round(newCost));
 	}

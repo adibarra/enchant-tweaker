@@ -1,5 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.client.tweak;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -19,6 +21,7 @@ import java.util.Random;
  * @note Uses the client's mod config for max enchantment levels.
  * @environment Client
  */
+@Environment(EnvType.CLIENT)
 @Mixin(value=Enchantment.class, priority=1543)
 public abstract class ShinyNameMixin {
 
@@ -33,10 +36,11 @@ public abstract class ShinyNameMixin {
 		at=@At(value="TAIL"),
 		locals=LocalCapture.CAPTURE_FAILSOFT)
 	private void getName(int level, CallbackInfoReturnable<Text> cir, MutableText mutableText) {
-		if (level >= this.getMaxLevel() && !this.isCursed()) {
-			mutableText.formatted(Formatting.YELLOW);
-			if (new Random().nextFloat() < 0.005f)
-				mutableText.formatted(Formatting.OBFUSCATED);
+		if (level < this.getMaxLevel() || this.isCursed()) return;
+
+		mutableText.formatted(Formatting.YELLOW);
+		if (new Random().nextFloat() < 0.005f) {
+			mutableText.formatted(Formatting.OBFUSCATED);
 		}
 	}
 }
