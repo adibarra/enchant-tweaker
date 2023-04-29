@@ -1,0 +1,79 @@
+---
+# type labels
+- name: "type/bug"
+  color: ee0701
+  description: "Related to actual project. Something is broken."
+- name: "type/ci-workflow-env"
+  color: d876e3
+  description: "Related to continuous integration, workflows, or dev environment."
+- name: "type/dependencies"
+  color: a82de5
+  description: "Related to project dependencies."
+- name: "type/documentation"
+  color: 0052cc
+  description: "Related to project documentation."
+- name: "type/other"
+  color: 2af79e
+  description: "Related to something else."
+- name: "type/new-feature"
+  color: 0e8a16
+  description: "Related to new features or options."
+- name: "type/performance"
+  color: fca52a
+  description: "Related to improving performance, not introducing new features."
+- name: "type/refactor"
+  color: fca52a
+  description: "Related to improving existing structure, not introducing new features."
+
+# status labels
+- name: "status/duplicate"
+  color: cfd3d7
+  description: "This issue or PR already exists."
+- name: "status/in-progress"
+  color: fbca04
+  description: "This Issue is currently being resolved by a developer."
+- name: "status/missing-info"
+  color: fc5b05
+  description: "This issue or PR is missing information."
+- name: "status/stale"
+  color: fef2c0
+  description: "This issue or PR is inactive."
+- name: "status/triage"
+  color: 00ff00
+  description: "This issue or PR needs to be triaged."
+- name: "status/wontfix"
+  color: ffffff
+  description: "This issue or PR will not be fixed."
+
+# review labels
+- name: "review/pending"
+  color: 0e8a16
+  description: "This PR needs to be reviewed."
+- name: "review/needs-work"
+  color: 0e8a16
+  description: "This PR needs some work, please see the review comments."
+
+# help labels
+- name: "help/beginner"
+  color: 0e8a16
+  description: "This is a good first issue for people wanting to contribute."
+- name: "help/intermediate"
+  color: 0e8a16
+  description: "This issue may require some familiarity with the codebase."
+- name: "help/advanced"
+  color: 0e8a16
+  description: "This issue does require familiarity with the codebase."
+
+# priority labels
+- name: "priority/critical"
+  color: ff0000
+  description: "This should be dealt with ASAP."
+- name: "priority/high"
+  color: ff8c00
+  description: "This should be dealt with after all critical issues are fixed."
+- name: "priority/medium"
+  color: e5ff00
+  description: "This should be dealt with after all high priority issues are fixed."
+- name: "priority/low"
+  color: 54ff00
+  description: "This should be dealt with after all medium priority issues are fixed."

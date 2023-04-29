@@ -1,0 +1,69 @@
+name: Bug Report
+description: File a bug report
+title: "bug: "
+labels: ["type/bug", "status/triage"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+      placeholder: This is what happened...
+    validations:
+      required: true
+  - type: textarea
+    id: what-should-happen
+    attributes:
+      label: What should have happened?
+      description: A clear and concise description of what you expected to happen.
+      placeholder: This is what I expected...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to reproduce?
+      description: A list of steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+  - type: input
+    id: version
+    attributes:
+      label: What is the jar file name?
+      description: Copy/Paste the name of the jar file.
+      placeholder: enchanttweaker-<version>+mc<mcversion>.jar
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Any relevant logs?
+      description: |
+        Use the following format:
+        \<details\>
+        \<summary\>Click to expand!\</summary\>
+
+        \`\`\`shell
+        // paste the log text here
+        \`\`\`
+        \</details\>
+      placeholder: Copy and paste any relevant log output.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Links? Screenshots? References? Any additional context?
+      placeholder: Here is a screenshot of the bug...
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Before submitting...
+      options:
+        - label: This issue is not a duplicate of an existing issue (open or closed).
+          required: true

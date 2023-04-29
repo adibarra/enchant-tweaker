@@ -1,0 +1,37 @@
+name: Feature Request
+description: Request a feature
+title: "feat: "
+labels: ["type/new-feature", "status/triage"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this feature request!
+  - type: textarea
+    id: what-does-it-do
+    attributes:
+      label: What does it do?
+      description: A clear and concise description of what your new feature will do.
+      placeholder: This is what is will do...
+    validations:
+      required: true
+  - type: textarea
+    id: why-do-you-need-it
+    attributes:
+      label: Why add it?
+      description: A clear and concise description of why you need it.
+      placeholder: This is why I need it...
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Links? Screenshots? References? Any additional context?
+      placeholder: Here is some extra context...
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Before submitting...
+      options:
+        - label: This issue is not a duplicate of an existing issue (open or closed).
+          required: true
