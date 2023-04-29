@@ -11,17 +11,6 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class Utils {
-	public static int clamp(int val, int min, int max) {
-		return Math.max(min, Math.min(max, val));
-	}
-
-	public static double clamp(double val, double min, double max) {
-		return Math.max(min, Math.min(max, val));
-	}
-
-	public static float clamp(float val, float min, float max) {
-		return Math.max(min, Math.min(max, val));
-	}
 
 	/**
 	 * Joins an array of Text objects into a single MutableText object.
@@ -38,7 +27,6 @@ public class Utils {
 
 	/**
 	 * Reads given resource file as a string.
-	 *
 	 * @param fileName path to the resource file
 	 * @return the file's contents
 	 * @throws IOException if read fails for any reason
@@ -55,4 +43,27 @@ public class Utils {
 		}
 	}
 
+	/**
+	 * Clamps a value between a minimum and maximum.
+	 * @return the clamped value
+	 */
+	public static int clamp(int val, int min, int max) {
+		return Math.max(min, Math.min(max, val));
+	}
+
+	/**
+	 * Clamps a value between a minimum and maximum.
+	 * @return the clamped value
+	 */
+	public static double clamp(double val, double min, double max) {
+		return Math.max(min, Math.min(max, val));
+	}
+
+	/**
+	 * Clamps a value between a minimum and maximum.
+	 * @return the clamped value
+	 */
+	public static float clamp(float val, float min, float max) {
+		return Math.max(min, Math.min(max, val));
+	}
 }
