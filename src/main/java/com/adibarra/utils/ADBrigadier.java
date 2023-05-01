@@ -4,6 +4,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
+@SuppressWarnings("unused")
 public class ADBrigadier {
     /**
      * Builds an alias for a command node.
