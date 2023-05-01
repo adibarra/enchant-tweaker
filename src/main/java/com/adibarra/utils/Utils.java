@@ -3,11 +3,8 @@ package com.adibarra.utils;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class Utils {
@@ -26,21 +23,16 @@ public class Utils {
 	}
 
 	/**
-	 * Reads given resource file as a string.
-	 * @param fileName path to the resource file
-	 * @return the file's contents
-	 * @throws IOException if read fails for any reason
-	 * @author <a href="https://stackoverflow.com/a/46613809">Lucio Paiva</a>
+	 * Joins an array of Text objects into a single MutableText object.
+	 * @param array the array of Text objects to join
+	 * @return the joined MutableText object
 	 */
-	public static String getResourceFileAsString(String fileName) throws IOException {
-		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-		try (InputStream is = classLoader.getResourceAsStream(fileName)) {
-			if (is == null) return null;
-			try (InputStreamReader isr = new InputStreamReader(is);
-				 BufferedReader reader = new BufferedReader(isr)) {
-				return reader.lines().collect(Collectors.joining(System.lineSeparator()));
-			}
+	public static MutableText joinText(Supplier<ArrayList<Text>> array) {
+		MutableText out = Text.empty();
+		for (Text text : array.get()) {
+			out.append(text);
 		}
+		return out;
 	}
 
 	/**
