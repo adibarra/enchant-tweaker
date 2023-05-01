@@ -14,23 +14,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 
-@SuppressWarnings("CodeBlock2Expr")
 public final class ETMixinPlugin implements IMixinConfigPlugin {
 
     private static int numMixins = 0;
     private static boolean MOD_ENABLED = false;
     private static ADConfig CONFIG;
     public static final String PREFIX = "[" + EnchantTweaker.MOD_NAME + "] ";
-    private static final Logger LOGGER = LoggerFactory.getLogger(EnchantTweaker.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EnchantTweaker.MOD_NAME);
     private static final Map<String, String> KEYS = new HashMap<>();
     private static final Map<String, Conflict> CONFLICTS = new HashMap<>();
     private static final Conflict NO_CONFLICT = new Conflict("No conflict", () -> false);
     private record Conflict(String reason, BooleanSupplier condition) { }
 
     static {
-        CONFLICTS.put("NotTooExpensiveMixin", new Conflict("Mod 'Fabrication' detected", () -> {
-            return FabricLoader.getInstance().isModLoaded("fabrication");
-        }));
+        CONFLICTS.put("NotTooExpensiveMixin", new Conflict("Mod 'Fabrication' detected", () ->
+            FabricLoader.getInstance().isModLoaded("fabrication")
+        ));
 
         KEYS.put("CheapNamesMixin",           "cheap_names");
         KEYS.put("NotTooExpensiveMixin",      "not_too_expensive");
@@ -65,7 +64,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         reloadConfig();
-        MOD_ENABLED = Boolean.parseBoolean(CONFIG.getOrDefault("mod_enabled", "true"));
+        MOD_ENABLED = Boolean.parseBoolean(CONFIG.getOrDefault("mod_enabled", "false"));
         LOGGER.info(PREFIX + "Mod {}", MOD_ENABLED ? "enabled! Enabling mixins..." : "disabled! No mixins will be applied.");
     }
 
@@ -81,7 +80,13 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
             return false;
         }
 
-        return Boolean.parseBoolean(CONFIG.getOrDefault(KEYS.getOrDefault(mixinName, "false"), "false"));
+        return Boolean.parseBoolean(CONFIG.getOrDefault(
+            KEYS.getOrDefault(mixinName, "false"), "false"));
+    }
+
+    public static void reloadConfig() {
+        CONFIG = new ADConfig(EnchantTweaker.MOD_NAME,
+            "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties");
     }
 
     @Override
@@ -91,11 +96,6 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
 
     public static int getNumMixins() {
         return numMixins;
-    }
-
-    public static void reloadConfig() {
-        CONFIG = new ADConfig(EnchantTweaker.MOD_NAME,
-            "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties");
     }
 
     public static ADConfig getConfig() {
