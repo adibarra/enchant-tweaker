@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.Utils;
+import com.adibarra.utils.ADMath;
 import net.minecraft.screen.AnvilScreenHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,7 +22,7 @@ public abstract class PriorWorkCheaperMixin {
 		cancellable=true)
 	private static void priorWorkCheaper(int cost, CallbackInfoReturnable<Integer> cir) {
 		double coefficient = ETMixinPlugin.getConfig().getOrDefault("pw_cost_multiplier", 2.0);
-		double newCost = Utils.clamp(coefficient, 0, Double.MAX_VALUE) * cost + 1;
+		double newCost = ADMath.clamp(coefficient, 0, Double.MAX_VALUE) * cost + 1;
 		cir.setReturnValue((int) Math.round(newCost));
 	}
 }

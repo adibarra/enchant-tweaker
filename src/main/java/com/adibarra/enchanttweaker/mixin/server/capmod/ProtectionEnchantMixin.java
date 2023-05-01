@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.Utils;
+import com.adibarra.utils.ADMath;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.enchantment.ProtectionEnchantment;
 import org.spongepowered.asm.mixin.Final;
@@ -33,6 +33,6 @@ public abstract class ProtectionEnchantMixin {
             default -> orig;
         };
         if (lvlCap < 0) return orig;
-        return Utils.clamp(lvlCap, 0, 255);
+        return ADMath.clamp(lvlCap, 0, 255);
     }
 }

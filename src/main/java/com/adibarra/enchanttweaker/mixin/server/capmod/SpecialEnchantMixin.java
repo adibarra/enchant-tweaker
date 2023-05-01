@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.Utils;
+import com.adibarra.utils.ADMath;
 import net.minecraft.enchantment.*;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.registry.Registries;
@@ -30,7 +30,7 @@ public abstract class SpecialEnchantMixin extends Enchantment {
             String id = Registries.ENCHANTMENT.getKey(this).get().getValue().getPath();
             int lvlCap = ETMixinPlugin.getConfig().getOrDefault(id, orig);
             if (lvlCap < 0) return orig;
-            return Utils.clamp(lvlCap, 0, 255);
+            return ADMath.clamp(lvlCap, 0, 255);
         }
         return orig;
     }

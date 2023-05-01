@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.Utils;
+import com.adibarra.utils.ADMath;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.enchantment.*;
 import org.spongepowered.asm.mixin.Mixin;
@@ -56,6 +56,6 @@ public abstract class GenericEnchantMixin {
     private int modifyMaxLevel(int orig) {
         int lvlCap = ETMixinPlugin.getConfig().getOrDefault(ENCHANTS.get(this.getClass()), orig);
         if (lvlCap < 0) return orig;
-        return Utils.clamp(lvlCap, 0, 255);
+        return ADMath.clamp(lvlCap, 0, 255);
     }
 }
