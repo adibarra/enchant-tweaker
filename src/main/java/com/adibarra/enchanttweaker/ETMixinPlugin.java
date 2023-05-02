@@ -85,6 +85,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     }
 
     public static void reloadConfig() {
+        if (CONFIG != null) LOGGER.info(PREFIX + "Reloading config...");
         CONFIG = new ADConfig(EnchantTweaker.MOD_NAME,
             "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties");
     }
