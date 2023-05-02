@@ -19,7 +19,7 @@ public abstract class SturdyAnvilsMixin {
 		method="method_24922(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V",
 		constant=@Constant(floatValue=0.12f))
 	private static float sturdyAnvils(float orig) {
-		double anvilDamageChance = ETMixinPlugin.getConfig().getOrDefault("anvil_damage_chance", orig);
-		return ADMath.clamp((float) anvilDamageChance, 0f, 1f);
+		float anvilDamageChance = ETMixinPlugin.getConfig().getOrDefault("anvil_damage_chance", orig);
+		return ADMath.clamp(anvilDamageChance, 0f, 1f);
 	}
 }
