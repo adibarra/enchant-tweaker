@@ -1,3 +1,7 @@
+<a href="https://github.com/adibarra/enchant-tweaker">
+    <img align="left" src="./src/main/resources/assets/enchanttweaker/icon.png" alt="Logo" height="128">
+</a>
+
 # Enchant Tweaker
 Tweak settings for many enchantment related things while keeping the vanilla feel.
 
