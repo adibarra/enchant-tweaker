@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
@@ -149,6 +149,10 @@ public class ADConfig {
         return true;
     }
 
+    /**
+     * Attempts to delete a file.
+     * @param file the file to delete
+     */
     private void deleteFile(File file) {
         try {
             if (!file.delete()) {
@@ -160,6 +164,44 @@ public class ADConfig {
             LOGGER.error(PREFIX + "Failed to delete '{}'!", file.getName());
             LOGGER.trace(e);
         }
+    }
+
+    /**
+     * Sets a key's config value.
+     * @param key the key to set
+     * @param value the value to set
+     * @return true if the key exists, false otherwise
+     */
+    public boolean set(String key, String value) {
+        if (config.containsKey(key)) {
+            config.put(key, value);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Gets a list of key value pairs in the config file.
+     * @return a list of key value pairs
+     */
+    public List<Map.Entry<String, String>> getEntries() {
+        return new ArrayList<>(config.entrySet());
+    }
+
+    /**
+     * Gets a list of all keys in the config file.
+     * @return a list of all keys
+     */
+    public List<String> getKeys() {
+        return new ArrayList<>(config.keySet());
+    }
+
+    /**
+     * Gets a list of all values in the config file.
+     * @return a list of all values
+     */
+    public List<String> getValues() {
+        return new ArrayList<>(config.values());
     }
 
     /**
