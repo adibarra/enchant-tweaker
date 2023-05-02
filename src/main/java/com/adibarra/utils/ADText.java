@@ -3,6 +3,7 @@ package com.adibarra.utils;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 
+import java.util.Arrays;
 import java.util.List;
 
 @SuppressWarnings("unused")
@@ -46,5 +47,21 @@ public class ADText {
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, literal))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Click to run " + literal)))
             );
+    }
+
+    /**
+     * Colors the value based on its type.
+     * @param value the value to color
+     * @return the colored value as a MutableText object
+     */
+    public static MutableText colorValue(String value) {
+        value = value.toLowerCase();
+        if (Arrays.asList("true", "t", "yes").contains(value)) {
+            return Text.literal(value).formatted(Formatting.GREEN);
+        }
+        else if (Arrays.asList("false", "f", "no").contains(value)) {
+            return Text.literal(value).formatted(Formatting.RED);
+        }
+        return Text.literal(value).formatted(Formatting.GOLD);
     }
 }
