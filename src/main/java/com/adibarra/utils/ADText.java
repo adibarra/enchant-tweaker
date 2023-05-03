@@ -4,10 +4,15 @@ import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public class ADText {
+
+    public static final Set<String> TRUE_VALUES = new HashSet<>(Arrays.asList("true", "t", "yes", "on", "enable", "enabled"));
+    public static final Set<String> FALSE_VALUES = new HashSet<>(Arrays.asList("false", "f", "no", "off", "disable", "disabled"));
 
 	/**
 	 * Joins an array of Text objects into a single MutableText object.
@@ -56,11 +61,13 @@ public class ADText {
      */
     public static MutableText colorValue(String value) {
         value = value.toLowerCase();
-        if (Arrays.asList("true", "t", "yes").contains(value)) {
+        if (TRUE_VALUES.contains(value)) {
             return Text.literal(value).formatted(Formatting.GREEN);
         }
-        else if (Arrays.asList("false", "f", "no").contains(value)) {
+        else if (FALSE_VALUES.contains(value)) {
             return Text.literal(value).formatted(Formatting.RED);
+        } else if (ADMisc.isDouble(value)) {
+            return Text.literal(value).formatted(Formatting.BLUE);
         }
         return Text.literal(value).formatted(Formatting.GOLD);
     }
