@@ -3,7 +3,7 @@
 </a>
 
 # Enchant Tweaker
-Tweak settings for many enchantment related things while keeping the vanilla feel.
+Tweak settings for many enchantment related mechanics while keeping the vanilla feel.
 
 
 
