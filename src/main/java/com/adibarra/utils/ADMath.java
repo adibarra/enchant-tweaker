@@ -3,6 +3,10 @@ package com.adibarra.utils;
 @SuppressWarnings("unused")
 public class ADMath {
 
+    private ADMath() {
+        throw new IllegalStateException("Utility class. Do not instantiate.");
+    }
+
     /**
      * Clamps a value between a minimum and maximum.
      * @return the clamped value

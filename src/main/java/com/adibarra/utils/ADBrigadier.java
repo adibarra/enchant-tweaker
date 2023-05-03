@@ -10,6 +10,10 @@ import java.util.function.Supplier;
 @SuppressWarnings("unused")
 public class ADBrigadier {
 
+    private ADBrigadier() {
+        throw new IllegalStateException("Utility class. Do not instantiate.");
+    }
+
     /**
      * A record representing a command.
      * @param description the description of the command

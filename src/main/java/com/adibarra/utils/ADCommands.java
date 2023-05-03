@@ -7,6 +7,10 @@ import net.minecraft.text.MutableText;
 @SuppressWarnings("unused")
 public class ADCommands {
 
+    private ADCommands() {
+        throw new IllegalStateException("Utility class. Do not instantiate.");
+    }
+
     /**
      * Broadcasts a message to all ops on the server.
      * @param server the server to broadcast to

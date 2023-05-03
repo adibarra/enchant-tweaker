@@ -3,6 +3,10 @@ package com.adibarra.utils;
 @SuppressWarnings("unused")
 public class ADMisc {
 
+    private ADMisc() {
+        throw new IllegalStateException("Utility class. Do not instantiate.");
+    }
+
     /**
      * Checks if a string is a boolean value.
      * @param value the string to check

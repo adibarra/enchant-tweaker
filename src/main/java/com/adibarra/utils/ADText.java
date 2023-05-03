@@ -11,6 +11,10 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public class ADText {
 
+    private ADText() {
+        throw new IllegalStateException("Utility class. Do not instantiate.");
+    }
+
     public static final Set<String> TRUE_VALUES = new HashSet<>(Arrays.asList("true", "t", "yes", "on", "enable", "enabled"));
     public static final Set<String> FALSE_VALUES = new HashSet<>(Arrays.asList("false", "f", "no", "off", "disable", "disabled"));
 
@@ -63,8 +67,7 @@ public class ADText {
         value = value.toLowerCase();
         if (TRUE_VALUES.contains(value)) {
             return Text.literal(value).formatted(Formatting.GREEN);
-        }
-        else if (FALSE_VALUES.contains(value)) {
+        } else if (FALSE_VALUES.contains(value)) {
             return Text.literal(value).formatted(Formatting.RED);
         } else if (ADMisc.isDouble(value)) {
             return Text.literal(value).formatted(Formatting.BLUE);
