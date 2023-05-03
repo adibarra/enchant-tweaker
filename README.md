@@ -55,7 +55,7 @@ Normally Channeling only works during thunderstorms. Enabling this tweak will al
 Normally Flame lasts 5 seconds. Enabling this tweak will allow Flame to scale with enchantment level. Each additional level will add 2 seconds to the duration. Effect does not max out.
 
 ### More Mending
-Enabling this tweak will allow Mending to scale with enchantment level. Mending II is the same as vanilla Mending. Mending I has ~10% XP efficiency loss and Mending III has ~10% XP efficiency gain. The effect maxes out at level X. Formula: `Repair Cost = 0.6 - 0.05 * mendingLevel`.
+Enabling this tweak will allow Mending to scale with enchantment level. Mending II is the same as vanilla Mending. Mending I has ~10% XP efficiency loss and Mending III has ~10% XP efficiency gain. The effect maxes out at Mending X. Formula: `Repair Cost = 0.6 - 0.05 * mendingLevel`.
 
 ### More Multishot
 Enabling this tweak will allow Multishot to scale with enchantment level. Each additional level will add 2 arrows to the shot. Crossbows take damage for **each** Multishot arrow shot. Effect does not max out.
