@@ -40,8 +40,8 @@ public class ADText {
      * @param literal the literal to run
      * @return the built command link as a MutableText object
      */
-    public static MutableText buildCmdLink(String literal) {
-        return Text.literal(literal)
+    public static MutableText buildCmdLink(String base, String literal) {
+        return Text.literal("/" + base + " " + literal)
             .setStyle(Style.EMPTY
                 .withColor(Formatting.AQUA)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, literal))

@@ -3,9 +3,20 @@ package com.adibarra.utils;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import net.minecraft.server.command.ServerCommandSource;
+
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class ADBrigadier {
+
+    /**
+     * A record representing a command.
+     * @param description the description of the command
+     * @param node the command node
+     */
+    public record Command(String description, Supplier<LiteralCommandNode<ServerCommandSource>> node) { }
+
     /**
      * Builds an alias for a command node.
      * @param alias the alias to build
