@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class ADConfig {
+
     private final HashMap<String, String> config = new HashMap<>();
     private final Logger LOGGER;
     private final String PREFIX;

@@ -2,6 +2,7 @@ package com.adibarra.utils;
 
 @SuppressWarnings("unused")
 public class ADMath {
+
     /**
      * Clamps a value between a minimum and maximum.
      * @return the clamped value
