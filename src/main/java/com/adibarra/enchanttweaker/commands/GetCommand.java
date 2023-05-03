@@ -7,7 +7,6 @@ import com.adibarra.utils.ADText;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
@@ -19,7 +18,7 @@ import java.util.List;
 public class GetCommand implements Command<ServerCommandSource> {
 
     @Override
-    public int run(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+    public int run(CommandContext<ServerCommandSource> context) {
         String key = StringArgumentType.getString(context, "key").toLowerCase();
         String value = ETMixinPlugin.getConfig().getOrDefault(key, null);
         List<Text> msg = new ArrayList<>();

@@ -1,5 +1,6 @@
 package com.adibarra.utils;
 
+@SuppressWarnings("unused")
 public class ADMisc {
 
     /**

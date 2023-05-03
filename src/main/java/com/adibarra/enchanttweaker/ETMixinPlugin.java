@@ -19,7 +19,6 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static int numMixins = 0;
     private static boolean MOD_ENABLED = false;
     private static ADConfig CONFIG;
-    public static final String PREFIX = "[" + EnchantTweaker.MOD_NAME + "] ";
     private static final Logger LOGGER = LoggerFactory.getLogger(EnchantTweaker.MOD_NAME);
     private static final Map<String, String> KEYS = new HashMap<>();
     private static final Map<String, Conflict> CONFLICTS = new HashMap<>();
@@ -65,7 +64,8 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     public void onLoad(String mixinPackage) {
         reloadConfig();
         MOD_ENABLED = Boolean.parseBoolean(CONFIG.getOrDefault("mod_enabled", "false"));
-        LOGGER.info(PREFIX + "Mod {}", MOD_ENABLED ? "enabled! Enabling mixins..." : "disabled! No mixins will be applied.");
+        LOGGER.info(EnchantTweaker.PREFIX + "Mod {}",
+            MOD_ENABLED ? "enabled! Enabling mixins..." : "disabled! No mixins will be applied.");
     }
 
     @Override
@@ -76,7 +76,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         Conflict conflict = CONFLICTS.getOrDefault(mixinName, NO_CONFLICT);
 
         if (conflict.condition().getAsBoolean()) {
-            LOGGER.info(PREFIX + "[COMPAT] {} disabled. Reason: {}", mixinName, conflict.reason());
+            LOGGER.info(EnchantTweaker.PREFIX + "[COMPAT] {} disabled. Reason: {}", mixinName, conflict.reason());
             return false;
         }
 
@@ -85,7 +85,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     }
 
     public static void reloadConfig() {
-        if (CONFIG != null) LOGGER.info(PREFIX + "Reloading config...");
+        if (CONFIG != null) LOGGER.info(EnchantTweaker.PREFIX + "Reloading config...");
         CONFIG = new ADConfig(EnchantTweaker.MOD_NAME,
             "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties");
     }
