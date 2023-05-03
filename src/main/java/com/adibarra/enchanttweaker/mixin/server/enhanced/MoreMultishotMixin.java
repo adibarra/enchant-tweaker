@@ -64,14 +64,14 @@ public abstract class MoreMultishotMixin {
 
         for (int i = 0; i < list.size(); ++i) {
             ItemStack itemStack = list.get(i);
-            boolean bl = entity instanceof PlayerEntity && ((PlayerEntity)entity).getAbilities().creativeMode;
+            boolean bl = entity instanceof PlayerEntity && ((PlayerEntity) entity).getAbilities().creativeMode;
             if (!itemStack.isEmpty()) {
                 if (i == 0) {
                     shoot(world, entity, hand, stack, itemStack, fs[i], bl, speed, divergence, 0.0F);
                 } else if (i % 2 != 0) {
-                    shoot(world, entity, hand, stack, itemStack, fs[1], bl, speed, divergence, -range * (i/(float)list.size()/2F));
+                    shoot(world, entity, hand, stack, itemStack, fs[1], bl, speed, divergence, -range * (i / (float) list.size() / 2F));
                 } else {
-                    shoot(world, entity, hand, stack, itemStack, fs[2], bl, speed, divergence, range * (i/(float)list.size()/2F));
+                    shoot(world, entity, hand, stack, itemStack, fs[2], bl, speed, divergence, range * (i / (float) list.size() / 2F));
                 }
             }
         }

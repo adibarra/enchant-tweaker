@@ -6,18 +6,18 @@ import org.slf4j.LoggerFactory;
 
 public class EnchantTweaker implements ModInitializer {
 
-	public static final String MOD_NAME = "EnchantTweaker";
-	public static final String MOD_ID = "enchanttweaker";
-	public static final String PREFIX = "[" + MOD_NAME + "] ";
-	private static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
+    public static final String MOD_NAME = "EnchantTweaker";
+    public static final String MOD_ID = "enchanttweaker";
+    public static final String PREFIX = "[" + MOD_NAME + "] ";
+    private static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     @Override
     public void onInitialize() {
-		if (ETMixinPlugin.getConfig().getOrDefault("mod_enabled", false)) {
-			ETCommands.registerCommands();
+        if (ETMixinPlugin.getConfig().getOrDefault("mod_enabled", false)) {
+            ETCommands.registerCommands();
             ETCommands.registerEventListeners();
-			LOGGER.info(PREFIX + "Ready to go! Applied {} Mixins.", ETMixinPlugin.getNumMixins());
-		}
-	}
+            LOGGER.info(PREFIX + "Ready to go! Applied {} Mixins.", ETMixinPlugin.getNumMixins());
+        }
+    }
 
 }

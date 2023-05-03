@@ -16,17 +16,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value=Enchantment.class, priority=1543)
 public abstract class TridentWeaponsMixin {
 
-	@Inject(
-		method="isAcceptableItem(Lnet/minecraft/item/ItemStack;)Z",
-		at=@At("HEAD"),
-		cancellable=true)
-	private void tridentWeapons(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-		boolean isTrident = stack.getItem() instanceof TridentItem;
-		if (!isTrident) return;
+    @Inject(
+        method="isAcceptableItem(Lnet/minecraft/item/ItemStack;)Z",
+        at=@At("HEAD"),
+        cancellable=true)
+    private void tridentWeapons(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+        boolean isTrident = stack.getItem() instanceof TridentItem;
+        if (!isTrident) return;
 
-		Enchantment enchantment = (Enchantment) (Object) this;
-		if (enchantment == Enchantments.FIRE_ASPECT || enchantment == Enchantments.KNOCKBACK || enchantment == Enchantments.LOOTING) {
-			cir.setReturnValue(true);
-		}
-	}
+        Enchantment enchantment = (Enchantment) (Object) this;
+        if (enchantment == Enchantments.FIRE_ASPECT || enchantment == Enchantments.KNOCKBACK || enchantment == Enchantments.LOOTING) {
+            cir.setReturnValue(true);
+        }
+    }
 }

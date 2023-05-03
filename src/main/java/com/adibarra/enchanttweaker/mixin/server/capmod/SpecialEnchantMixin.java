@@ -12,9 +12,9 @@ import org.spongepowered.asm.mixin.Mixin;
  * @environment Server
  */
 @Mixin(value={
-        AquaAffinityEnchantment.class, BindingCurseEnchantment.class, ChannelingEnchantment.class,
-        FlameEnchantment.class,        InfinityEnchantment.class,     MendingEnchantment.class,
-        MultishotEnchantment.class,    SilkTouchEnchantment.class,    VanishingCurseEnchantment.class,
+    AquaAffinityEnchantment.class, BindingCurseEnchantment.class, ChannelingEnchantment.class,
+    FlameEnchantment.class,        InfinityEnchantment.class,     MendingEnchantment.class,
+    MultishotEnchantment.class,    SilkTouchEnchantment.class,    VanishingCurseEnchantment.class
 }, priority=1543)
 public abstract class SpecialEnchantMixin extends Enchantment {
 

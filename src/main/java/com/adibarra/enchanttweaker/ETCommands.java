@@ -41,7 +41,7 @@ public class ETCommands {
             new ADBrigadier.Command("Get the value for a config key.", () ->
                 CommandManager.literal("get")
                     .then(CommandManager.argument("key", StringArgumentType.word())
-                    .suggests(GetCommand.getKeySuggestions())
+                        .suggests(GetCommand.getKeySuggestions())
                         .executes(new GetCommand()))
                     .build())
         );

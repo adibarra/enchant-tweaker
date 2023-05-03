@@ -12,7 +12,7 @@ import net.minecraft.util.Formatting;
 import java.util.ArrayList;
 import java.util.List;
 
-public class KeysCommand implements Command<ServerCommandSource>  {
+public class KeysCommand implements Command<ServerCommandSource> {
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
         List<Text> msg = new ArrayList<>();

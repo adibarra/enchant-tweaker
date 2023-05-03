@@ -16,11 +16,12 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Environment(EnvType.CLIENT)
 @Mixin(value=AnvilScreen.class, priority=1543)
 public abstract class NotTooExpensiveMixin {
-	@ModifyConstant(
-		method="drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V",
-		constant=@Constant(intValue=40))
-	private int notTooExpensiveClient(int orig) {
-		int max_cost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
-		return ADMath.clamp(max_cost, 0, Integer.MAX_VALUE);
-	}
+
+    @ModifyConstant(
+        method="drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V",
+        constant=@Constant(intValue=40))
+    private int notTooExpensiveClient(int orig) {
+        int max_cost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
+        return ADMath.clamp(max_cost, 0, Integer.MAX_VALUE);
+    }
 }

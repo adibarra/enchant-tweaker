@@ -25,22 +25,22 @@ import java.util.Random;
 @Mixin(value=Enchantment.class, priority=1543)
 public abstract class ShinyNameMixin {
 
-	@Shadow
-	public abstract int getMaxLevel();
+    @Shadow
+    public abstract int getMaxLevel();
 
-	@Shadow
-	public abstract boolean isCursed();
+    @Shadow
+    public abstract boolean isCursed();
 
-	@Inject(
-		method="getName(I)Lnet/minecraft/text/Text;",
-		at=@At(value="TAIL"),
-		locals=LocalCapture.CAPTURE_FAILSOFT)
-	private void getName(int level, CallbackInfoReturnable<Text> cir, MutableText mutableText) {
-		if (level < this.getMaxLevel() || this.isCursed()) return;
+    @Inject(
+        method="getName(I)Lnet/minecraft/text/Text;",
+        at=@At(value="TAIL"),
+        locals=LocalCapture.CAPTURE_FAILSOFT)
+    private void getName(int level, CallbackInfoReturnable<Text> cir, MutableText mutableText) {
+        if (level < this.getMaxLevel() || this.isCursed()) return;
 
-		mutableText.formatted(Formatting.YELLOW);
-		if (new Random().nextFloat() < 0.005f) {
-			mutableText.formatted(Formatting.OBFUSCATED);
-		}
-	}
+        mutableText.formatted(Formatting.YELLOW);
+        if (new Random().nextFloat() < 0.005f) {
+            mutableText.formatted(Formatting.OBFUSCATED);
+        }
+    }
 }

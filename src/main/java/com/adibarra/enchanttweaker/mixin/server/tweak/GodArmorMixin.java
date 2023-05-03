@@ -14,12 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value=ProtectionEnchantment.class, priority=1543)
 public abstract class GodArmorMixin {
 
-	@Inject(
-		method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
-		at=@At("HEAD"),
-		cancellable=true)
-	private void allowGodArmor(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
-		boolean isProtection = other instanceof ProtectionEnchantment;
-		if (isProtection) cir.setReturnValue(true);
-	}
+    @Inject(
+        method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
+        at=@At("HEAD"),
+        cancellable=true)
+    private void allowGodArmor(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+        boolean isProtection = other instanceof ProtectionEnchantment;
+        if (isProtection) cir.setReturnValue(true);
+    }
 }

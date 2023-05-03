@@ -15,11 +15,11 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(value=AnvilScreenHandler.class, priority=1543)
 public abstract class SturdyAnvilsMixin {
 
-	@ModifyConstant(
-		method="method_24922(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V",
-		constant=@Constant(floatValue=0.12f))
-	private static float sturdyAnvils(float orig) {
-		float anvilDamageChance = ETMixinPlugin.getConfig().getOrDefault("anvil_damage_chance", orig);
-		return ADMath.clamp(anvilDamageChance, 0f, 1f);
-	}
+    @ModifyConstant(
+        method="method_24922(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V",
+        constant=@Constant(floatValue=0.12f))
+    private static float sturdyAnvils(float orig) {
+        float anvilDamageChance = ETMixinPlugin.getConfig().getOrDefault("anvil_damage_chance", orig);
+        return ADMath.clamp(anvilDamageChance, 0f, 1f);
+    }
 }

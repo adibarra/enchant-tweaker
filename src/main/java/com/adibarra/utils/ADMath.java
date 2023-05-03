@@ -9,6 +9,7 @@ public class ADMath {
 
     /**
      * Clamps a value between a minimum and maximum.
+     *
      * @return the clamped value
      */
     public static int clamp(int val, int min, int max) {
@@ -17,6 +18,7 @@ public class ADMath {
 
     /**
      * Clamps a value between a minimum and maximum.
+     *
      * @return the clamped value
      */
     public static double clamp(double val, double min, double max) {
@@ -25,6 +27,7 @@ public class ADMath {
 
     /**
      * Clamps a value between a minimum and maximum.
+     *
      * @return the clamped value
      */
     public static float clamp(float val, float min, float max) {
@@ -33,6 +36,7 @@ public class ADMath {
 
     /**
      * Clamps a value between a minimum and maximum.
+     *
      * @return the clamped value
      */
     public static long clamp(long val, long min, long max) {

@@ -17,20 +17,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value=AnvilScreenHandler.class, priority=1543)
 public abstract class CheapNamesMixin extends ForgingScreenHandler {
 
-	@Shadow @Final
-	private Property levelCost;
+    @Shadow @Final
+    private Property levelCost;
 
-	@SuppressWarnings("unused")
-	private CheapNamesMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context) {
-		super(type, syncId, playerInventory, context);
-	}
+    @SuppressWarnings("unused")
+    private CheapNamesMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context) {
+        super(type, syncId, playerInventory, context);
+    }
 
-	@Inject(
-		method="updateResult()V",
-		at=@At("TAIL"))
-	private void cheapNames(CallbackInfo ci) {
-		if (this.input.getStack(1).isEmpty()) {
-			levelCost.set(1);
-		}
-	}
+    @Inject(
+        method="updateResult()V",
+        at=@At("TAIL"))
+    private void cheapNames(CallbackInfo ci) {
+        if (this.input.getStack(1).isEmpty()) {
+            levelCost.set(1);
+        }
+    }
 }

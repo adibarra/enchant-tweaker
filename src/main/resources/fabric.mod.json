@@ -1,25 +1,25 @@
 {
-	"schemaVersion": 1,
-	"id": "enchanttweaker",
-	"version": "${version}",
-	"name": "Enchant Tweaker",
-	"description": "Tweak settings for many enchantment related things while keeping the vanilla feel.",
-	"authors": ["adibarra"],
-	"contact": {
-		"homepage": "https://modrinth.com/mod/enchant-tweaker",
-		"sources": "https://github.com/adibarra/enchant-tweaker",
-		"issues": "https://github.com/adibarra/enchant-tweaker/issues"
-	},
-	"license": "MIT",
-	"icon": "assets/enchanttweaker/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"preLaunch": ["com.llamalad7.mixinextras.MixinExtrasBootstrap::init"],
-		"main": ["com.adibarra.enchanttweaker.EnchantTweaker"]
-	},
-	"mixins": ["enchanttweaker.mixins.json"],
-	"depends": {
-		"fabricloader": ">=0.14.19",
-		"java": ">=17"
-	}
+  "schemaVersion": 1,
+  "id": "enchanttweaker",
+  "version": "${version}",
+  "name": "Enchant Tweaker",
+  "description": "Tweak settings for many enchantment related things while keeping the vanilla feel.",
+  "authors": ["adibarra"],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/enchant-tweaker",
+    "sources": "https://github.com/adibarra/enchant-tweaker",
+    "issues": "https://github.com/adibarra/enchant-tweaker/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/enchanttweaker/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "preLaunch": ["com.llamalad7.mixinextras.MixinExtrasBootstrap::init"],
+    "main": ["com.adibarra.enchanttweaker.EnchantTweaker"]
+  },
+  "mixins": ["enchanttweaker.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.14.19",
+    "java": ">=17"
+  }
 }

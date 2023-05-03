@@ -7,7 +7,10 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
@@ -19,7 +22,8 @@ public class ADConfig {
 
     /**
      * Loads a config file from the config directory. If the file doesn't exist, it will be generated.
-     * @param name the name of the mod
+     *
+     * @param name          the name of the mod
      * @param defaultConfig the path to the default config file (relative to jar base)
      */
     public ADConfig(String name, String defaultConfig) {
@@ -30,6 +34,7 @@ public class ADConfig {
 
     /**
      * Attempts to load a config file. If the file doesn't exist, it will be generated.
+     *
      * @param defaultConfig the contents of the default config file
      */
     private void request(String defaultConfig) {
@@ -43,6 +48,7 @@ public class ADConfig {
 
     /**
      * Loads a default config file within the jar.
+     *
      * @param defaultConfig the path to the default config file (relative to jar base)
      * @return the config file's contents, or null if the file doesn't exist
      */
@@ -59,6 +65,7 @@ public class ADConfig {
 
     /**
      * Attempts to create a new config file.
+     *
      * @param configFile    the config file to create
      * @param defaultConfig the contents of the default config file
      */
@@ -96,6 +103,7 @@ public class ADConfig {
 
     /**
      * Attempts to load a config file.
+     *
      * @param configFile the config file to load
      */
     private void loadConfig(File configFile) {
@@ -130,8 +138,9 @@ public class ADConfig {
 
     /**
      * Attempts to parse a line from a config file.
-     * @param line the line to parse
-     * @param lineNum the line number
+     *
+     * @param line     the line to parse
+     * @param lineNum  the line number
      * @param filename the name of the config file
      * @return true if the line was parsed successfully, false otherwise
      */
@@ -152,6 +161,7 @@ public class ADConfig {
 
     /**
      * Attempts to delete a file.
+     *
      * @param file the file to delete
      */
     private void deleteFile(File file) {
@@ -167,9 +177,13 @@ public class ADConfig {
         }
     }
 
+    // TODO: Set should also save to config file, not just in-memory.
+    // TODO: Should be done via searching for the key and only updating the value.
+
     /**
      * Sets a key's config value.
-     * @param key the key to set
+     *
+     * @param key   the key to set
      * @param value the value to set
      * @return true if the key exists, false otherwise
      */
@@ -183,6 +197,7 @@ public class ADConfig {
 
     /**
      * Gets a list of key value pairs in the config file.
+     *
      * @return a list of key value pairs
      */
     public List<Map.Entry<String, String>> getEntries() {
@@ -191,6 +206,7 @@ public class ADConfig {
 
     /**
      * Gets a list of all keys in the config file.
+     *
      * @return a list of all keys
      */
     public List<String> getKeys() {
@@ -199,6 +215,7 @@ public class ADConfig {
 
     /**
      * Gets a list of all values in the config file.
+     *
      * @return a list of all values
      */
     public List<String> getValues() {
@@ -207,6 +224,7 @@ public class ADConfig {
 
     /**
      * Attempt to get a key value from the config file.
+     *
      * @return the key value, or def if the key is missing.
      */
     @SuppressWarnings("unused")
@@ -217,6 +235,7 @@ public class ADConfig {
 
     /**
      * Attempt to get a key value from the config file.
+     *
      * @return the key value, or def if the key is missing.
      */
     @SuppressWarnings("unused")
@@ -230,6 +249,7 @@ public class ADConfig {
 
     /**
      * Attempt to get a key value from the config file.
+     *
      * @return the key value, or def if the key is missing.
      */
     @SuppressWarnings("unused")
@@ -243,6 +263,7 @@ public class ADConfig {
 
     /**
      * Attempt to get a key value from the config file.
+     *
      * @return the key value, or def if the key is missing.
      */
     @SuppressWarnings("unused")
@@ -256,6 +277,7 @@ public class ADConfig {
 
     /**
      * Attempt to get a key value from the config file.
+     *
      * @return the key value, or def if the key is missing.
      */
     @SuppressWarnings("unused")

@@ -14,11 +14,11 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(value=AnvilScreenHandler.class, priority=1543)
 public abstract class NotTooExpensiveMixin {
 
-	@ModifyConstant(
-		method="updateResult()V",
-		constant=@Constant(intValue=40, ordinal=2))
-	private int notTooExpensive(int orig) {
-		int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
-		return ADMath.clamp(maxCost, 0, Integer.MAX_VALUE);
-	}
+    @ModifyConstant(
+        method="updateResult()V",
+        constant=@Constant(intValue=40, ordinal=2))
+    private int notTooExpensive(int orig) {
+        int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
+        return ADMath.clamp(maxCost, 0, Integer.MAX_VALUE);
+    }
 }

@@ -9,6 +9,7 @@ public class ADMisc {
 
     /**
      * Checks if a string is a boolean value.
+     *
      * @param value the string to check
      * @return true if the string is a boolean value, false otherwise
      */
@@ -18,6 +19,7 @@ public class ADMisc {
 
     /**
      * Checks if a string is an integer value.
+     *
      * @param value the string to check
      * @return true if the string is an integer value, false otherwise
      */
@@ -32,6 +34,7 @@ public class ADMisc {
 
     /**
      * Checks if a string is a double value.
+     *
      * @param value the string to check
      * @return true if the string is a double value, false otherwise
      */

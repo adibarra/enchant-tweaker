@@ -23,6 +23,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static final Map<String, String> KEYS = new HashMap<>();
     private static final Map<String, Conflict> CONFLICTS = new HashMap<>();
     private static final Conflict NO_CONFLICT = new Conflict("No conflict", () -> false);
+
     private record Conflict(String reason, BooleanSupplier condition) { }
 
     static {

@@ -13,11 +13,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value=ItemStack.class, priority=1543)
 public abstract class PriorWorkFreeMixin {
 
-	@Inject(
-		method="getRepairCost()I",
-		at=@At(value="HEAD"),
-		cancellable=true)
-	private void priorWorkFree(CallbackInfoReturnable<Integer> cir) {
-		cir.setReturnValue(0);
-	}
+    @Inject(
+        method="getRepairCost()I",
+        at=@At(value="HEAD"),
+        cancellable=true)
+    private void priorWorkFree(CallbackInfoReturnable<Integer> cir) {
+        cir.setReturnValue(0);
+    }
 }

@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value=TridentEntity.class, priority=1543)
 public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
 
-    @Final @Shadow
+    @Shadow @Final
     private static TrackedData<Byte> LOYALTY;
 
     @Shadow

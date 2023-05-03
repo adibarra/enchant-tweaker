@@ -33,6 +33,6 @@ public abstract class MoreFlameMixin {
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
         constant=@Constant(intValue=5))
     private int decoder(int orig) {
-        return 2 * (flameLevel - 1)  + orig;
+        return 2 * (flameLevel - 1) + orig;
     }
 }

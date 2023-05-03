@@ -16,14 +16,16 @@ public class ADBrigadier {
 
     /**
      * A record representing a command.
+     *
      * @param description the description of the command
-     * @param node the command node
+     * @param node        the command node
      */
     public record Command(String description, Supplier<LiteralCommandNode<ServerCommandSource>> node) { }
 
     /**
      * Builds an alias for a command node.
-     * @param alias the alias to build
+     *
+     * @param alias    the alias to build
      * @param destNode the destination node to forward to
      * @return the built alias node
      */

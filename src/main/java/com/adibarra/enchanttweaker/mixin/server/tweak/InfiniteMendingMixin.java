@@ -15,12 +15,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value=InfinityEnchantment.class, priority=1543)
 public abstract class InfiniteMendingMixin {
 
-	@Inject(
-		method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
-		at=@At("HEAD"),
-		cancellable=true)
-	private void allowInfinityMending(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
-		boolean isMending = other instanceof MendingEnchantment;
-		if (isMending) cir.setReturnValue(true);
-	}
+    @Inject(
+        method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
+        at=@At("HEAD"),
+        cancellable=true)
+    private void allowInfinityMending(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+        boolean isMending = other instanceof MendingEnchantment;
+        if (isMending) cir.setReturnValue(true);
+    }
 }

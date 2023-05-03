@@ -13,8 +13,9 @@ public class ADCommands {
 
     /**
      * Broadcasts a message to all ops on the server.
+     *
      * @param server the server to broadcast to
-     * @param msg the message to broadcast
+     * @param msg    the message to broadcast
      */
     public static void broadcastOps(MinecraftServer server, MutableText msg) {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {

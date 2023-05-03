@@ -14,11 +14,11 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(value=MiningToolItem.class, priority=1543)
 public abstract class AxesNotToolsMixin {
 
-	@ModifyConstant(
-		method="postHit(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/LivingEntity;)Z",
-		constant=@Constant(intValue=2))
-	private int modifySelfDamage(int orig, ItemStack stack) {
-		boolean isAxe = stack.getItem() instanceof AxeItem;
-		return isAxe ? 1 : orig;
-	}
+    @ModifyConstant(
+        method="postHit(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/LivingEntity;)Z",
+        constant=@Constant(intValue=2))
+    private int modifySelfDamage(int orig, ItemStack stack) {
+        boolean isAxe = stack.getItem() instanceof AxeItem;
+        return isAxe ? 1 : orig;
+    }
 }
