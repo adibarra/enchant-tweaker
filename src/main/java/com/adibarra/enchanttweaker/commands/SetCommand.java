@@ -30,18 +30,18 @@ public class SetCommand implements Command<ServerCommandSource> {
             msg.add(Text.literal("' set to '").formatted(Formatting.GRAY));
             msg.add(ADText.colorValue(value));
             msg.add(Text.literal("'.").formatted(Formatting.GRAY));
-        }
-        else {
-            msg.add(Text.literal("Key '").formatted(Formatting.GRAY));
-            msg.add(Text.literal(key).formatted(Formatting.RED));
-            msg.add(Text.literal("' does not exist.").formatted(Formatting.GRAY));
+            context.getSource().sendFeedback(ADText.joinText(msg), false);
+            return Command.SINGLE_SUCCESS;
         }
 
-        context.getSource().sendFeedback(ADText.joinText(msg), false);
-        return Command.SINGLE_SUCCESS;
+        msg.add(Text.literal("Key '").formatted(Formatting.GRAY));
+        msg.add(Text.literal(key).formatted(Formatting.RED));
+        msg.add(Text.literal("' does not exist.").formatted(Formatting.GRAY));
+        context.getSource().sendError(ADText.joinText(msg));
+        return 0;
     }
 
-    public static String boolString(String value) {
+    private static String boolString(String value) {
         if (Arrays.asList("true", "t", "yes", "on", "enable", "enabled").contains(value)) return "true";
         if (Arrays.asList("false", "f", "no", "off", "disable", "disabled").contains(value)) return "false";
         return value;

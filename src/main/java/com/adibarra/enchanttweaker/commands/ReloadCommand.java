@@ -16,12 +16,12 @@ public class ReloadCommand implements Command<ServerCommandSource> {
     public int run(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ETMixinPlugin.reloadConfig();
 
-        Text[] out = new Text[] {
+        Text[] msg = new Text[] {
             Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN),
             Text.literal("Config Reloaded!")
         };
 
-        context.getSource().sendFeedback(ADText.joinText(out), false);
+        context.getSource().sendFeedback(ADText.joinText(msg), false);
         return Command.SINGLE_SUCCESS;
     }
 }
