@@ -41,15 +41,16 @@ public class ETCommands {
             new ADBrigadier.Command("Get the value for a config key.", () ->
                 CommandManager.literal("get")
                     .then(CommandManager.argument("key", StringArgumentType.word())
+                    .suggests(GetCommand.getKeySuggestions())
                         .executes(new GetCommand()))
                     .build())
         );
 
-        // TODO: Set command should also save to config file
         COMMANDS.add(
             new ADBrigadier.Command("Set the value for a config key.", () ->
                 CommandManager.literal("set")
                     .then(CommandManager.argument("key", StringArgumentType.word())
+                        .suggests(SetCommand.getKeySuggestions())
                         .then(CommandManager.argument("value", StringArgumentType.word())
                             .executes(new SetCommand())))
                     .build())
@@ -91,7 +92,7 @@ public class ETCommands {
             ETMixinPlugin.reloadConfig();
             ADCommands.broadcastOps(server, ADText.joinText(new Text[] {
                 Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN),
-                Text.literal("Reload config file.")
+                Text.literal("Config Reloaded!")
             }));
         });
     }

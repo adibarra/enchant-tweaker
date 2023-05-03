@@ -2,18 +2,18 @@ package com.adibarra.enchanttweaker.commands;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.EnchantTweaker;
+import com.adibarra.enchanttweaker.commands.suggestions.ListSuggestion;
 import com.adibarra.utils.ADText;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class SetCommand implements Command<ServerCommandSource> {
 
@@ -41,9 +41,13 @@ public class SetCommand implements Command<ServerCommandSource> {
         return 0;
     }
 
+    public static SuggestionProvider<ServerCommandSource> getKeySuggestions() {
+        return ListSuggestion.of(() -> ETMixinPlugin.getConfig().getKeys());
+    }
+
     private static String boolString(String value) {
-        if (Arrays.asList("true", "t", "yes", "on", "enable", "enabled").contains(value)) return "true";
-        if (Arrays.asList("false", "f", "no", "off", "disable", "disabled").contains(value)) return "false";
+        if (ADText.TRUE_VALUES.contains(value)) return "true";
+        if (ADText.FALSE_VALUES.contains(value)) return "false";
         return value;
     }
 }
