@@ -41,7 +41,7 @@ public class ETCommands {
             new ADBrigadier.Command("Get the value for a config key.", () ->
                 CommandManager.literal("get")
                     .then(CommandManager.argument("key", StringArgumentType.word())
-                        .suggests(GetCommand.getKeySuggestions())
+                        .suggests(GetCommand.KEY_SUGGESTIONS)
                         .executes(new GetCommand()))
                     .build())
         );
@@ -50,7 +50,7 @@ public class ETCommands {
             new ADBrigadier.Command("Set the value for a config key.", () ->
                 CommandManager.literal("set")
                     .then(CommandManager.argument("key", StringArgumentType.word())
-                        .suggests(SetCommand.getKeySuggestions())
+                        .suggests(SetCommand.KEY_SUGGESTIONS)
                         .then(CommandManager.argument("value", StringArgumentType.word())
                             .executes(new SetCommand())))
                     .build())

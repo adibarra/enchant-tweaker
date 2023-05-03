@@ -17,6 +17,8 @@ import java.util.List;
 
 public class SetCommand implements Command<ServerCommandSource> {
 
+    public static final SuggestionProvider<ServerCommandSource> KEY_SUGGESTIONS = ListSuggestion.of(() -> ETMixinPlugin.getConfig().getKeys());
+
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
         String key = StringArgumentType.getString(context, "key").toLowerCase();
@@ -39,10 +41,6 @@ public class SetCommand implements Command<ServerCommandSource> {
         msg.add(Text.literal("' does not exist.").formatted(Formatting.GRAY));
         context.getSource().sendError(ADText.joinText(msg));
         return 0;
-    }
-
-    public static SuggestionProvider<ServerCommandSource> getKeySuggestions() {
-        return ListSuggestion.of(() -> ETMixinPlugin.getConfig().getKeys());
     }
 
     private static String boolString(String value) {

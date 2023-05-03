@@ -16,7 +16,7 @@ public class ListSuggestion {
         throw new IllegalStateException("Utility class. Do not instantiate.");
     }
 
-    public static CompletableFuture<Suggestions> buildSuggestions(SuggestionsBuilder builder, Collection<String> options) {
+    private static CompletableFuture<Suggestions> buildSuggestions(SuggestionsBuilder builder, Collection<String> options) {
         String query = builder.getRemaining().toLowerCase();
 
         if (options.isEmpty()) {
