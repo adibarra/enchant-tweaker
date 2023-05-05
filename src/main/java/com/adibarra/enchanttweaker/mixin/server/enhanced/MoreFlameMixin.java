@@ -2,6 +2,7 @@ package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.util.hit.EntityHitResult;
@@ -26,13 +27,16 @@ public abstract class MoreFlameMixin {
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
         at=@At("HEAD"))
     private void captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
-        flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) entityHitResult.getEntity());
+        Entity hitEntity = entityHitResult.getEntity();
+        if (hitEntity instanceof LivingEntity) {
+            flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) hitEntity);
+        }
     }
 
     @ModifyConstant(
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
         constant=@Constant(intValue=5))
-    private int decoder(int orig) {
+    private int moreFlame(int orig) {
         return 2 * (flameLevel - 1) + orig;
     }
 }
