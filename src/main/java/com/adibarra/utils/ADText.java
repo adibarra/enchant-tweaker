@@ -53,11 +53,12 @@ public class ADText {
      * @return the built command link as a MutableText object
      */
     public static MutableText buildCmdLink(String base, String literal) {
-        return Text.literal("/" + base + " " + literal)
+        String cmd = "/" + base + " " + literal;
+        return Text.literal(cmd)
             .setStyle(Style.EMPTY
                 .withColor(Formatting.AQUA)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, literal))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Click to run " + literal)))
+                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Click to run " + cmd)))
             );
     }
 
