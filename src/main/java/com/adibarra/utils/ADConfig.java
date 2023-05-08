@@ -84,7 +84,9 @@ public class ADConfig {
             }
 
             // write default config to file
-            writeFile(configFile, defaultConfigLines);
+            if (writeFile(configFile, defaultConfigLines)) {
+                LOGGER.info(PREFIX + "Generated new '{}'!", configFile.getName());
+            }
         }
     }
 
@@ -93,17 +95,19 @@ public class ADConfig {
      *
      * @param file  the file to write to
      * @param lines the lines to write
+     * @return true if successful, false otherwise
      */
-    private void writeFile(File file, List<String> lines) {
+    private boolean writeFile(File file, List<String> lines) {
         try {
             PrintWriter writer = new PrintWriter(file, StandardCharsets.UTF_8);
             writer.write(String.join("\n", lines));
             writer.close();
-            LOGGER.info(PREFIX + "Generated new '{}'!", configFile.getName());
+            return true;
 
         } catch (IOException e) {
-            LOGGER.error(PREFIX + "Failed to generate '{}'!", file.getName());
+            LOGGER.error(PREFIX + "Failed to write '{}'!", file.getName());
             LOGGER.trace(e);
+            return false;
         }
     }
 
