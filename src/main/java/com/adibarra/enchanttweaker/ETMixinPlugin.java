@@ -21,16 +21,11 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static ADConfig CONFIG;
     private static final Logger LOGGER = LoggerFactory.getLogger(EnchantTweaker.MOD_NAME);
     private static final Map<String, String> KEYS = new HashMap<>();
-    private static final Map<String, Conflict> CONFLICTS = new HashMap<>();
-    private static final Conflict NO_CONFLICT = new Conflict("No conflict", () -> false);
+    private static final Map<String, CompatEntry> COMPAT = new HashMap<>();
 
-    private record Conflict(String reason, BooleanSupplier condition) { }
+    private record CompatEntry(String reason, boolean shouldApply, BooleanSupplier compatTrigger) { }
 
     static {
-        CONFLICTS.put("NotTooExpensiveMixin", new Conflict("Mod 'Fabrication' detected", () ->
-            FabricLoader.getInstance().isModLoaded("fabrication")
-        ));
-
         KEYS.put("CheapNamesMixin",           "cheap_names");
         KEYS.put("NotTooExpensiveMixin",      "not_too_expensive");
         KEYS.put("PriorWorkCheaperMixin",     "prior_work_cheaper");
@@ -59,6 +54,24 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("LuckEnchantMixin",          "capmod_enabled");
         KEYS.put("ProtectionEnchantMixin",    "capmod_enabled");
         KEYS.put("SpecialEnchantMixin",       "capmod_enabled");
+
+        COMPAT.put(
+            "NotTooExpensiveMixin",
+            new CompatEntry(
+                "Mod 'Fabrication' detected",
+                false,
+                () -> FabricLoader.getInstance().isModLoaded("fabrication"))
+        );
+        /*
+         COMPAT.put(
+             "EnderiteBowInfinityFix",
+             new CompatEntry(
+                 "Mod 'EnderiteMod' detected",
+                 true,
+                 () -> FabricLoader.getInstance().isModLoaded("enderitemod")
+                     && getMixinConfig("BowInfinityFixMixin")
+             ));
+        */
     }
 
     @Override
@@ -74,15 +87,17 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         if (!MOD_ENABLED) return false;
 
         String mixinName = mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1);
-        Conflict conflict = CONFLICTS.getOrDefault(mixinName, NO_CONFLICT);
+        CompatEntry compatEntry = COMPAT.get(mixinName);
 
-        if (conflict.condition().getAsBoolean()) {
-            LOGGER.info(EnchantTweaker.PREFIX + "[COMPAT] {} disabled. Reason: {}", mixinName, conflict.reason());
-            return false;
+        // if there is a compat entry, and it activates, override config
+        if (compatEntry != null && compatEntry.compatTrigger().getAsBoolean()) {
+            String state = compatEntry.shouldApply() ? "enabled" : "disabled";
+            LOGGER.info(EnchantTweaker.PREFIX + "[COMPAT] {} {}. Reason: {}", mixinName, state, compatEntry.reason());
+            return compatEntry.shouldApply();
         }
 
-        return Boolean.parseBoolean(CONFIG.getOrDefault(
-            KEYS.getOrDefault(mixinName, "false"), "false"));
+        // assume no compatibility entries, use config
+        return getMixinConfig(mixinName);
     }
 
     public static void reloadConfig() {
@@ -91,9 +106,9 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
             "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties");
     }
 
-    @Override
-    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
-        numMixins++;
+    public static boolean getMixinConfig(String mixinName) {
+        return Boolean.parseBoolean(CONFIG.getOrDefault(
+            KEYS.getOrDefault(mixinName, "false"), "false"));
     }
 
     public static int getNumMixins() {
@@ -102,6 +117,11 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
 
     public static ADConfig getConfig() {
         return CONFIG;
+    }
+
+    @Override
+    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+        numMixins++;
     }
 
     @Override
