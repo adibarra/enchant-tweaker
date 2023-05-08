@@ -7,11 +7,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @SuppressWarnings("unused")
 public class ADConfig {
@@ -42,25 +38,19 @@ public class ADConfig {
         Path configDir = FabricLoader.getInstance().getConfigDir();
         File configFile = configDir.resolve(filename).toFile();
 
+        // create config file if it doesn't exist
         createConfig(configFile, defaultConfig);
-        loadConfig(configFile);
-    }
 
-    /**
-     * Loads a default config file within the jar.
-     *
-     * @param defaultConfig the path to the default config file (relative to jar base)
-     * @return the config file's contents, or null if the file doesn't exist
-     */
-    private String getDefaultConfig(String defaultConfig) {
-        final InputStream is = getClass().getClassLoader().getResourceAsStream(defaultConfig);
-        if (is == null) {
-            LOGGER.error(PREFIX + "Failed to load default config file!");
-            LOGGER.error(PREFIX + "Please report this to the mod author!");
-            return "";
+        // load config file
+        List<String> configLines = loadFile(configFile);
+        if (configLines.isEmpty()) {
+            LOGGER.warn(PREFIX + "Config '{}' is blank! It is probably broken...", configFile.getName());
+            deleteFile(configFile);
+
+        } else {
+            // parse config file
+            parseConfig(configLines, configFile.getName());
         }
-        return new BufferedReader(new InputStreamReader(is))
-            .lines().collect(Collectors.joining("\n"));
     }
 
     /**
@@ -72,7 +62,7 @@ public class ADConfig {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private void createConfig(File configFile, String defaultConfig) {
         if (!configFile.exists()) {
-            LOGGER.info(PREFIX + "Failed to find '{}'. Generating default...", configFile.getName());
+            LOGGER.warn(PREFIX + "Failed to find '{}'. Generating default...", configFile.getName());
 
             try {
                 // try creating missing dirs and file
@@ -85,78 +75,90 @@ public class ADConfig {
                 return;
             }
 
-            try {
-                // write default config data
-                PrintWriter writer = new PrintWriter(configFile, StandardCharsets.UTF_8);
-                writer.write(getDefaultConfig(defaultConfig));
-                writer.close();
+            // write default config to file
+            List<String> defaultConfigLines = loadInternalFile(defaultConfig);
+            if (defaultConfigLines == null) {
+                LOGGER.error(PREFIX + "Failed to load default config file!");
+                LOGGER.error(PREFIX + "Please report this to the mod author!");
 
-            } catch (IOException e) {
-                LOGGER.error(PREFIX + "Failed to generate '{}'!", configFile.getName());
-                LOGGER.trace(e);
-                return;
+            } else if (writeFile(configFile, defaultConfigLines)) {
+                LOGGER.info(PREFIX + "Generated new '{}'!", configFile.getName());
             }
-
-            LOGGER.info(PREFIX + "Generated new '{}'!", configFile.getName());
         }
     }
 
     /**
-     * Attempts to load a config file.
+     * Attempts to write a list of lines to a file.
      *
-     * @param configFile the config file to load
+     * @param lines the lines to write
+     * @return true if the file was written successfully, false otherwise
      */
-    private void loadConfig(File configFile) {
+    private boolean writeFile(File file, List<String> lines) {
         try {
-            BufferedReader br = new BufferedReader(new FileReader(configFile, StandardCharsets.UTF_8));
-            int lineNum = 1;
-            String line;
-
-            boolean failed = false;
-            while ((line = br.readLine()) != null) {
-                failed = failed || !parseLine(line, lineNum, configFile.getName());
-                lineNum++;
-            }
-            br.close();
-
-            if (failed) {
-                LOGGER.warn(PREFIX + "Ignoring '{}' due to syntax errors!", configFile.getName());
-                config.clear();
-                return;
-            }
-
-            if (config.size() == 0) {
-                LOGGER.warn(PREFIX + "No keys found in '{}'! It is probably broken...", configFile.getName());
-                deleteFile(configFile);
-            }
+            PrintWriter writer = new PrintWriter(file, StandardCharsets.UTF_8);
+            writer.write(String.join("\n", lines));
+            writer.close();
+            return true;
 
         } catch (IOException e) {
-            LOGGER.error(PREFIX + "Failed to load '{}'!", configFile.getName());
+            LOGGER.error(PREFIX + "Failed to generate '{}'!", file.getName());
             LOGGER.trace(e);
+            return false;
         }
     }
 
     /**
-     * Attempts to parse a line from a config file.
+     * Attempts to load a file from the filesystem.
      *
-     * @param line     the line to parse
-     * @param lineNum  the line number
-     * @param filename the name of the config file
-     * @return true if the line was parsed successfully, false otherwise
+     * @param file the file to load
+     * @return the file's contents, or null if the file doesn't exist
      */
-    private boolean parseLine(String line, int lineNum, String filename) {
-        line = line.trim().toLowerCase();
-        if (line.isEmpty() || line.startsWith("#")) return true;
+    private List<String> loadFile(File file) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8));
+            List<String> lines = br.lines().toList();
+            br.close();
+            return lines;
 
-        String[] keyPair = line.split("=", 2);
-
-        if (keyPair.length != 2) {
-            LOGGER.warn(PREFIX + "{} line {}: Found a syntax error!", filename, lineNum);
-            return false;
+        } catch (IOException e) {
+            LOGGER.error(PREFIX + "Failed to load '{}'!", file.getName());
+            LOGGER.trace(e);
+            return Collections.emptyList();
         }
+    }
 
-        config.put(keyPair[0].trim(), keyPair[1].trim());
-        return true;
+    /**
+     * Attempts to parse config from a List of lines.
+     *
+     * @param lines the List of config lines
+     */
+    private void parseConfig(List<String> lines, String filename) {
+        int lineNum = 0;
+        for (String line : lines) {
+            lineNum++;
+            line = line.trim().toLowerCase();
+            if (line.isEmpty() || line.startsWith("#")) continue;
+
+            String[] keyPair = line.split("=");
+            if (keyPair.length != 2) {
+                LOGGER.warn(PREFIX + "'{}' line {}: Found a syntax error! Skipping line...", filename, lineNum);
+                continue;
+            }
+
+            config.put(keyPair[0].trim(), keyPair[1].trim());
+        }
+    }
+
+    /**
+     * Attempts to load a file from the jar.
+     *
+     * @param path path to the file (relative to jar base)
+     * @return the file's contents as a List, or null if the file doesn't exist
+     */
+    private List<String> loadInternalFile(String path) {
+        final InputStream is = getClass().getClassLoader().getResourceAsStream(path);
+        if (is == null) return null;
+        return new BufferedReader(new InputStreamReader(is)).lines().toList();
     }
 
     /**
@@ -166,11 +168,12 @@ public class ADConfig {
      */
     private void deleteFile(File file) {
         try {
-            if (!file.delete()) {
-                LOGGER.error(PREFIX + "Failed to delete '{}'! Is it in use?", file.getName());
+            if (file.delete()) {
+                LOGGER.info(PREFIX + "Deleted '{}'. Restart the game to regenerate it.", file.getName());
                 return;
             }
-            LOGGER.info(PREFIX + "Deleted '{}'. Restart the game to regenerate it.", file.getName());
+            LOGGER.error(PREFIX + "Failed to delete '{}'! Is it in use?", file.getName());
+
         } catch (Exception e) {
             LOGGER.error(PREFIX + "Failed to delete '{}'!", file.getName());
             LOGGER.trace(e);
