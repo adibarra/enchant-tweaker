@@ -6,61 +6,61 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class ADConfig {
 
-    private final HashMap<String, String> config = new HashMap<>();
+    private final Map<String, String> config = new HashMap<>();
     private final Logger LOGGER;
     private final String PREFIX;
+    private File configFile;
 
     /**
-     * Loads a config file from the config directory. If the file doesn't exist, it will be generated.
+     * Get an ADConfig instance.
      *
-     * @param name          the name of the mod
-     * @param defaultConfig the path to the default config file (relative to jar base)
+     * @param name              the name of the mod
+     * @param defaultConfigPath the path to the default config file (relative to jar base)
      */
-    public ADConfig(String name, String defaultConfig) {
+    public ADConfig(String name, String defaultConfigPath) {
         LOGGER = LogManager.getLogger(name);
         PREFIX = "[" + name + "] [ADConfig] ";
-        this.request(defaultConfig);
+        request(defaultConfigPath);
     }
 
     /**
-     * Attempts to load a config file. If the file doesn't exist, it will be generated.
+     * Load a config file. If the file doesn't exist, it will be generated.
      *
-     * @param defaultConfig the contents of the default config file
+     * @param defaultConfigPath the path to the default config file (relative to jar base)
      */
-    private void request(String defaultConfig) {
-        String filename = defaultConfig.substring(defaultConfig.lastIndexOf('/') + 1);
-        Path configDir = FabricLoader.getInstance().getConfigDir();
-        File configFile = configDir.resolve(filename).toFile();
+    private void request(String defaultConfigPath) {
+        String filename = defaultConfigPath.substring(defaultConfigPath.lastIndexOf('/') + 1);
+        configFile = FabricLoader.getInstance().getConfigDir().resolve(filename).toFile();
 
         // create config file if it doesn't exist
-        createConfig(configFile, defaultConfig);
+        createConfig(configFile, defaultConfigPath);
 
         // load config file
         List<String> configLines = loadFile(configFile);
         if (configLines.isEmpty()) {
             LOGGER.warn(PREFIX + "Config '{}' is blank! It is probably broken...", configFile.getName());
             deleteFile(configFile);
-
-        } else {
-            // parse config file
-            parseConfig(configLines, configFile.getName());
+            return;
         }
+
+        // parse config file
+        parseConfig(configLines, configFile.getName());
     }
 
     /**
      * Attempts to create a new config file.
      *
-     * @param configFile    the config file to create
-     * @param defaultConfig the contents of the default config file
+     * @param configFile        the config file to create
+     * @param defaultConfigPath the path to the default config file (relative to jar base)
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void createConfig(File configFile, String defaultConfig) {
+    private void createConfig(File configFile, String defaultConfigPath) {
         if (!configFile.exists()) {
             LOGGER.warn(PREFIX + "Failed to find '{}'. Generating default...", configFile.getName());
 
@@ -75,35 +75,35 @@ public class ADConfig {
                 return;
             }
 
-            // write default config to file
-            List<String> defaultConfigLines = loadInternalFile(defaultConfig);
+            // load default config from jar
+            List<String> defaultConfigLines = loadInternalFile(defaultConfigPath);
             if (defaultConfigLines == null) {
                 LOGGER.error(PREFIX + "Failed to load default config file!");
                 LOGGER.error(PREFIX + "Please report this to the mod author!");
-
-            } else if (writeFile(configFile, defaultConfigLines)) {
-                LOGGER.info(PREFIX + "Generated new '{}'!", configFile.getName());
+                return;
             }
+
+            // write default config to file
+            writeFile(configFile, defaultConfigLines);
         }
     }
 
     /**
      * Attempts to write a list of lines to a file.
      *
+     * @param file  the file to write to
      * @param lines the lines to write
-     * @return true if the file was written successfully, false otherwise
      */
-    private boolean writeFile(File file, List<String> lines) {
+    private void writeFile(File file, List<String> lines) {
         try {
             PrintWriter writer = new PrintWriter(file, StandardCharsets.UTF_8);
             writer.write(String.join("\n", lines));
             writer.close();
-            return true;
+            LOGGER.info(PREFIX + "Generated new '{}'!", configFile.getName());
 
         } catch (IOException e) {
             LOGGER.error(PREFIX + "Failed to generate '{}'!", file.getName());
             LOGGER.trace(e);
-            return false;
         }
     }
 
@@ -116,7 +116,7 @@ public class ADConfig {
     private List<String> loadFile(File file) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8));
-            List<String> lines = br.lines().toList();
+            List<String> lines = br.lines().collect(Collectors.toList());
             br.close();
             return lines;
 
@@ -124,28 +124,6 @@ public class ADConfig {
             LOGGER.error(PREFIX + "Failed to load '{}'!", file.getName());
             LOGGER.trace(e);
             return Collections.emptyList();
-        }
-    }
-
-    /**
-     * Attempts to parse config from a List of lines.
-     *
-     * @param lines the List of config lines
-     */
-    private void parseConfig(List<String> lines, String filename) {
-        int lineNum = 0;
-        for (String line : lines) {
-            lineNum++;
-            line = line.trim().toLowerCase();
-            if (line.isEmpty() || line.startsWith("#")) continue;
-
-            String[] keyPair = line.split("=");
-            if (keyPair.length != 2) {
-                LOGGER.warn(PREFIX + "'{}' line {}: Found a syntax error! Skipping line...", filename, lineNum);
-                continue;
-            }
-
-            config.put(keyPair[0].trim(), keyPair[1].trim());
         }
     }
 
@@ -180,11 +158,50 @@ public class ADConfig {
         }
     }
 
-    // TODO: Set should also save to config file, not just in-memory.
-    // TODO: Should be done via searching for the key and only updating the value.
+    /**
+     * Attempts to replace a value in the config file.
+     *
+     * @param file  the config file
+     * @param key   the key to replace
+     * @param value the value to replace with
+     */
+    private void replaceValue(File file, String key, String value) {
+        List<String> lines = loadFile(configFile);
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            String trimLine = line.replaceAll(" ", "").toLowerCase();
+            if (!trimLine.startsWith("#") && trimLine.contains(key + "=")) {
+                lines.set(i, line.replace(trimLine.substring(trimLine.indexOf("=") + 1), value));
+                break;
+            }
+        }
+        writeFile(configFile, lines);
+    }
 
     /**
-     * Sets a key's config value.
+     * Attempts to parse config from a List of lines.
+     *
+     * @param lines the List of config lines
+     */
+    private void parseConfig(List<String> lines, String filename) {
+        int lineNum = 0;
+        for (String line : lines) {
+            lineNum++;
+            line = line.trim().toLowerCase();
+            if (line.isEmpty() || line.startsWith("#")) continue;
+
+            String[] keyPair = line.split("=");
+            if (keyPair.length != 2) {
+                LOGGER.warn(PREFIX + "'{}' line {}: Found a syntax error! Skipping line...", filename, lineNum);
+                continue;
+            }
+
+            config.put(keyPair[0].trim(), keyPair[1].trim());
+        }
+    }
+
+    /**
+     * Sets a key's config value and updates the config file.
      *
      * @param key   the key to set
      * @param value the value to set
@@ -193,6 +210,7 @@ public class ADConfig {
     public boolean set(String key, String value) {
         if (config.containsKey(key)) {
             config.put(key, value);
+            replaceValue(configFile, key, value);
             return true;
         }
         return false;
@@ -230,7 +248,6 @@ public class ADConfig {
      *
      * @return the key value, or def if the key is missing.
      */
-    @SuppressWarnings("unused")
     public String getOrDefault(String key, String def) {
         String val = config.get(key);
         return val == null ? def : val;
@@ -241,7 +258,6 @@ public class ADConfig {
      *
      * @return the key value, or def if the key is missing.
      */
-    @SuppressWarnings("unused")
     public boolean getOrDefault(String key, boolean def) {
         try {
             return Boolean.parseBoolean(config.get(key));
@@ -255,7 +271,6 @@ public class ADConfig {
      *
      * @return the key value, or def if the key is missing.
      */
-    @SuppressWarnings("unused")
     public int getOrDefault(String key, int def) {
         try {
             return Integer.parseInt(config.get(key));
@@ -269,7 +284,6 @@ public class ADConfig {
      *
      * @return the key value, or def if the key is missing.
      */
-    @SuppressWarnings("unused")
     public double getOrDefault(String key, double def) {
         try {
             return Double.parseDouble(config.get(key));
@@ -283,7 +297,6 @@ public class ADConfig {
      *
      * @return the key value, or def if the key is missing.
      */
-    @SuppressWarnings("unused")
     public float getOrDefault(String key, float def) {
         try {
             return Float.parseFloat(config.get(key));
