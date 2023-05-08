@@ -1,6 +1,10 @@
 <a href="https://github.com/adibarra/enchant-tweaker">
     <img align="left" src="./src/main/resources/assets/enchanttweaker/icon.png" alt="Logo" height="128">
 </a>
+<a href="https://modrinth.com/mod/fabric-api"><img src="https://camo.githubusercontent.com/9296b230044bb4ef07851ff9baa2d04aeb210baee3467abafff1380fa081f08b/68747470733a2f2f692e696d6775722e636f6d2f4f6c31546366382e706e67" alt="drawing" width="200"/></a>
+
+<a href="https://fabricmc.net/use/installer">![Modloader](https://img.shields.io/static/v1?color=00AF5C&label=modloader&message=fabric&style=for-the-badge)</a>
+<a href="https://modrinth.com/mod/enchant-tweaker">![Modrinth Downloads](https://img.shields.io/modrinth/dt/enchant-tweaker?color=00AF5C&label=modrinth&style=for-the-badge&logo=modrinth)</a>
 
 # Enchant Tweaker
 Tweak settings for many enchantment related mechanics while keeping the vanilla feel.
