@@ -32,6 +32,9 @@ public class SetCommand implements Command<ServerCommandSource> {
             msg.add(Text.literal("' set to '").formatted(Formatting.GRAY));
             msg.add(ADText.colorValue(value));
             msg.add(Text.literal("'.").formatted(Formatting.GRAY));
+            if (boolString(value).equals("true") || boolString(value).equals("false")) {
+                msg.add(Text.literal("\nEnabling/Disabling mixins requires a restart to take effect.").formatted(Formatting.LIGHT_PURPLE));
+            }
             context.getSource().sendFeedback(ADText.joinText(msg), false);
             return Command.SINGLE_SUCCESS;
         }
