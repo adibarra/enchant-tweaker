@@ -108,4 +108,68 @@ Allow the addition of some weapon enchantments that normally can not be added to
 
 
 ## Modify Max Enchantment Levels
-This is useful if you want to make individual enchantments more powerful or less powerful. Not all vanilla enchantments scale by default. Some may require enabling their respective tweak to scale properly.
+Tweak the max level for individual enchantments. Not all vanilla enchantments scale by default. Some may require enabling their respective tweak to scale properly.
+
+<details>
+<summary> View Suggested Custom Enchantment Levels </summary>
+
+### Armor Enchantments:
+|      Enchantment      | Max Level |
+|:---------------------:|:---------:|
+|     Aqua Affinity     |     1     |
+|   Blast Protection    |    10     |
+|     Depth Strider     |     3     |
+|    Feather Falling    |     7     |
+|    Fire Protection    |    10     |
+|     Frost Walker      |     2     |
+| Projectile Protection |    10     |
+|      Protection       |    10     |
+|      Respiration      |    10     |
+|      Soul Speed       |     5     |
+|      Swift Sneak      |     4     |
+|        Thorns         |     5     |
+
+### Curse Enchantments:
+|      Enchantment      | Max Level |
+|:---------------------:|:---------:|
+|     Binding Curse     |     1     |
+|    Vanishing Curse    |     1     |
+
+### Melee Enchantments:
+|      Enchantment      | Max Level |
+|:---------------------:|:---------:|
+|  Bane of Arthropods   |    10     |
+|      Fire Aspect      |     3     |
+|       Impaling        |     5     |
+|       Knockback       |     2     |
+|        Looting        |     5     |
+|       Sharpness       |    10     |
+|         Smite         |    10     |
+|     Sweeping Edge     |     5     |
+
+### Ranged Enchantments:
+|      Enchantment      | Max Level |
+|:---------------------:|:---------:|
+|      Channeling       |     2     |
+|         Flame         |     2     |
+|       Infinity        |     1     |
+|        Loyalty        |     5     |
+|       Multishot       |     3     |
+|       Piercing        |     5     |
+|         Power         |    10     |
+|         Punch         |     2     |
+|     Quick Charge      |     3     |
+|        Riptide        |     3     |
+
+### Tool Enchantments:
+|      Enchantment      | Max Level |
+|:---------------------:|:---------:|
+|      Efficiency       |    10     |
+|        Fortune        |     5     |
+|         Lure          |     3     |
+|    Luck of the Sea    |     5     |
+|        Mending        |     3     |
+|      Silk Touch       |     1     |
+|      Unbreaking       |    10     |
+
+</details>
