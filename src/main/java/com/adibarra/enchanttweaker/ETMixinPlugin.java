@@ -44,6 +44,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("GodWeaponsMixin",           "god_weapons");
         KEYS.put("InfiniteMendingMixin",      "infinite_mending");
         KEYS.put("LoyalVoidTridentsMixin",    "loyal_void_tridents");
+        KEYS.put("MultishotPiercingMixin",    "multishot_piercing");
         KEYS.put("NoSoulSpeedBacklashMixin",  "no_soul_speed_backlash");
         KEYS.put("NoThornsBacklashMixin",     "no_thorns_backlash");
         KEYS.put("ShinyNameMixin",            "shiny_name");

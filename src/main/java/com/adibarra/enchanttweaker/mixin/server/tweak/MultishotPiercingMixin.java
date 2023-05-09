@@ -2,25 +2,28 @@ package com.adibarra.enchanttweaker.mixin.server.tweak;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.enchantment.InfinityEnchantment;
+import net.minecraft.enchantment.MultishotEnchantment;
+import net.minecraft.enchantment.PiercingEnchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * @description Allow Infinity and Mending enchantments to co-exist.
+ * @description Allow Multishot and Piercing enchantments to co-exist.
  * @environment Server
  */
-@Mixin(value=InfinityEnchantment.class, priority=1543)
-public abstract class InfiniteMendingMixin {
+@Mixin(value={
+    MultishotEnchantment.class, PiercingEnchantment.class
+}, priority=1543)
+public abstract class MultishotPiercingMixin {
 
     @Inject(
         method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
         at=@At("HEAD"),
         cancellable=true)
-    private void allowInfinityMending(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
-        if (other == Enchantments.MENDING) {
+    private void allowMultishotPiercing(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+        if (other == Enchantments.MULTISHOT || other == Enchantments.PIERCING) {
             cir.setReturnValue(true);
         }
     }

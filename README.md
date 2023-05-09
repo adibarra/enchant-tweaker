@@ -95,6 +95,9 @@ Normally you need to choose between having either Mending or Infinity. Enabling 
 ### Loyal Void Tridents
 Normally tridents enchanted with Loyalty will be lost if thrown into the void. Enabling this tweak will allow those tridents to return to the player.
 
+### Multishot Piercing
+Normally you need to choose between having either Multishot or Piercing. Enabling this tweak allows both enchantments to coexist.
+
 ### No Soul Speed Backlash
 Normally boots will take damage when walking on soul sand with Soul Speed. Enabling this tweak will prevent your boots from taking damage from the enchantment.
 
