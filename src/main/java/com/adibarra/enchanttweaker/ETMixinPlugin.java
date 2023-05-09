@@ -68,7 +68,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         reloadConfig();
-        MOD_ENABLED = Boolean.parseBoolean(CONFIG.getOrDefault("mod_enabled", "false"));
+        MOD_ENABLED = CONFIG.getOrDefault("mod_enabled", false);
         LOGGER.info(EnchantTweaker.PREFIX + "Mod {}",
             MOD_ENABLED ? "enabled! Enabling mixins..." : "disabled! No mixins will be applied.");
     }
@@ -98,8 +98,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     }
 
     public static boolean getMixinConfig(String mixinName) {
-        return Boolean.parseBoolean(CONFIG.getOrDefault(
-            KEYS.getOrDefault(mixinName, "false"), "false"));
+        return CONFIG.getOrDefault(KEYS.getOrDefault(mixinName, null), false);
     }
 
     public static int getNumMixins() {
