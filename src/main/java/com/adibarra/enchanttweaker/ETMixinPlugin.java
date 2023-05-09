@@ -23,7 +23,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static final Map<String, String> KEYS = new HashMap<>();
     private static final Map<String, CompatEntry> COMPAT = new HashMap<>();
 
-    private record CompatEntry(String reason, boolean shouldApply, BooleanSupplier compatTrigger) { }
+    private record CompatEntry(boolean shouldApply, String reason, BooleanSupplier compatTrigger) { }
 
     static {
         KEYS.put("CheapNamesMixin",           "cheap_names");
@@ -58,20 +58,10 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         COMPAT.put(
             "NotTooExpensiveMixin",
             new CompatEntry(
-                "Mod 'Fabrication' detected",
                 false,
+                "Mod 'Fabrication' detected",
                 () -> FabricLoader.getInstance().isModLoaded("fabrication"))
         );
-        /*
-         COMPAT.put(
-             "EnderiteBowInfinityFix",
-             new CompatEntry(
-                 "Mod 'EnderiteMod' detected",
-                 true,
-                 () -> FabricLoader.getInstance().isModLoaded("enderitemod")
-                     && getMixinConfig("BowInfinityFixMixin")
-             ));
-        */
     }
 
     @Override
