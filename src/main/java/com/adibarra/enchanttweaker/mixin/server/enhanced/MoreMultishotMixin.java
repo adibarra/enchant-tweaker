@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
@@ -16,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.List;
 
@@ -47,19 +47,17 @@ public abstract class MoreMultishotMixin {
     @ModifyConstant(
         method="loadProjectiles(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;)Z",
         constant=@Constant(intValue=3))
-    private static int loadProjectiles(int original) {
+    private static int loadProjectiles(int orig) {
         return multishotLevel * 2 + 1;
     }
 
-    @SuppressWarnings("InvalidInjectorMethodSignature")
     @Inject(
         method="shootAll(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/item/ItemStack;FF)V",
         at=@At(
             value="INVOKE_ASSIGN",
             target="Lnet/minecraft/item/CrossbowItem;getSoundPitches(Lnet/minecraft/util/math/random/Random;)[F"),
-        locals=LocalCapture.CAPTURE_FAILSOFT,
         cancellable=true)
-    private static void shootAll(World world, LivingEntity entity, Hand hand, ItemStack stack, float speed, float divergence, CallbackInfo ci, List<ItemStack> list, float[] fs) {
+    private static void shootAll(World world, LivingEntity entity, Hand hand, ItemStack stack, float speed, float divergence, CallbackInfo ci, @Local List<ItemStack> list, @Local float[] fs) {
         float range = Math.max(10.0F, list.size() * 0.2F);
 
         for (int i = 0; i < list.size(); ++i) {

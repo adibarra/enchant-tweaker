@@ -21,7 +21,7 @@ public abstract class NotTooExpensiveMixin {
         method="drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V",
         constant=@Constant(intValue=40))
     private int notTooExpensiveClient(int orig) {
-        int max_cost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
-        return ADMath.clamp(max_cost, 0, Integer.MAX_VALUE);
+        int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
+        return ADMath.clamp(maxCost, 0, Integer.MAX_VALUE);
     }
 }
