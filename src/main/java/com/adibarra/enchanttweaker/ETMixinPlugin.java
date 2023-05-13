@@ -32,6 +32,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("PriorWorkFreeMixin",        "prior_work_free");
         KEYS.put("SturdyAnvilsMixin",         "sturdy_anvils");
 
+        KEYS.put("MoreBindingMixin",          "more_binding");
         KEYS.put("MoreChannelingMixin",       "more_channeling");
         KEYS.put("MoreFlameMixin",            "more_flame");
         KEYS.put("MoreMendingMixin",          "more_mending");

@@ -7,7 +7,7 @@
 <a href="https://modrinth.com/mod/enchant-tweaker">![Modrinth Downloads](https://img.shields.io/modrinth/dt/enchant-tweaker?color=00AF5C&label=modrinth&style=for-the-badge&logo=modrinth)</a>
 
 # Enchant Tweaker
-Tweak settings for many enchantment related mechanics while keeping the vanilla feel.
+Tweak many enchantment related mechanics while keeping the vanilla feel.
 
 
 
@@ -52,17 +52,20 @@ Some vanilla enchantments tweaked to scale better. Some of these require the enc
 <details>
 <summary> View Enhanced Enchantments </summary>
 
+### More Binding
+Enabling this tweak will allow Curse of Binding to scale with enchantment level. Higher levels will decrease the chance of the item dropping on death. The effect maxes out at Curse of Binding X, Binding I is kept the same as vanilla. Formula: `Keep Chance on Death = 1.1 - 0.1 * bindingLevel`.
+
 ### More Channeling
-Normally Channeling only works during thunderstorms. Enabling this tweak will allow Channeling II to work during rain as well. No scaling for higher levels.
+Enabling this tweak will allow Channeling to scale with enchantment level. Channeling I only works during thunderstorms. Channeling II will allow Channeling to work during rain. No scaling for higher levels.
 
 ### More Flame
-Normally Flame lasts 5 seconds. Enabling this tweak will allow Flame to scale with enchantment level. Each additional level will add 2 seconds to the duration. Continues scaling for higher levels.
+Enabling this tweak will allow Flame to scale with enchantment level. Flame I lasts 5 seconds. Each additional level adds 2 seconds. Continues scaling for higher levels (uncapped). Formula: `Burn Duration = 5 + 2 * flameLevel`.
 
 ### More Mending
 Enabling this tweak will allow Mending to scale with enchantment level. Mending II is the same as vanilla Mending. Mending I has ~10% XP efficiency loss and Mending III has ~10% XP efficiency gain. The effect maxes out at Mending X. Formula: `Repair Cost = 0.6 - 0.05 * mendingLevel`.
 
 ### More Multishot
-Enabling this tweak will allow Multishot to scale with enchantment level. Each additional level will add 2 arrows to the shot. Crossbows take damage for **each** Multishot arrow shot. Continues scaling for higher levels.
+Enabling this tweak will allow Multishot to scale with enchantment level. Each additional level will add 2 arrows to the shot. Crossbows take damage for **each** Multishot arrow shot. Continues scaling for higher levels (uncapped).
 
 </details>
 
