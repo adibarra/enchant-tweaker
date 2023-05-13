@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.client.tweak;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.enchantment.Enchantment;
@@ -11,7 +12,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Random;
 
@@ -33,12 +33,14 @@ public abstract class ShinyNameMixin {
 
     @Inject(
         method="getName(I)Lnet/minecraft/text/Text;",
-        at=@At(value="TAIL"),
-        locals=LocalCapture.CAPTURE_FAILSOFT)
-    private void getName(int level, CallbackInfoReturnable<Text> cir, MutableText mutableText) {
-        if (level < this.getMaxLevel() || this.isCursed()) return;
+        at=@At(value="TAIL"))
+    private void getName(int level, CallbackInfoReturnable<Text> cir, @Local MutableText mutableText) {
+        if (level < this.getMaxLevel()) return;
 
-        mutableText.formatted(Formatting.YELLOW);
+        if (!this.isCursed()) {
+            mutableText.formatted(Formatting.YELLOW);
+        }
+
         if (new Random().nextFloat() < 0.005f) {
             mutableText.formatted(Formatting.OBFUSCATED);
         }
