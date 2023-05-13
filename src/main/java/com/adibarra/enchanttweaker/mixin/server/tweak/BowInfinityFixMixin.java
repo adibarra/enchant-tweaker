@@ -1,7 +1,11 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.BowItem;
+import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -18,7 +22,10 @@ public abstract class BowInfinityFixMixin {
         at=@At(
             value="INVOKE",
             target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-    private boolean bowInfinityFix(boolean orig) {
-        return false;
+    private boolean bowInfinityFix(boolean orig, @Local ItemStack stack) {
+        if (EnchantmentHelper.getLevel(Enchantments.INFINITY, stack) > 0) {
+            return false;
+        }
+        return orig;
     }
 }
