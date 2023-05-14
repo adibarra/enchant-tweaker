@@ -55,7 +55,7 @@ Some vanilla enchantments tweaked to scale better. Some of these require the enc
 <summary> View Enhanced Enchantments </summary>
 
 ### More Binding
-Enabling this tweak will allow Curse of Binding to scale with enchantment level. Higher levels will decrease the chance of the item dropping on death. The effect maxes out at Curse of Binding X, Binding I is kept the same as vanilla. Formula: `Keep Chance on Death = 1.1 - 0.1 * bindingLevel`.
+Enabling this tweak will allow Curse of Binding to scale with enchantment level. Higher levels will decrease the chance of the item dropping on death. The effect maxes out at Curse of Binding X, Binding I is kept the same as vanilla. Formula: `Unbind Chance on Death = 1.1 - 0.1 * bindingLevel`.
 
 ### More Channeling
 Enabling this tweak will allow Channeling to scale with enchantment level. Channeling I only works during thunderstorms. Channeling II will allow Channeling to work during rain. No scaling for higher levels.
