@@ -1,7 +1,9 @@
 <a href="https://github.com/adibarra/enchant-tweaker">
     <img align="left" src="./src/main/resources/assets/enchanttweaker/icon.png" alt="Logo" height="128">
 </a>
-<a href="https://modrinth.com/mod/P7dR8mSH"><img src="https://camo.githubusercontent.com/9296b230044bb4ef07851ff9baa2d04aeb210baee3467abafff1380fa081f08b/68747470733a2f2f692e696d6775722e636f6d2f4f6c31546366382e706e67" alt="fabric api" width="200"/></a>
+
+<a href="https://modrinth.com/mod/e4Vpm1dD"><img src="https://github.com/adibarra/enchant-tweaker/assets/93070681/2fe57029-fbad-4e5f-8583-1ff1b300c18d" alt="Download on Modrinth" width="200"/></a>
+<a href="https://modrinth.com/mod/P7dR8mSH"><img src="https://github.com/adibarra/enchant-tweaker/assets/93070681/0a730158-59ca-4cb0-a029-11337665328f" alt="Fabric API" width="200"/></a>
 
 <a href="https://fabricmc.net/use/installer">![Modloader](https://img.shields.io/static/v1?color=00AF5C&label=modloader&message=fabric&style=for-the-badge)</a>
 <a href="https://modrinth.com/mod/enchant-tweaker">![Modrinth Downloads](https://img.shields.io/modrinth/dt/enchant-tweaker?color=00AF5C&label=modrinth&style=for-the-badge&logo=modrinth)</a>
