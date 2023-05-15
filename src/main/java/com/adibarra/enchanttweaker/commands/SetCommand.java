@@ -2,12 +2,10 @@ package com.adibarra.enchanttweaker.commands;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.EnchantTweaker;
-import com.adibarra.enchanttweaker.commands.suggestions.ListSuggestion;
 import com.adibarra.utils.ADText;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -16,8 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SetCommand implements Command<ServerCommandSource> {
-
-    public static final SuggestionProvider<ServerCommandSource> KEY_SUGGESTIONS = ListSuggestion.of(() -> ETMixinPlugin.getConfig().getKeys());
 
     @Override
     public int run(CommandContext<ServerCommandSource> context) {

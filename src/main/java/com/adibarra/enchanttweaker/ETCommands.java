@@ -31,26 +31,12 @@ public class ETCommands {
         );
 
         COMMANDS.add(
-            new ADBrigadier.Command("Get a list of all config keys.", () ->
-                CommandManager.literal("keys")
-                    .executes(new KeysCommand())
-                    .build())
-        );
-
-        COMMANDS.add(
-            new ADBrigadier.Command("Get the value for a config key.", () ->
-                CommandManager.literal("get")
+            new ADBrigadier.Command("Check or set the value for a config key.", () ->
+                CommandManager.literal("config")
+                    .executes(new ConfigCommand())
                     .then(CommandManager.argument("key", StringArgumentType.word())
                         .suggests(GetCommand.KEY_SUGGESTIONS)
-                        .executes(new GetCommand()))
-                    .build())
-        );
-
-        COMMANDS.add(
-            new ADBrigadier.Command("Set the value for a config key.", () ->
-                CommandManager.literal("set")
-                    .then(CommandManager.argument("key", StringArgumentType.word())
-                        .suggests(SetCommand.KEY_SUGGESTIONS)
+                            .executes(new GetCommand())
                         .then(CommandManager.argument("value", StringArgumentType.word())
                             .executes(new SetCommand())))
                     .build())
