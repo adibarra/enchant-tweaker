@@ -20,12 +20,14 @@ public abstract class AxeWeaponsMixin {
         method="isAcceptableItem(Lnet/minecraft/item/ItemStack;)Z",
         at=@At("HEAD"),
         cancellable=true)
-    private void enchanttweaker$axeWeapons$allowSwordEnchants(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+    private void enchanttweaker$axeWeapons$allowFireAspectKnockbackLooting(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         boolean isAxe = stack.getItem() instanceof AxeItem;
         if (!isAxe) return;
 
         Enchantment enchantment = (Enchantment) (Object) this;
-        if (enchantment == Enchantments.FIRE_ASPECT || enchantment == Enchantments.KNOCKBACK || enchantment == Enchantments.LOOTING) {
+        if (enchantment == Enchantments.FIRE_ASPECT ||
+            enchantment == Enchantments.KNOCKBACK ||
+            enchantment == Enchantments.LOOTING) {
             cir.setReturnValue(true);
         }
     }
