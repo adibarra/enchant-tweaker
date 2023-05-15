@@ -17,6 +17,7 @@
         "server.enhanced.MoreBindingMixin",
         "server.enhanced.MoreChannelingMixin",
         "server.enhanced.MoreFlameMixin",
+        "server.enhanced.MoreInfinityMixin",
         "server.enhanced.MoreMendingMixin",
         "server.enhanced.MoreMultishotMixin",
         "server.tweak.AxesNotToolsMixin",

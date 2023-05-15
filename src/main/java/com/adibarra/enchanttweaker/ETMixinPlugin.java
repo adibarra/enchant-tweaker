@@ -35,6 +35,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("MoreBindingMixin",          "more_binding");
         KEYS.put("MoreChannelingMixin",       "more_channeling");
         KEYS.put("MoreFlameMixin",            "more_flame");
+        KEYS.put("MoreInfinityMixin",         "more_infinity");
         KEYS.put("MoreMendingMixin",          "more_mending");
         KEYS.put("MoreMultishotMixin",        "more_multishot");
 
@@ -64,7 +65,16 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
                 false,
                 "Mod 'Fabrication' detected",
                 () -> FabricLoader.getInstance().isModLoaded("fabrication"),
-                () -> {})
+                () -> CONFIG.set(getMixinKey("NotTooExpensiveMixin"), Boolean.FALSE.toString()))
+        );
+
+        COMPAT.put(
+            "BowInfinityFixMixin",
+            new CompatEntry(
+                false,
+                "MoreInfinityMixin is enabled and takes precedence",
+                () -> getMixinConfig("MoreInfinityMixin"),
+                () -> CONFIG.set(getMixinKey("BowInfinityFixMixin"), Boolean.FALSE.toString()))
         );
     }
 
@@ -101,8 +111,14 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
             "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties");
     }
 
+    public static String getMixinKey(String mixinName) {
+        String key = KEYS.getOrDefault(mixinName, null);
+        if (key == null) LOGGER.error(EnchantTweaker.PREFIX + "Unknown mixin name: {}", mixinName);
+        return key;
+    }
+
     public static boolean getMixinConfig(String mixinName) {
-        return CONFIG.getOrDefault(KEYS.getOrDefault(mixinName, null), false);
+        return CONFIG.getOrDefault(getMixinKey(mixinName), false);
     }
 
     public static int getNumMixins() {

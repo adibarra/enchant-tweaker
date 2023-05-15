@@ -55,13 +55,16 @@ Some vanilla enchantments tweaked to scale better. Some of these require the enc
 <summary> View Enhanced Enchantments </summary>
 
 ### More Binding
-Enabling this tweak will allow Curse of Binding to scale with enchantment level. Higher levels will decrease the chance of the item dropping on death. The effect maxes out at Curse of Binding X, Binding I is kept the same as vanilla. Formula: `Unbind Chance on Death = 1.1 - 0.1 * bindingLevel`.
+Enabling this tweak will allow Curse of Binding to scale with enchantment level. Higher levels will decrease the chance of the item dropping on death. The effect maxes out at Curse of Binding X, Binding I is kept the same as vanilla. Formula: `Drop Chance on Death = 1.1 - 0.1 * bindingLevel`.
 
 ### More Channeling
 Enabling this tweak will allow Channeling to scale with enchantment level. Channeling I only works during thunderstorms. Channeling II will allow Channeling to work during rain. No scaling for higher levels.
 
 ### More Flame
 Enabling this tweak will allow Flame to scale with enchantment level. Flame I lasts 5 seconds. Each additional level adds 2 seconds. Continues scaling for higher levels (uncapped). Formula: `Burn Duration = 5 + 2 * flameLevel`.
+
+### More Infinity
+**Overrides BowInfinityFix.** Enabling this tweak will allow Infinity to scale with enchantment level. Lets bows with Infinity have a chance at shooting without consuming an arrow. Continues scaling for higher levels (capped at 100% chance). Formula: `Free Arrow Chance = 0.03 * infinityLevel`. (+3% chance per level)
 
 ### More Mending
 Enabling this tweak will allow Mending to scale with enchantment level. Mending II is the same as vanilla Mending. Mending I has ~10% XP efficiency loss and Mending III has ~10% XP efficiency gain. The effect maxes out at Mending X. Formula: `Repair Cost = 0.6 - 0.05 * mendingLevel`.
