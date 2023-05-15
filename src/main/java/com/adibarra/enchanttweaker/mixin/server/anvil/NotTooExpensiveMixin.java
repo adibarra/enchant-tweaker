@@ -16,7 +16,9 @@ public abstract class NotTooExpensiveMixin {
 
     @ModifyConstant(
         method="updateResult()V",
-        constant=@Constant(intValue=40, ordinal=2))
+        constant=@Constant(
+            ordinal=2,
+            intValue=40))
     private int enchanttweaker$notTooExpensive$modifyTooExpensive(int orig) {
         int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
         return ADMath.clamp(maxCost, 0, Integer.MAX_VALUE);

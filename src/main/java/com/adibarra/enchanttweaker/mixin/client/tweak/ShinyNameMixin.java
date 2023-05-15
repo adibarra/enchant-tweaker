@@ -35,7 +35,7 @@ public abstract class ShinyNameMixin {
 
     @Inject(
         method="getName(I)Lnet/minecraft/text/Text;",
-        at=@At(value="TAIL"))
+        at=@At("TAIL"))
     private void getName(int level, CallbackInfoReturnable<Text> cir, @Local MutableText mutableText) {
         if (level < this.getMaxLevel()) return;
 
