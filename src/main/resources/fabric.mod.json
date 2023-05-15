@@ -14,7 +14,6 @@
   "icon": "assets/enchanttweaker/icon.png",
   "environment": "*",
   "entrypoints": {
-    "preLaunch": ["com.llamalad7.mixinextras.MixinExtrasBootstrap::init"],
     "main": ["com.adibarra.enchanttweaker.EnchantTweaker"]
   },
   "mixins": ["enchanttweaker.mixins.json"],
