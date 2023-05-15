@@ -30,6 +30,7 @@ public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
     @ModifyExpressionValue(
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
         at=@At(
+            ordinal=0,
             value="INVOKE",
             target="Lnet/minecraft/world/World;isThundering()Z"))
     private boolean enchanttweaker$moreChanneling$modifyOnHit(boolean orig) {

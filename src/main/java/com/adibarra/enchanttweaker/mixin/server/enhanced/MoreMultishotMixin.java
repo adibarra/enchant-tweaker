@@ -54,6 +54,7 @@ public abstract class MoreMultishotMixin {
     @Inject(
         method="shootAll(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/item/ItemStack;FF)V",
         at=@At(
+            ordinal=0,
             value="INVOKE_ASSIGN",
             target="Lnet/minecraft/item/CrossbowItem;getSoundPitches(Lnet/minecraft/util/math/random/Random;)[F"),
         cancellable=true)

@@ -19,6 +19,7 @@ public abstract class BowInfinityFixMixin {
     @ModifyExpressionValue(
         method="use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;",
         at=@At(
+            ordinal=0,
             value="INVOKE",
             target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private boolean enchanttweaker$bowInfinityFix$fireNoArrow(boolean orig, @Local ItemStack stack) {

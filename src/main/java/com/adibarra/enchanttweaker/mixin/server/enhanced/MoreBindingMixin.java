@@ -43,6 +43,7 @@ public abstract class MoreBindingMixin {
     @ModifyExpressionValue(
         method="dropAll()V",
         at=@At(
+            ordinal=0,
             value="INVOKE",
             target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
         private boolean enchanttweaker$moreBinding$modifyDropAll(boolean orig, @Local ItemStack stack) {

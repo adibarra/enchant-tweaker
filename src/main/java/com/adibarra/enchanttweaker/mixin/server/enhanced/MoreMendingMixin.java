@@ -27,6 +27,7 @@ public abstract class MoreMendingMixin {
     @Inject(
         method="repairPlayerGears(Lnet/minecraft/entity/player/PlayerEntity;I)I",
         at=@At(
+            ordinal=0,
             value="INVOKE_ASSIGN",
             target="Lnet/minecraft/enchantment/EnchantmentHelper;chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;"))
     private void enchanttweaker$moreMending$captureMendingLevel(PlayerEntity player, int amount, CallbackInfoReturnable<Integer> cir, @Local Map.Entry<EquipmentSlot, ItemStack> entry) {
