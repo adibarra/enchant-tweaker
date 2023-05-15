@@ -40,6 +40,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
 
         KEYS.put("AxesNotToolsMixin",         "axes_not_tools");
         KEYS.put("AxeWeaponsMixin",           "axe_weapons");
+        KEYS.put("BetterMendingMixin",        "better_mending");
         KEYS.put("BowInfinityFixMixin",       "bow_infinity_fix");
         KEYS.put("GodArmorMixin",             "god_armor");
         KEYS.put("GodWeaponsMixin",           "god_weapons");

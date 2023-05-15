@@ -85,6 +85,9 @@ Normally axes are treated as tools when used in combat. This causes them to take
 ### Axe Weapons
 Allow the addition of some weapon enchantments that normally can not be added onto axes. Enabling this tweak allows you to add the following enchantments to axes: Fire Aspect, Knockback, and Looting.
 
+### Better Mending
+Normally Mending will only repair an item if it is being held or worn by the player. Enabling this tweak will allow Mending to be more flexible with what it can repair. Mending order: Main-Hand -> Off-Hand -> Armor -> Hotbar -> Inventory.
+
 ### Bow Infinity Fix
 Normally even though you have Infinity on a bow, you need to have arrows in your inventory to shoot. Enabling this tweak will allow you to shoot arrows without having them in your inventory.
 

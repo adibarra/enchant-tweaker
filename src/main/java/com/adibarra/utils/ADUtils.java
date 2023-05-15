@@ -21,6 +21,15 @@ public class ADUtils {
     }
 
     /**
+     * Represents an inventory.
+     */
+    public record Inventory(List<ItemStack> inv) {
+        public Inventory(ItemStack inv) {
+            this(List.of(inv));
+        }
+    }
+
+    /**
      * Broadcasts a message to all ops on the server.
      *
      * @param server the server to broadcast to
@@ -38,53 +47,36 @@ public class ADUtils {
      * Gets a player's hotbar.
      *
      * @param player the player
-     * @return the hotbar
+     * @return the hotbar inventory
      */
-    public static List<ItemStack> getPlayerHotbar(PlayerEntity player) {
-        List<ItemStack> list = DefaultedList.ofSize(PlayerInventory.getHotbarSize(), ItemStack.EMPTY);
-        for (int i = 0; i < PlayerInventory.getHotbarSize(); i++) {
+    public static Inventory getPlayerHotbar(PlayerEntity player) {
+        int size = PlayerInventory.getHotbarSize();
+        List<ItemStack> list = DefaultedList.ofSize(size, ItemStack.EMPTY);
+        for (int i = 0; i < size; i++) {
             list.set(i, player.getInventory().getStack(i));
         }
-        return list;
+        return new Inventory(list);
     }
 
     /**
-     * Checks if the given stack matches the condition.
+     * Gets an item that matches the condition from the given inventories.
+     * Checks inventories in order, returning a random matching item from the first inventory that has one.
      *
-     * @param stack     the stack to check
-     * @param condition the condition
-     * @return true if the stack matches the condition, false otherwise
-     */
-    public static boolean isMatchingItem(ItemStack stack, Predicate<ItemStack> condition) {
-        return stack != null && !stack.isEmpty() && condition.test(stack);
-    }
-
-    /**
-     * Gets a list of items from the given inventory that match the condition.
-     *
-     * @param inventory the inventory to search
-     * @param condition the condition
-     * @return the matching items
-     */
-    public static List<ItemStack> getMatchingItems(List<ItemStack> inventory, Predicate<ItemStack> condition) {
-        List<ItemStack> list = new ArrayList<>();
-        for (ItemStack stack : inventory) {
-            if (isMatchingItem(stack, condition)) {
-                list.add(stack);
-            }
-        }
-        return list;
-    }
-
-    /**
-     * Gets a random item from the given inventory that matches the condition.
-     *
-     * @param inventory the inventory to search
+     * @param inventories the inventories to search
      * @param condition the condition
      * @return the matching item, or null if none was found
      */
-    public static ItemStack getMatchingItem(List<ItemStack> inventory, Predicate<ItemStack> condition) {
-        List<ItemStack> list = getMatchingItems(inventory, condition);
-        return list.isEmpty() ? null : list.get(new Random().nextInt(list.size()));
+    public static ItemStack getMatchingItem(List<Inventory> inventories, Predicate<ItemStack> condition) {
+        for (Inventory inventory : inventories) {
+            List<ItemStack> list = new ArrayList<>();
+            for (ItemStack stack : inventory.inv()) {
+                if (stack != null && !stack.isEmpty() && condition.test(stack)) {
+                    list.add(stack);
+                }
+            }
+            if (list.isEmpty()) continue;
+            return list.get(new Random().nextInt(list.size()));
+        }
+        return null;
     }
 }

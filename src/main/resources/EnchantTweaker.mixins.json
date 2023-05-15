@@ -21,6 +21,7 @@
         "server.enhanced.MoreMultishotMixin",
         "server.tweak.AxesNotToolsMixin",
         "server.tweak.AxeWeaponsMixin",
+        "server.tweak.BetterMendingMixin",
         "server.tweak.BowInfinityFixMixin",
         "server.tweak.GodArmorMixin",
         "server.tweak.GodWeaponsMixin",
