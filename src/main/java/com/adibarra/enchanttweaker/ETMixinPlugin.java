@@ -23,7 +23,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static final Map<String, String> KEYS = new HashMap<>();
     private static final Map<String, CompatEntry> COMPAT = new HashMap<>();
 
-    private record CompatEntry(boolean shouldApply, String reason, BooleanSupplier compatTrigger) { }
+    private record CompatEntry(boolean shouldApply, String reason, BooleanSupplier condition, Runnable callback) { }
 
     static {
         KEYS.put("CheapNamesMixin",           "cheap_names");
@@ -63,7 +63,8 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
             new CompatEntry(
                 false,
                 "Mod 'Fabrication' detected",
-                () -> FabricLoader.getInstance().isModLoaded("fabrication"))
+                () -> FabricLoader.getInstance().isModLoaded("fabrication"),
+                () -> {})
         );
     }
 
@@ -83,9 +84,10 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         CompatEntry compatEntry = COMPAT.get(mixinName);
 
         // if there is a compat entry, and it activates, override config
-        if (compatEntry != null && compatEntry.compatTrigger().getAsBoolean()) {
+        if (compatEntry != null && compatEntry.condition().getAsBoolean()) {
             String state = compatEntry.shouldApply() ? "enabled" : "disabled";
             LOGGER.info(EnchantTweaker.PREFIX + "[COMPAT] {} {}. Reason: {}", mixinName, state, compatEntry.reason());
+            compatEntry.callback().run();
             return compatEntry.shouldApply();
         }
 
