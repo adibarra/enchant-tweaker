@@ -28,12 +28,11 @@ public abstract class LuckEnchantMixin extends Enchantment {
         method="getMaxLevel()I",
         at=@At("RETURN"))
     private int enchanttweaker$luckEnchant$modifyMaxLevel(int orig) {
-        if (Registries.ENCHANTMENT.getKey(this).isPresent()) {
-            String id = Registries.ENCHANTMENT.getKey(this).get().getValue().getPath();
-            int lvlCap = ETMixinPlugin.getConfig().getOrDefault(id, orig);
-            if (lvlCap < 0) return orig;
-            return ADMath.clamp(lvlCap, 0, 255);
-        }
-        return orig;
+        if (Registries.ENCHANTMENT.getKey(this).isEmpty()) return orig;
+
+        String key = Registries.ENCHANTMENT.getKey(this).get().getValue().getPath();
+        int lvlCap = ETMixinPlugin.getConfig().getOrDefault(key, orig);
+        if (lvlCap < 0) return orig;
+        return ADMath.clamp(lvlCap, 0, 255);
     }
 }
