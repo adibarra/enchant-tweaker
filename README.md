@@ -14,7 +14,7 @@ Tweak many enchantment related mechanics while keeping the vanilla feel.
 
 
 ## Installation
-Client-side install is recommended but not required. Some non-critical visual QOL improvements and tweaks need to be installed on the client to work properly. This means that vanilla clients can join servers with the mod installed and not have any issues.
+Client-side install is recommended but not required. Some non-critical visual QOL tweaks need to be installed on the client to work properly.
 
 |              | Client-Side  | Server-Side  |
 |:------------:|:------------:|:------------:|
