@@ -45,15 +45,9 @@ body:
     attributes:
       label: Any relevant logs?
       description: |
-        Use the following format:
-        \<details\>
-        \<summary\>Click to expand!\</summary\>
-
-        \`\`\`shell
-        // paste the log text here
-        \`\`\`
-        \</details\>
-      placeholder: Copy and paste any relevant log output.
+        If applicable, add logs to help explain your problem.
+        Using https://mclo.gs/ is recommended.
+      placeholder: Copy and paste any relevant log output or crash reports here.
   - type: textarea
     id: extra
     attributes:
