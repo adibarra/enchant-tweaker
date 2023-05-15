@@ -18,7 +18,7 @@ public abstract class GodArmorMixin {
         method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
         at=@At("HEAD"),
         cancellable=true)
-    private void allowGodArmor(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+    private void enchanttweaker$godArmor$allowAllProtectionEnchants(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
         boolean isProtection = other instanceof ProtectionEnchantment;
         if (isProtection) cir.setReturnValue(true);
     }

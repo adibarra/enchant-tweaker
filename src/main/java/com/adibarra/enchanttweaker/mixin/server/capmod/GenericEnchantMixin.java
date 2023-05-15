@@ -53,7 +53,7 @@ public abstract class GenericEnchantMixin {
     @ModifyReturnValue(
         method="getMaxLevel()I",
         at=@At("RETURN"))
-    private int modifyMaxLevel(int orig) {
+    private int enchanttweaker$genericEnchant$modifyMaxLevel(int orig) {
         int lvlCap = ETMixinPlugin.getConfig().getOrDefault(ENCHANTS.get(this.getClass()), orig);
         if (lvlCap < 0) return orig;
         return ADMath.clamp(lvlCap, 0, 255);

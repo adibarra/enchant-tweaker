@@ -16,7 +16,7 @@ public abstract class NoSoulSpeedBacklashMixin {
     @ModifyConstant(
         method="addSoulSpeedBoostIfNeeded()V",
         constant=@Constant(intValue=1))
-    private int removeBacklash(int orig) {
+    private int enchanttweaker$noSoulSpeedBacklash$noBacklash(int orig) {
         return 0;
     }
 }

@@ -42,7 +42,7 @@ public abstract class MoreBindingMixin {
         at=@At(
             value="INVOKE",
             target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-        private boolean moreBinding(boolean orig, @Local ItemStack stack) {
+        private boolean enchanttweaker$moreBinding$modifyDropAll(boolean orig, @Local ItemStack stack) {
         if (orig) return true;
         if (!armor.contains(stack)) return false;
 

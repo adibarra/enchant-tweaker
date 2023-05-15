@@ -22,7 +22,7 @@ public abstract class MultishotPiercingMixin {
         method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
         at=@At("HEAD"),
         cancellable=true)
-    private void allowMultishotPiercing(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+    private void enchanttweaker$multishotPiercing$allowCoexist(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
         if (other == Enchantments.MULTISHOT || other == Enchantments.PIERCING) {
             cir.setReturnValue(true);
         }

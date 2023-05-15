@@ -20,7 +20,7 @@ public abstract class TridentWeaponsMixin {
         method="isAcceptableItem(Lnet/minecraft/item/ItemStack;)Z",
         at=@At("HEAD"),
         cancellable=true)
-    private void tridentWeapons(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+    private void enchanttweaker$tridentWeapons$allowSwordEnchants(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         boolean isTrident = stack.getItem() instanceof TridentItem;
         if (!isTrident) return;
 

@@ -16,7 +16,7 @@ public abstract class NoThornsBacklashMixin {
     @ModifyConstant(
         method="onUserDamaged(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/Entity;I)V",
         constant=@Constant(intValue=2))
-    private int removeBacklash(int orig) {
+    private int enchanttweaker$noThornsBacklash$noBacklash(int orig) {
         return 0;
     }
 }

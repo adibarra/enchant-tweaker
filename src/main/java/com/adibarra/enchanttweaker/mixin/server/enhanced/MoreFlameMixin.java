@@ -26,7 +26,7 @@ public abstract class MoreFlameMixin {
     @Inject(
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
         at=@At("HEAD"))
-    private void captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
+    private void enchanttweaker$moreFlame$captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
         Entity hitEntity = entityHitResult.getEntity();
         if (hitEntity instanceof LivingEntity) {
             flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) hitEntity);
@@ -36,7 +36,7 @@ public abstract class MoreFlameMixin {
     @ModifyConstant(
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
         constant=@Constant(intValue=5))
-    private int moreFlame(int orig) {
+    private int enchanttweaker$moreFlame$modifyBurnTime(int orig) {
         return 2 * (flameLevel - 1) + orig;
     }
 }

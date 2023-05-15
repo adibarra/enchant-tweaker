@@ -17,7 +17,7 @@ public abstract class PriorWorkFreeMixin {
         method="getRepairCost()I",
         at=@At(value="HEAD"),
         cancellable=true)
-    private void priorWorkFree(CallbackInfoReturnable<Integer> cir) {
+    private void enchanttweaker$priorWorkFree$modifyRepairCost(CallbackInfoReturnable<Integer> cir) {
         cir.setReturnValue(0);
     }
 }

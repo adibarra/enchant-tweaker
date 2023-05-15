@@ -16,13 +16,12 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(value=BowItem.class, priority=1543)
 public abstract class BowInfinityFixMixin {
 
-    @SuppressWarnings("SameReturnValue")
     @ModifyExpressionValue(
         method="use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;",
         at=@At(
             value="INVOKE",
             target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-    private boolean bowInfinityFix(boolean orig, @Local ItemStack stack) {
+    private boolean enchanttweaker$bowInfinityFix$fireNoArrow(boolean orig, @Local ItemStack stack) {
         if (EnchantmentHelper.getLevel(Enchantments.INFINITY, stack) > 0) {
             return false;
         }

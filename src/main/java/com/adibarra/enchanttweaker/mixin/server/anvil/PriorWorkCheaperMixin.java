@@ -20,7 +20,7 @@ public abstract class PriorWorkCheaperMixin {
         method="getNextCost(I)I",
         at=@At(value="HEAD"),
         cancellable=true)
-    private static void priorWorkCheaper(int cost, CallbackInfoReturnable<Integer> cir) {
+    private static void enchanttweaker$priorWorkCheaper$modifyRepairCost(int cost, CallbackInfoReturnable<Integer> cir) {
         double coefficient = ETMixinPlugin.getConfig().getOrDefault("pw_cost_multiplier", 2.0);
         double newCost = ADMath.clamp(coefficient, 0, Double.MAX_VALUE) * cost + 1;
         cir.setReturnValue((int) Math.round(newCost));

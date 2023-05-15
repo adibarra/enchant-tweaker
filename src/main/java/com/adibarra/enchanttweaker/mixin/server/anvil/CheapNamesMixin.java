@@ -28,7 +28,7 @@ public abstract class CheapNamesMixin extends ForgingScreenHandler {
     @Inject(
         method="updateResult()V",
         at=@At("TAIL"))
-    private void cheapNames(CallbackInfo ci) {
+    private void enchanttweaker$cheapNames$modifyLevelCost(CallbackInfo ci) {
         if (this.input.getStack(1).isEmpty()) {
             levelCost.set(1);
         }

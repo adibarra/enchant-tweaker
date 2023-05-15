@@ -22,7 +22,7 @@ public abstract class DamageEnchantMixin {
     @ModifyReturnValue(
         method="getMaxLevel()I",
         at=@At("RETURN"))
-    private int modifyMaxLevel(int orig) {
+    private int enchanttweaker$damageEnchant$modifyMaxLevel(int orig) {
         int lvlCap = switch (this.typeIndex) {
             case 0 -> ETMixinPlugin.getConfig().getOrDefault("sharpness", orig);
             case 1 -> ETMixinPlugin.getConfig().getOrDefault("smite", orig);

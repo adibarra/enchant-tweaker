@@ -19,7 +19,7 @@ public abstract class InfiniteMendingMixin {
         method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
         at=@At("HEAD"),
         cancellable=true)
-    private void allowInfinityMending(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+    private void enchanttweaker$infiniteMending$allowCoexist(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
         if (other == Enchantments.MENDING) {
             cir.setReturnValue(true);
         }

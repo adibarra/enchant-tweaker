@@ -33,7 +33,7 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
     @Inject(
         method="tick()V",
         at=@At("HEAD"))
-    private void tick(CallbackInfo ci) {
+    private void enchanttweaker$loyalVoidTridents$returnFromVoid(CallbackInfo ci) {
         if (dataTracker.get(LOYALTY) == 0 || this.dealtDamage) return;
 
         if (this.getY() <= this.world.getBottomY()) {

@@ -18,7 +18,7 @@ public abstract class GodWeaponsMixin {
         method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
         at=@At("HEAD"),
         cancellable=true)
-    private void allowGodWeapons(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+    private void enchanttweaker$godWeapons$allowAllDamageEnchants(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
         boolean isDamage = other instanceof DamageEnchantment;
         if (isDamage) cir.setReturnValue(true);
     }

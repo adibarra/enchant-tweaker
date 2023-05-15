@@ -28,7 +28,7 @@ public abstract class MoreMendingMixin {
         at=@At(
             value="INVOKE_ASSIGN",
             target="Lnet/minecraft/enchantment/EnchantmentHelper;chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;"))
-    private void captureMendingLevel(PlayerEntity player, int amount, CallbackInfoReturnable<Integer> cir, @Local Map.Entry<EquipmentSlot, ItemStack> entry) {
+    private void enchanttweaker$moreMending$captureMendingLevel(PlayerEntity player, int amount, CallbackInfoReturnable<Integer> cir, @Local Map.Entry<EquipmentSlot, ItemStack> entry) {
         if (entry != null) {
             mendingLevel = EnchantmentHelper.getLevel(Enchantments.MENDING, entry.getValue());
         }
@@ -38,7 +38,7 @@ public abstract class MoreMendingMixin {
         method="getMendingRepairCost(I)I",
         at=@At("HEAD"),
         cancellable=true)
-    private void moreMending(int repairAmount, CallbackInfoReturnable<Integer> cir) {
+    private void enchanttweaker$moreMending$modifyRepairCost(int repairAmount, CallbackInfoReturnable<Integer> cir) {
         cir.setReturnValue((int) Math.round(repairAmount * Math.max(0.6 - 0.05 * mendingLevel, 0.1)));
     }
 }
