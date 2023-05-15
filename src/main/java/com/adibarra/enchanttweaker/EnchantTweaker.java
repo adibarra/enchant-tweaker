@@ -19,5 +19,4 @@ public class EnchantTweaker implements ModInitializer {
             LOGGER.info(PREFIX + "Ready to go! Applied {} Mixins.", ETMixinPlugin.getNumMixins());
         }
     }
-
 }
