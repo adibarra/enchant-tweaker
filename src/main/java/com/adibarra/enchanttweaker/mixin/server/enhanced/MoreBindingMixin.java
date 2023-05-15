@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
+import com.adibarra.utils.ADMath;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -49,7 +50,7 @@ public abstract class MoreBindingMixin {
         if (!armor.contains(stack)) return false;
 
         int bindingLevel = EnchantmentHelper.getLevel(Enchantments.BINDING_CURSE, stack);
-        if (RAND.nextFloat() > Math.max(1.1 - 0.1 * bindingLevel, 0.1)) {
+        if (RAND.nextFloat() > ADMath.clamp(1.1 - 0.1 * bindingLevel, 0.1, 1.0)) {
             BOUND_ARMOR.put(armor.indexOf(stack), stack.copy());
             return true;
         }
