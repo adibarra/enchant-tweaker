@@ -25,6 +25,8 @@ import java.util.Random;
 @Mixin(value=Enchantment.class, priority=1543)
 public abstract class ShinyNameMixin {
 
+    private static final Random RAND = new Random();
+
     @Shadow
     public abstract int getMaxLevel();
 
@@ -41,7 +43,7 @@ public abstract class ShinyNameMixin {
             mutableText.formatted(Formatting.YELLOW);
         }
 
-        if (new Random().nextFloat() < 0.005f) {
+        if (RAND.nextFloat() < 0.005f) {
             mutableText.formatted(Formatting.OBFUSCATED);
         }
     }

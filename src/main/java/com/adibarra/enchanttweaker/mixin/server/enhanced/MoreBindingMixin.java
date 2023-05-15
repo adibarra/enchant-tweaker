@@ -24,6 +24,8 @@ import java.util.Random;
 @Mixin(value=PlayerInventory.class, priority=1543)
 public abstract class MoreBindingMixin {
 
+    private static final Random RAND = new Random();
+
     private static final Map<Integer, ItemStack> BOUND_ARMOR = new HashMap<>();
     static {
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
@@ -47,7 +49,7 @@ public abstract class MoreBindingMixin {
         if (!armor.contains(stack)) return false;
 
         int bindingLevel = EnchantmentHelper.getLevel(Enchantments.BINDING_CURSE, stack);
-        if (new Random().nextFloat() > Math.max(1.1 - 0.1 * bindingLevel, 0.1)) {
+        if (RAND.nextFloat() > Math.max(1.1 - 0.1 * bindingLevel, 0.1)) {
             BOUND_ARMOR.put(armor.indexOf(stack), stack.copy());
             return true;
         }
