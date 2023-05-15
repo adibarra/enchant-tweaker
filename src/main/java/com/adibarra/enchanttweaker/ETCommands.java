@@ -2,7 +2,7 @@ package com.adibarra.enchanttweaker;
 
 import com.adibarra.enchanttweaker.commands.*;
 import com.adibarra.utils.ADBrigadier;
-import com.adibarra.utils.ADCommands;
+import com.adibarra.utils.ADUtils;
 import com.adibarra.utils.ADText;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.CommandNode;
@@ -90,7 +90,7 @@ public class ETCommands {
 
             // Reload config file
             ETMixinPlugin.reloadConfig();
-            ADCommands.broadcastOps(server, ADText.joinText(new Text[] {
+            ADUtils.broadcastOps(server, ADText.joinText(new Text[] {
                 Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN),
                 Text.literal("Config Reloaded!")
             }));
