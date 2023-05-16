@@ -9,7 +9,7 @@
 <a href="https://modrinth.com/mod/enchant-tweaker">![Modrinth Downloads](https://img.shields.io/modrinth/dt/enchant-tweaker?color=00AF5C&label=modrinth&style=for-the-badge&logo=modrinth)</a>
 
 # Enchant Tweaker
-Tweak many enchantment related mechanics while keeping the vanilla feel.
+Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 68 configuration options.
 
 
 
