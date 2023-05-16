@@ -6,7 +6,7 @@
 <a href="https://modrinth.com/mod/P7dR8mSH"><img src="https://github.com/adibarra/enchant-tweaker/assets/93070681/0a730158-59ca-4cb0-a029-11337665328f" alt="Fabric API" width="200"/></a>
 
 <a href="https://fabricmc.net/use/installer">![Modloader](https://img.shields.io/static/v1?color=00AF5C&label=modloader&message=fabric&style=for-the-badge)</a>
-<a href="https://modrinth.com/mod/enchant-tweaker">![Modrinth Downloads](https://img.shields.io/modrinth/dt/enchant-tweaker?color=00AF5C&label=modrinth&style=for-the-badge&logo=modrinth)</a>
+<a href="https://modrinth.com/mod/e4Vpm1dD">![Modrinth Downloads](https://img.shields.io/modrinth/dt/enchant-tweaker?color=00AF5C&label=modrinth&style=for-the-badge&logo=modrinth)</a>
 
 # Enchant Tweaker
 Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 68 configuration options.
