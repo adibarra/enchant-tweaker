@@ -60,6 +60,15 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("SpecialEnchantMixin",       "capmod_enabled");
 
         COMPAT.put(
+            "AxesNotToolsMixin",
+            new CompatEntry(
+                false,
+                "Mod 'AxesAreWeapons' detected",
+                () -> FabricLoader.getInstance().isModLoaded("axesareweapons"),
+                () -> CONFIG.set(getMixinKey("AxesNotToolsMixin"), Boolean.FALSE.toString()))
+        );
+
+        COMPAT.put(
             "NotTooExpensiveMixin",
             new CompatEntry(
                 false,
