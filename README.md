@@ -1,12 +1,15 @@
-<a href="https://github.com/adibarra/enchant-tweaker">
-    <img align="left" src="./src/main/resources/assets/enchanttweaker/icon.png" alt="Logo" height="128">
-</a>
+<!-- main logo -->
+[<img alt="Logo" src="src/main/resources/assets/enchanttweaker/icon.png" height="128" align="left">](https://github.com/adibarra/enchant-tweaker)
 
-<a href="https://modrinth.com/mod/e4Vpm1dD"><img src="https://github.com/adibarra/enchant-tweaker/assets/93070681/2fe57029-fbad-4e5f-8583-1ff1b300c18d" alt="Download on Modrinth" width="200"/></a>
-<a href="https://modrinth.com/mod/P7dR8mSH"><img src="https://github.com/adibarra/enchant-tweaker/assets/93070681/0a730158-59ca-4cb0-a029-11337665328f" alt="Fabric API" width="200"/></a>
+<!-- large badges -->
+[<img alt="Download on Modrinth" src="https://github.com/adibarra/enchant-tweaker/assets/93070681/2fe57029-fbad-4e5f-8583-1ff1b300c18d" width="200"/>](https://modrinth.com/mod/e4Vpm1dD)
+[<img alt="Fabric API" src="https://github.com/adibarra/enchant-tweaker/assets/93070681/0a730158-59ca-4cb0-a029-11337665328f" width="200"/>](https://modrinth.com/mod/P7dR8mSH)
 
-<a href="https://fabricmc.net/use/installer">![Modloader](https://img.shields.io/static/v1?color=00AF5C&label=modloader&message=fabric&style=for-the-badge)</a>
-<a href="https://modrinth.com/mod/e4Vpm1dD">![Modrinth Downloads](https://img.shields.io/modrinth/dt/enchant-tweaker?color=00AF5C&label=modrinth&style=for-the-badge&logo=modrinth)</a>
+<!-- badges -->
+[<img alt="Modloader" src="https://img.shields.io/static/v1?color=00AF5C&amp;label=modloaders&amp;message=fabric/quilt&amp;style=for-the-badge"/>](https://fabricmc.net/use/installer)
+[<img alt="Modrinth Downloads" src="https://img.shields.io/modrinth/dt/enchant-tweaker?color=00AF5C&amp;label=modrinth&amp;style=for-the-badge&amp;logo=modrinth"/>](https://modrinth.com/mod/e4Vpm1dD)
+
+
 
 # Enchant Tweaker
 Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 68 configuration options.
