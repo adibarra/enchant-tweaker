@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @description Enchanting/repairing cost does not increase with prior work.
  * @environment Server
  */
-@Mixin(value=ItemStack.class, priority=1543)
+@Mixin(value=ItemStack.class)
 public abstract class PriorWorkFreeMixin {
 
     @Inject(

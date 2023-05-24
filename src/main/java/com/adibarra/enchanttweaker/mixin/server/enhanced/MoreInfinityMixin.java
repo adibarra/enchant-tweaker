@@ -13,7 +13,7 @@ import java.util.Random;
  * without consuming an arrow. Overrides BowInfinityFix.
  * @environment Server
  */
-@Mixin(value=BowItem.class, priority=1543)
+@Mixin(value=BowItem.class)
 public abstract class MoreInfinityMixin {
 
     private static final Random RAND = new Random();

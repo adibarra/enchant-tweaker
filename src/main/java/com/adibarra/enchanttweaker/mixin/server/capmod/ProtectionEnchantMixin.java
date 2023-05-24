@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
  * @description Modify enchantment level cap.
  * @environment Server
  */
-@Mixin(value=ProtectionEnchantment.class, priority=1543)
+@Mixin(value=ProtectionEnchantment.class)
 public abstract class ProtectionEnchantMixin {
 
     @Shadow @Final

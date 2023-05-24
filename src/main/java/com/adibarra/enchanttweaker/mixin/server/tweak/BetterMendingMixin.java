@@ -20,7 +20,7 @@ import java.util.List;
  * Priority order: Main-Hand -> Off-Hand -> Armor -> Hotbar -> Inventory.
  * @environment Server
  */
-@Mixin(value=ExperienceOrbEntity.class, priority=1543)
+@Mixin(value=ExperienceOrbEntity.class)
 public abstract class BetterMendingMixin {
 
     @Shadow

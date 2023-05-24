@@ -24,7 +24,7 @@ import java.util.List;
  * @description Scales the number of the arrows fired by Multishot enchant based on its level.
  * @environment Server
  */
-@Mixin(value=CrossbowItem.class, priority=1543)
+@Mixin(value=CrossbowItem.class)
 public abstract class MoreMultishotMixin {
 
     @SuppressWarnings("EmptyMethod")

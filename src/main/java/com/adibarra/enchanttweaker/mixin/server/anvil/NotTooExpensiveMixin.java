@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
  * @description Anvils no longer say "Too Expensive!"
  * @environment Server
  */
-@Mixin(value=AnvilScreenHandler.class, priority=1543)
+@Mixin(value=AnvilScreenHandler.class)
 public abstract class NotTooExpensiveMixin {
 
     @ModifyConstant(

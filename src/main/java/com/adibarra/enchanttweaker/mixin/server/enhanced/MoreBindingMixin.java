@@ -22,7 +22,7 @@ import java.util.Random;
  * @description Scales the Binding Curse enchantment to have a chance of not dropping the item on death.
  * @environment Server
  */
-@Mixin(value=PlayerInventory.class, priority=1543)
+@Mixin(value=PlayerInventory.class)
 public abstract class MoreBindingMixin {
 
     private static final Random RAND = new Random();

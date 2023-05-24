@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @description Lets tridents with Loyalty enchant return when thrown into the void.
  * @environment Server
  */
-@Mixin(value=TridentEntity.class, priority=1543)
+@Mixin(value=TridentEntity.class)
 public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
 
     @Shadow @Final

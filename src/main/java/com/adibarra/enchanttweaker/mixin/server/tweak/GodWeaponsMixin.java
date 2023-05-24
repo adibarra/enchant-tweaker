@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @description Allow weapons to be enchanted with multiple damage enchantments.
  * @environment Server
  */
-@Mixin(value=DamageEnchantment.class, priority=1543)
+@Mixin(value=DamageEnchantment.class)
 public abstract class GodWeaponsMixin {
 
     @Inject(

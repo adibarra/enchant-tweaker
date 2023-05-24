@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Adds 2 seconds of burn time per level above 1.
  * @environment Server
  */
-@Mixin(value=PersistentProjectileEntity.class, priority=1543)
+@Mixin(value=PersistentProjectileEntity.class)
 public abstract class MoreFlameMixin {
 
     private int flameLevel = 0;

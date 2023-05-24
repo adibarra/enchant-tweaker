@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @note Not ModifyConstant because we want to work with doubles then cast to int.
  * @environment Server
  */
-@Mixin(value=AnvilScreenHandler.class, priority=1543)
+@Mixin(value=AnvilScreenHandler.class)
 public abstract class PriorWorkCheaperMixin {
 
     @Inject(

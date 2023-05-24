@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
  * @description Disable Thorns enchant armor self-damage backlash.
  * @environment Server
  */
-@Mixin(value=ThornsEnchantment.class, priority=1543)
+@Mixin(value=ThornsEnchantment.class)
 public abstract class NoThornsBacklashMixin {
 
     @SuppressWarnings("SameReturnValue")

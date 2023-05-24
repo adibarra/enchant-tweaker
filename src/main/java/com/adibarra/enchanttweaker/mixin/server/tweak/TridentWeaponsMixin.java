@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @description Allow tridents to be enchanted with fire aspect, knockback, and looting.
  * @environment Server
  */
-@Mixin(value=Enchantment.class, priority=1543)
+@Mixin(value=Enchantment.class)
 public abstract class TridentWeaponsMixin {
 
     @Inject(

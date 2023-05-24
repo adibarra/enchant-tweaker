@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
  * @environment Client
  */
 @Environment(EnvType.CLIENT)
-@Mixin(value=AnvilScreen.class, priority=1543)
+@Mixin(value=AnvilScreen.class)
 public abstract class NotTooExpensiveMixin {
 
     @ModifyConstant(

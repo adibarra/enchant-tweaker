@@ -22,7 +22,7 @@ import java.util.Random;
  * @environment Client
  */
 @Environment(EnvType.CLIENT)
-@Mixin(value=Enchantment.class, priority=1543)
+@Mixin(value=Enchantment.class)
 public abstract class ShinyNameMixin {
 
     private static final Random RAND = new Random();

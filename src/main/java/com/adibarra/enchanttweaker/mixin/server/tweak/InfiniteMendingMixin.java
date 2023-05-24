@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @description Allow Infinity and Mending enchantments to co-exist.
  * @environment Server
  */
-@Mixin(value=InfinityEnchantment.class, priority=1543)
+@Mixin(value=InfinityEnchantment.class)
 public abstract class InfiniteMendingMixin {
 
     @Inject(

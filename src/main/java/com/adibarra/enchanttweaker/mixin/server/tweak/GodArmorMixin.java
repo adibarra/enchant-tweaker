@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @description Allow armor to be enchanted with multiple protection enchantments.
  * @environment Server
  */
-@Mixin(value=ProtectionEnchantment.class, priority=1543)
+@Mixin(value=ProtectionEnchantment.class)
 public abstract class GodArmorMixin {
 
     @Inject(

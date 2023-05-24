@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @description Renaming items in anvils costs 1 level.
  * @environment Server
  */
-@Mixin(value=AnvilScreenHandler.class, priority=1543)
+@Mixin(value=AnvilScreenHandler.class)
 public abstract class CheapNamesMixin extends ForgingScreenHandler {
 
     @Shadow @Final

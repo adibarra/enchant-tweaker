@@ -22,7 +22,7 @@ import java.util.Map;
     RespirationEnchantment.class,  RiptideEnchantment.class,     SoulSpeedEnchantment.class,
     SweepingEnchantment.class,     SwiftSneakEnchantment.class,  ThornsEnchantment.class,
     UnbreakingEnchantment.class
-}, priority=1543)
+})
 public abstract class GenericEnchantMixin {
 
     private final static Map<Class<?>, String> ENCHANTS = new HashMap<>();

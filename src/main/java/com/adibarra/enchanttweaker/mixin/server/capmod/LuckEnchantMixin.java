@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
  * @note LuckEnchantment is used by: Looting, Fortune, and Luck of the Sea
  * @environment Server
  */
-@Mixin(value=LuckEnchantment.class, priority=1543)
+@Mixin(value=LuckEnchantment.class)
 public abstract class LuckEnchantMixin extends Enchantment {
 
     @SuppressWarnings("unused")

@@ -19,7 +19,7 @@ import java.util.Map;
  * @description Scales the efficiency of the Mending enchant based on its level.
  * @environment Server
  */
-@Mixin(value=ExperienceOrbEntity.class, priority=1543)
+@Mixin(value=ExperienceOrbEntity.class)
 public abstract class MoreMendingMixin {
 
     private int mendingLevel = 0;

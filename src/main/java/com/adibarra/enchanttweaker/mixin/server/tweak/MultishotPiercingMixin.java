@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(value={
     MultishotEnchantment.class, PiercingEnchantment.class
-}, priority=1543)
+})
 public abstract class MultishotPiercingMixin {
 
     @Inject(

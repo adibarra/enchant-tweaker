@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
  * @description Lets bows with Infinity enchant shoot without arrows.
  * @environment Server
  */
-@Mixin(value=BowItem.class, priority=1543)
+@Mixin(value=BowItem.class)
 public abstract class BowInfinityFixMixin {
 
     @ModifyExpressionValue(

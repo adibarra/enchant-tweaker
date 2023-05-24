@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
  * @description Remove extra self-damage from axes when used as a weapon.
  * @environment Server
  */
-@Mixin(value=MiningToolItem.class, priority=1543)
+@Mixin(value=MiningToolItem.class)
 public abstract class AxesNotToolsMixin {
 
     @ModifyConstant(

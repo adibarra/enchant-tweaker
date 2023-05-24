@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
  * @note This modifies a constant in a lambda in onTakeOutput
  * @environment Server
  */
-@Mixin(value=AnvilScreenHandler.class, priority=1543)
+@Mixin(value=AnvilScreenHandler.class)
 public abstract class SturdyAnvilsMixin {
 
     @ModifyConstant(

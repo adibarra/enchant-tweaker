@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
  * @description Lets Channeling enchant work in rain at level 2.
  * @environment Server
  */
-@Mixin(value=TridentEntity.class, priority=1543)
+@Mixin(value=TridentEntity.class)
 public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
 
     @Shadow
