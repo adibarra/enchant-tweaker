@@ -17,8 +17,11 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(value=AnvilScreen.class)
 public abstract class NotTooExpensiveMixin {
 
+    // VERSION CHANGES:
+    // 1.19+: drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V
+    // 1.20+: drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V
     @ModifyConstant(
-        method="drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V",
+        method="drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V",
         constant=@Constant(intValue=40))
     private int notTooExpensiveClient(int orig) {
         int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
