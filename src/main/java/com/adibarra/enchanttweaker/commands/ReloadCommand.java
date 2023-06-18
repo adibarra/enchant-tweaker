@@ -9,18 +9,23 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ReloadCommand implements Command<ServerCommandSource> {
 
+    // VERSION CHANGES:
+    // 1.19+: sendFeedback(
+    // 1.20+: sendFeedback(() ->
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
         ETMixinPlugin.reloadConfig();
 
-        Text[] msg = new Text[] {
-            Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN),
-            Text.literal("Config Reloaded!")
-        };
+        List<Text> msg = new ArrayList<>();
+        msg.add(Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN));
+        msg.add(Text.literal("Config Reloaded!"));
 
-        context.getSource().sendFeedback(ADText.joinText(msg), false);
+        context.getSource().sendFeedback(() -> ADText.joinText(msg), false);
         return Command.SINGLE_SUCCESS;
     }
 }

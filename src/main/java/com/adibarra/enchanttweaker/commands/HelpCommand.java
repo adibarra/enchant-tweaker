@@ -15,6 +15,9 @@ import java.util.List;
 
 public class HelpCommand implements Command<ServerCommandSource> {
 
+    // VERSION CHANGES:
+    // 1.19+: sendFeedback(
+    // 1.20+: sendFeedback(() ->
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
         List<Text> msg = new ArrayList<>();
@@ -30,7 +33,7 @@ public class HelpCommand implements Command<ServerCommandSource> {
         msg.add(ADText.buildCmdLink(ETCommands.BASE_CMD, "help"));
         msg.add(Text.literal(" - Shows this help message."));
 
-        context.getSource().sendFeedback(ADText.joinText(msg), false);
+        context.getSource().sendFeedback(() -> ADText.joinText(msg), false);
         return Command.SINGLE_SUCCESS;
     }
 }

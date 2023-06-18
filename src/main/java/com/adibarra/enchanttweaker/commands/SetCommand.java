@@ -15,6 +15,9 @@ import java.util.List;
 
 public class SetCommand implements Command<ServerCommandSource> {
 
+    // VERSION CHANGES:
+    // 1.19+: sendFeedback(
+    // 1.20+: sendFeedback(() ->
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
         String key = StringArgumentType.getString(context, "key").toLowerCase();
@@ -31,7 +34,7 @@ public class SetCommand implements Command<ServerCommandSource> {
             if (boolString(value).equals("true") || boolString(value).equals("false")) {
                 msg.add(Text.literal("\nEnabling/Disabling mixins requires a restart to take effect.").formatted(Formatting.LIGHT_PURPLE));
             }
-            context.getSource().sendFeedback(ADText.joinText(msg), false);
+            context.getSource().sendFeedback(() -> ADText.joinText(msg), false);
             return Command.SINGLE_SUCCESS;
         }
 

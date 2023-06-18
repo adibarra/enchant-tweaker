@@ -19,6 +19,9 @@ public class GetCommand implements Command<ServerCommandSource> {
 
     public static final SuggestionProvider<ServerCommandSource> KEY_SUGGESTIONS = ListSuggestion.of(() -> ETMixinPlugin.getConfig().getKeys());
 
+    // VERSION CHANGES:
+    // 1.19+: sendFeedback(
+    // 1.20+: sendFeedback(() ->
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
         String key = StringArgumentType.getString(context, "key").toLowerCase();
@@ -32,7 +35,7 @@ public class GetCommand implements Command<ServerCommandSource> {
             msg.add(Text.literal("' is set to '").formatted(Formatting.GRAY));
             msg.add(ADText.colorValue(value.toLowerCase()));
             msg.add(Text.literal("'.").formatted(Formatting.GRAY));
-            context.getSource().sendFeedback(ADText.joinText(msg), false);
+            context.getSource().sendFeedback(() -> ADText.joinText(msg), false);
             return Command.SINGLE_SUCCESS;
         }
 

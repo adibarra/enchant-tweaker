@@ -76,10 +76,13 @@ public class ETCommands {
 
             // Reload config file
             ETMixinPlugin.reloadConfig();
-            ADUtils.broadcastOps(server, ADText.joinText(new Text[] {
-                Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN),
-                Text.literal("Config Reloaded!")
-            }));
+
+            // Build broadcast message
+            List<Text> msg = new ArrayList<>();
+            msg.add(Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN));
+            msg.add(Text.literal("Config Reloaded!"));
+
+            ADUtils.broadcastOps(server, ADText.joinTextMutable(msg));
         });
     }
 
