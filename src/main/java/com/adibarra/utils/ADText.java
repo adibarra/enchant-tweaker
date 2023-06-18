@@ -19,31 +19,27 @@ public class ADText {
     public static final Set<String> FALSE_VALUES = new HashSet<>(Arrays.asList("false", "f", "no", "off", "disable", "disabled"));
 
     /**
-     * Joins an array of Text objects into a single MutableText object.
+     * Joins a list of Text objects into a single MutableText object.
      *
-     * @param array the array of Text objects to join
+     * @param list the list of Text objects to join
      * @return the joined MutableText object
      */
-    public static MutableText joinText(Text[] array) {
+    public static MutableText joinTextMutable(List<Text> list) {
         MutableText out = Text.empty();
-        for (Text text : array) {
+        for (Text text : list) {
             out.append(text);
         }
         return out;
     }
 
     /**
-     * Joins an array of Text objects into a single MutableText object.
+     * Joins a list of Text objects into a single Text object.
      *
-     * @param array the array of Text objects to join
-     * @return the joined MutableText object
+     * @param list the list of Text objects to join
+     * @return the joined Text object
      */
-    public static MutableText joinText(List<Text> array) {
-        MutableText out = Text.empty();
-        for (Text text : array) {
-            out.append(text);
-        }
-        return out;
+    public static Text joinText(List<Text> list) {
+        return joinTextMutable(list);
     }
 
     /**
