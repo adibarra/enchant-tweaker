@@ -36,7 +36,7 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
     private void enchanttweaker$loyalVoidTridents$returnFromVoid(CallbackInfo ci) {
         if (dataTracker.get(LOYALTY) == 0 || this.dealtDamage) return;
 
-        if (this.getY() <= this.world.getBottomY()) {
+        if (this.getY() <= this.getWorld().getBottomY()) {
             this.dealtDamage = true;
             this.setVelocity(0, 0, 0);
         }

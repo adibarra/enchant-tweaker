@@ -35,6 +35,6 @@ public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
             target="Lnet/minecraft/world/World;isThundering()Z"))
     private boolean enchanttweaker$moreChanneling$modifyOnHit(boolean orig) {
         boolean isChannelingII = EnchantmentHelper.getLevel(Enchantments.CHANNELING, this.tridentStack) > 1;
-        return orig || (isChannelingII && this.world.isRaining());
+        return orig || (isChannelingII && this.getWorld().isRaining());
     }
 }
