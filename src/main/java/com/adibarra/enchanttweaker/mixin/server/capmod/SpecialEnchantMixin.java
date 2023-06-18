@@ -24,8 +24,8 @@ public abstract class SpecialEnchantMixin extends Enchantment {
     }
 
     // VERSION CHANGES:
-    // 1.19+: Registry
-    // 1.20+: Registries
+    // 1.16+: Registry
+    // 1.19.3+: Registries
     @Override
     public int getMaxLevel() {
         int orig = super.getMaxLevel();

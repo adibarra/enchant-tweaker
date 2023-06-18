@@ -16,8 +16,8 @@ import java.util.List;
 public class SetCommand implements Command<ServerCommandSource> {
 
     // VERSION CHANGES:
-    // 1.19+: sendFeedback(
-    // 1.20+: sendFeedback(() ->
+    // 1.16+: sendFeedback(Text)
+    // 1.20+: sendFeedback(() -> Text)
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
         String key = StringArgumentType.getString(context, "key").toLowerCase();

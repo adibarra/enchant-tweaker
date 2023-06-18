@@ -14,8 +14,8 @@ import java.util.List;
 public class ConfigCommand implements Command<ServerCommandSource> {
 
     // VERSION CHANGES:
-    // 1.19+: sendFeedback(
-    // 1.20+: sendFeedback(() ->
+    // 1.16+: sendFeedback(Text)
+    // 1.20+: sendFeedback(() -> Text)
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
         List<Text> msg = new ArrayList<>();

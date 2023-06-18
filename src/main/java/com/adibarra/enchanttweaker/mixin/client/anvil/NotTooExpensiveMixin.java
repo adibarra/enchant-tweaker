@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public abstract class NotTooExpensiveMixin {
 
     // VERSION CHANGES:
-    // 1.19+: drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V
+    // 1.16+: drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V
     // 1.20+: drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V
     @ModifyConstant(
         method="drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V",

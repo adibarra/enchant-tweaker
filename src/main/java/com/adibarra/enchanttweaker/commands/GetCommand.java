@@ -20,8 +20,8 @@ public class GetCommand implements Command<ServerCommandSource> {
     public static final SuggestionProvider<ServerCommandSource> KEY_SUGGESTIONS = ListSuggestion.of(() -> ETMixinPlugin.getConfig().getKeys());
 
     // VERSION CHANGES:
-    // 1.19+: sendFeedback(
-    // 1.20+: sendFeedback(() ->
+    // 1.16+: sendFeedback(Text)
+    // 1.20+: sendFeedback(() -> Text)
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
         String key = StringArgumentType.getString(context, "key").toLowerCase();

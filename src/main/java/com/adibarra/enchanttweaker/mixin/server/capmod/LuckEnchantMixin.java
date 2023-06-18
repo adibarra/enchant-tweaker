@@ -25,8 +25,8 @@ public abstract class LuckEnchantMixin extends Enchantment {
     }
 
     // VERSION CHANGES:
-    // 1.19+: Registry
-    // 1.20+: Registries
+    // 1.16+: Registry
+    // 1.19.3+: Registries
     @ModifyReturnValue(
         method="getMaxLevel()I",
         at=@At("RETURN"))
