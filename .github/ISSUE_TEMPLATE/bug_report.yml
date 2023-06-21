@@ -33,11 +33,19 @@ body:
         3. Scroll down to '...'
         4. See error
   - type: input
-    id: version
+    id: mod-version
     attributes:
       label: What is the jar file name?
       description: Copy/Paste the name of the jar file.
       placeholder: enchanttweaker-<version>+mc<mcversion>.jar
+    validations:
+      required: true
+  - type: input
+    id: mc-version
+    attributes:
+      label: What Minecraft version?
+      description: Also include the modloader.
+      placeholder: Fabric 1.20.1
     validations:
       required: true
   - type: textarea
