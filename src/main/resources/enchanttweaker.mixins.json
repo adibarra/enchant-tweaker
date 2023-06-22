@@ -1,43 +1,43 @@
 {
-    "compatibilityLevel": "JAVA_17",
-    "package": "com.adibarra.enchanttweaker.mixin",
-    "plugin": "com.adibarra.enchanttweaker.ETMixinPlugin",
-    "required": true,
-    "mixins": [
-        "server.anvil.CheapNamesMixin",
-        "server.anvil.NotTooExpensiveMixin",
-        "server.anvil.PriorWorkCheaperMixin",
-        "server.anvil.PriorWorkFreeMixin",
-        "server.anvil.SturdyAnvilsMixin",
-        "server.capmod.DamageEnchantMixin",
-        "server.capmod.GenericEnchantMixin",
-        "server.capmod.LuckEnchantMixin",
-        "server.capmod.ProtectionEnchantMixin",
-        "server.capmod.SpecialEnchantMixin",
-        "server.enhanced.MoreBindingMixin",
-        "server.enhanced.MoreChannelingMixin",
-        "server.enhanced.MoreFlameMixin",
-        "server.enhanced.MoreInfinityMixin",
-        "server.enhanced.MoreMendingMixin",
-        "server.enhanced.MoreMultishotMixin",
-        "server.tweak.AxesNotToolsMixin",
-        "server.tweak.AxeWeaponsMixin",
-        "server.tweak.BetterMendingMixin",
-        "server.tweak.BowInfinityFixMixin",
-        "server.tweak.GodArmorMixin",
-        "server.tweak.GodWeaponsMixin",
-        "server.tweak.InfiniteMendingMixin",
-        "server.tweak.LoyalVoidTridentsMixin",
-        "server.tweak.MultishotPiercingMixin",
-        "server.tweak.NoSoulSpeedBacklashMixin",
-        "server.tweak.NoThornsBacklashMixin",
-        "server.tweak.TridentWeaponsMixin"
-    ],
-    "client": [
-        "client.anvil.NotTooExpensiveMixin",
-        "client.tweak.ShinyNameMixin"
-    ],
-    "injectors": {
-        "defaultRequire": 1
+  "compatibilityLevel": "JAVA_17",
+  "package": "com.adibarra.enchanttweaker.mixin",
+  "plugin": "com.adibarra.enchanttweaker.ETMixinPlugin",
+  "required": true,
+  "mixins": [
+    "server.anvil.CheapNamesMixin",
+    "server.anvil.NotTooExpensiveMixin",
+    "server.anvil.PriorWorkCheaperMixin",
+    "server.anvil.PriorWorkFreeMixin",
+    "server.anvil.SturdyAnvilsMixin",
+    "server.capmod.DamageEnchantMixin",
+    "server.capmod.GenericEnchantMixin",
+    "server.capmod.LuckEnchantMixin",
+    "server.capmod.ProtectionEnchantMixin",
+    "server.capmod.SpecialEnchantMixin",
+    "server.enhanced.MoreBindingMixin",
+    "server.enhanced.MoreChannelingMixin",
+    "server.enhanced.MoreFlameMixin",
+    "server.enhanced.MoreInfinityMixin",
+    "server.enhanced.MoreMendingMixin",
+    "server.enhanced.MoreMultishotMixin",
+    "server.tweak.AxesNotToolsMixin",
+    "server.tweak.AxeWeaponsMixin",
+    "server.tweak.BetterMendingMixin",
+    "server.tweak.BowInfinityFixMixin",
+    "server.tweak.GodArmorMixin",
+    "server.tweak.GodWeaponsMixin",
+    "server.tweak.InfiniteMendingMixin",
+    "server.tweak.LoyalVoidTridentsMixin",
+    "server.tweak.MultishotPiercingMixin",
+    "server.tweak.NoSoulSpeedBacklashMixin",
+    "server.tweak.NoThornsBacklashMixin",
+    "server.tweak.TridentWeaponsMixin"
+  ],
+  "client": [
+    "client.anvil.NotTooExpensiveMixin",
+    "client.tweak.ShinyNameMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
   }
 }
