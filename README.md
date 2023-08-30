@@ -17,7 +17,7 @@ Tweak many enchantment related mechanics while keeping the vanilla feel. Current
 
 
 ## Installation
-Client-side install is recommended but not required. Some non-critical visual QOL tweaks need to be installed on the client to work properly.
+Client-side install is recommended but not required. Some non-critical visual QOL tweaks (Not Too Expensive, Shiny Names) need to be installed on the client to work properly.
 
 |              | Client-Side  | Server-Side  |
 |:------------:|:------------:|:------------:|
@@ -36,7 +36,7 @@ Some small anvil related tweaks. Lightly alters the anvil's mechanics.
 Normally renaming an item will cost a similar amount of levels as adding an enchantment onto an item. Enabling this will force the cost for renaming items to always be one level. For those who don't enjoy spending nineteen levels to rename a pickaxe... again.
 
 ### Not Too Expensive
-Normally once an item's enchant/repair cost reaches 40 levels you can no longer enchant or repair it. Enabling this tweak alters the "Too Expensive!" mechanic in the anvil changing the level it activates at to one of your choosing.
+Normally once an item's enchant/repair cost reaches 40 levels you can no longer enchant or repair it. Enabling this tweak alters the "Too Expensive!" mechanic in the anvil changing the level it activates at to one of your choosing. Client-side install will hide the "Too Expensive!" message. Otherwise, it will still appear but will not prevent the action.
 
 ### Prior Work is Cheaper
 Normally when enchanting/repairing an item, each operation will double the cost of the next action. Enabling this tweak will let you customize the penalty.
@@ -119,7 +119,7 @@ Normally boots will take damage when walking on soul sand with Soul Speed. Enabl
 Normally armor will take damage when Thorns is triggered. Enabling this tweak will prevent your armor from taking damage from the enchantment.
 
 ### Shiny Max Enchantment Names
-Normally everyone knows what the max level for an enchantment is, but what about now? Enabling this tweak will color the name of enchantments at max level to be yellow. This tweak is client side only and uses the client's Enchant Tweaker config.
+Normally everyone knows what the max level for an enchantment is, but what about now? Enabling this tweak will color the name of enchantments at max level to be yellow. Client-side installation is required for this tweak, it uses the client's Enchant Tweaker config.
 
 ### Trident Weapons
 Allow the addition of some weapon enchantments that normally can not be added to tridents. Enabling this tweak allows you to add the following enchantments to tridents: Sharpness, Smite, Bane of Arthropods, Fire Aspect, Knockback, and Looting.
