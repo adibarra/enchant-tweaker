@@ -173,13 +173,13 @@ public class ADConfig {
         List<String> lines = loadFile(configFile);
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
-            String trimLine = line.replaceAll(" ", "").toLowerCase();
-            if (!trimLine.startsWith("#") && trimLine.contains(key + "=")) {
-                lines.set(i, line.replace(trimLine.substring(trimLine.indexOf("=") + 1), value));
-                break;
+            if (line.trim().toLowerCase().startsWith(key + "=")) {
+                String spaces = line.substring(0, line.indexOf(key));
+                lines.set(i, spaces + key + "=" + value);
+                writeFile(configFile, lines);
+                return;
             }
         }
-        writeFile(configFile, lines);
     }
 
     /**
