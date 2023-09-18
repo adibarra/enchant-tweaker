@@ -5,6 +5,7 @@ import com.adibarra.utils.ADMath;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.enchantment.*;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import java.util.Map;
 })
 public abstract class GenericEnchantMixin {
 
+    @Unique
     private final static Map<Class<?>, String> ENCHANTS = new HashMap<>();
 
     static {
