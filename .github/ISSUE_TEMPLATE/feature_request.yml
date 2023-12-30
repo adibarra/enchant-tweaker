@@ -2,6 +2,8 @@ name: Feature Request
 description: Request a feature
 title: "feat: "
 labels: ["type/new-feature", "status/triage"]
+assignees: 
+  - adibarra
 body:
   - type: markdown
     attributes:
