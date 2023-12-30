@@ -25,6 +25,9 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
     @Shadow
     private boolean dealtDamage;
 
+    // VERSION CHANGES:
+    // 1.16+: PersistentProjectileEntity
+    // 1.20+: ProjectileEntity
     @SuppressWarnings("unused")
     protected LoyalVoidTridentsMixin(EntityType<ProjectileEntity> entityType, World world) {
         super(entityType, world);
