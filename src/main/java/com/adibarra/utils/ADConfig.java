@@ -20,26 +20,27 @@ public class ADConfig {
     /**
      * Get an ADConfig instance.
      *
-     * @param name              the name of the mod
-     * @param defaultConfigPath the path to the default config file (relative to jar base)
+     * @param name       the name of the mod
+     * @param configPath the path to the config file
      */
-    public ADConfig(String name, String defaultConfigPath) {
+    public ADConfig(String name, String configPath, String internalDefaultConfigPath) {
         LOGGER = LogManager.getLogger(name);
         PREFIX = "[" + name + "] [ADConfig] ";
-        request(defaultConfigPath);
+        request(configPath, internalDefaultConfigPath);
     }
 
     /**
      * Load a config file. If the file doesn't exist, it will be generated.
      *
-     * @param defaultConfigPath the path to the default config file (relative to jar base)
+     * @param configPath                the path to the config file
+     * @param internalDefaultConfigPath the path to the default config file (relative to jar base)
      */
-    private void request(String defaultConfigPath) {
-        String filename = defaultConfigPath.substring(defaultConfigPath.lastIndexOf('/') + 1);
+    private void request(String configPath, String internalDefaultConfigPath) {
+        String filename = configPath.substring(configPath.lastIndexOf('/') + 1);
         configFile = FabricLoader.getInstance().getConfigDir().resolve(filename).toFile();
 
         // create config file if it doesn't exist
-        createConfig(configFile, defaultConfigPath);
+        createConfig(configFile, internalDefaultConfigPath);
 
         // load config file
         List<String> configLines = loadFile(configFile);
@@ -56,11 +57,11 @@ public class ADConfig {
     /**
      * Attempts to create a new config file.
      *
-     * @param configFile        the config file to create
-     * @param defaultConfigPath the path to the default config file (relative to jar base)
+     * @param configFile                the config file to create
+     * @param internalDefaultConfigPath the path to the default config file (relative to jar base)
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void createConfig(File configFile, String defaultConfigPath) {
+    private void createConfig(File configFile, String internalDefaultConfigPath) {
         if (!configFile.exists()) {
             LOGGER.warn(PREFIX + "Failed to find '{}'. Generating default...", configFile.getName());
 
@@ -76,7 +77,7 @@ public class ADConfig {
             }
 
             // load default config from jar
-            List<String> defaultConfigLines = loadInternalFile(defaultConfigPath);
+            List<String> defaultConfigLines = loadInternalFile(internalDefaultConfigPath);
             if (defaultConfigLines == null) {
                 LOGGER.error(PREFIX + "Failed to load default config file!");
                 LOGGER.error(PREFIX + "Please report this to the mod author!");
