@@ -23,7 +23,7 @@ public class ReloadCommand implements Command<ServerCommandSource> {
 
         List<Text> msg = new ArrayList<>();
         msg.add(Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN));
-        msg.add(Text.literal("Config Reloaded!"));
+        msg.add(Text.literal("Config Reloaded!").formatted(Formatting.AQUA));
 
         context.getSource().sendFeedback(() -> ADText.joinText(msg), false);
         return Command.SINGLE_SUCCESS;

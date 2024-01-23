@@ -80,7 +80,7 @@ public class ETCommands {
             // Build broadcast message
             List<Text> msg = new ArrayList<>();
             msg.add(Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN));
-            msg.add(Text.literal("Config Reloaded!"));
+            msg.add(Text.literal("Config Reloaded!").formatted(Formatting.AQUA));
 
             ADUtils.broadcastOps(server, ADText.joinTextMutable(msg));
         });

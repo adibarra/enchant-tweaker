@@ -20,7 +20,10 @@ public class ConfigCommand implements Command<ServerCommandSource> {
     public int run(CommandContext<ServerCommandSource> context) {
         List<Text> msg = new ArrayList<>();
         msg.add(Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN));
-        msg.add(Text.literal("Usage: /et config <key> [value]"));
+        msg.add(Text.literal("Usage: "));
+        msg.add(Text.literal("/et config ").formatted(Formatting.AQUA));
+        msg.add(Text.literal("<key> ").formatted(Formatting.RED));
+        msg.add(Text.literal("[value]").formatted(Formatting.GRAY));
 
         context.getSource().sendFeedback(() -> ADText.joinText(msg), false);
         return Command.SINGLE_SUCCESS;
