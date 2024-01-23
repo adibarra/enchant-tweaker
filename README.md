@@ -129,7 +129,7 @@ Allow the addition of some weapon enchantments that normally can not be added to
 
 
 ## Modify Max Enchantment Levels
-Tweak the max level for individual enchantments. Not all vanilla enchantments scale by default. Some may require enabling their respective tweak to scale properly.
+Tweak the max level for individual enchantments. Not all vanilla enchantments scale by default, some have capped effects at certain levels. For example: Protection 255 would still be affected by vanilla's 25 EPF cap despite going far above it. To avoid these limits you can enable a tweak from the 'Enhanced Enchantments' section (if available).
 
 <details>
 <summary> View Suggested Custom Enchantment Levels </summary>
