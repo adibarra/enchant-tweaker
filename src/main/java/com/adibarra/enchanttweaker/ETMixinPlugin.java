@@ -115,11 +115,10 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     }
 
     public static void reloadConfig() {
-        String configPath = FabricLoader.getInstance().getConfigDir().resolve("enchant-tweaker.properties").toString();
-        String internalDefaultConfigPath = "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties";
-
         if (CONFIG != null) LOGGER.info(EnchantTweaker.PREFIX + "Reloading config...");
-        CONFIG = new ADConfig(EnchantTweaker.MOD_NAME, configPath, internalDefaultConfigPath);
+
+        String internalDefaultConfigPath = "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties";
+        CONFIG = new ADConfig(EnchantTweaker.MOD_NAME, "enchant-tweaker.properties", internalDefaultConfigPath);
     }
 
     public static String getMixinKey(String mixinName) {
