@@ -1,0 +1,1 @@
+- Fix config saving in wrong directory
