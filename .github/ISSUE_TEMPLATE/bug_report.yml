@@ -57,9 +57,10 @@ body:
     attributes:
       label: Any relevant logs?
       description: |
-        If applicable, add logs to help explain your problem.
+        If applicable, add logs or files to help explain your problem.
+        You can also attach the mod's config file here.
         Using https://mclo.gs/ is recommended.
-      placeholder: Copy and paste any relevant log output or crash reports here.
+      placeholder: Copy and paste any relevant log output, crash reports, or config files here.
   - type: textarea
     id: extra
     attributes:
