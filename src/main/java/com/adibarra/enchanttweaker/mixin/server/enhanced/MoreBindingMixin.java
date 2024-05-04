@@ -12,6 +12,7 @@ import net.minecraft.util.collection.DefaultedList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.HashMap;
@@ -25,8 +26,10 @@ import java.util.Random;
 @Mixin(value=PlayerInventory.class)
 public abstract class MoreBindingMixin {
 
+    @Unique
     private static final Random RAND = new Random();
 
+    @Unique
     private static final Map<Integer, ItemStack> BOUND_ARMOR = new HashMap<>();
     static {
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
