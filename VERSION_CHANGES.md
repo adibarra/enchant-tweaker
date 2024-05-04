@@ -1,1 +1,1 @@
-- Fix config saving in wrong directory
+- Misc improvements under the hood
