@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
