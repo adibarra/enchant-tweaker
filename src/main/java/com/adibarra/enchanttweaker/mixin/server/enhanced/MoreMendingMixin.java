@@ -1,7 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import com.adibarra.utils.ADMath;
-import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EquipmentSlot;
@@ -32,7 +31,8 @@ public abstract class MoreMendingMixin {
             ordinal=0,
             value="INVOKE_ASSIGN",
             target="Lnet/minecraft/enchantment/EnchantmentHelper;chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;"))
-    private void enchanttweaker$moreMending$captureMendingLevel(PlayerEntity player, int amount, CallbackInfoReturnable<Integer> cir, @Local Map.Entry<EquipmentSlot, ItemStack> entry) {
+    private void enchanttweaker$moreMending$captureMendingLevel(PlayerEntity player, int amount, CallbackInfoReturnable<Integer> cir) {
+        Map.Entry<EquipmentSlot, ItemStack> entry = EnchantmentHelper.chooseEquipmentWith(Enchantments.MENDING, player, ItemStack::isDamaged);
         if (entry != null) {
             mendingLevel = EnchantmentHelper.getLevel(Enchantments.MENDING, entry.getValue());
         }
