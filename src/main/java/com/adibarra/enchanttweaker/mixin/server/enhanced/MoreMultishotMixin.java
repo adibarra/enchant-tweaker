@@ -8,9 +8,11 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.CrossbowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,6 +38,15 @@ public abstract class MoreMultishotMixin {
     @Shadow
     private static void postShoot(World world, LivingEntity entity, ItemStack stack) { /* dummy */ }
 
+    @SuppressWarnings("EmptyMethod")
+    @Shadow
+    private static List<ItemStack> getProjectiles(ItemStack stack) { return new ArrayList<>(0); }
+
+    @SuppressWarnings("EmptyMethod")
+    @Shadow
+    private static float[] getSoundPitches(Random random) { return new float[0]; }
+
+    @Unique
     private static int multishotLevel = 0;
 
     @Inject(
@@ -58,7 +70,9 @@ public abstract class MoreMultishotMixin {
             value="INVOKE_ASSIGN",
             target="Lnet/minecraft/item/CrossbowItem;getSoundPitches(Lnet/minecraft/util/math/random/Random;)[F"),
         cancellable=true)
-    private static void enchanttweaker$moreMultishot$modifyShootAll(World world, LivingEntity entity, Hand hand, ItemStack stack, float speed, float divergence, CallbackInfo ci, @Local List<ItemStack> list, @Local float[] fs) {
+    private static void enchanttweaker$moreMultishot$modifyShootAll(World world, LivingEntity entity, Hand hand, ItemStack stack, float speed, float divergence, CallbackInfo ci) {
+        List<ItemStack> list = getProjectiles(stack);
+        float[] fs = getSoundPitches(entity.getRandom());
         float range = Math.max(10.0F, list.size() * 0.2F);
 
         for (int i = 0; i < list.size(); ++i) {
