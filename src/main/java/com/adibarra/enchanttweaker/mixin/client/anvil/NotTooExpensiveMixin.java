@@ -19,7 +19,7 @@ public abstract class NotTooExpensiveMixin {
 
     // VERSION CHANGES:
     // 1.16+: drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V
-    // 1.20.2+: drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V
+    // 1.20.1+: drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V
     @ModifyConstant(
         method="drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V",
         constant=@Constant(intValue=40))
