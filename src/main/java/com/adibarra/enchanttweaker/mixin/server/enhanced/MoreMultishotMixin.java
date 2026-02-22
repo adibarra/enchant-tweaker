@@ -11,13 +11,11 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,21 +43,11 @@ public abstract class MoreMultishotMixin {
     @Shadow
     private static float[] getSoundPitches(Random random) { return new float[0]; }
 
-    @Unique
-    private static int multishotLevel = 0;
-
-    @Inject(
-        method="loadProjectiles(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;)Z",
-        at=@At("HEAD"))
-    private static void enchanttweaker$moreMultishot$captureMultishotLevel(LivingEntity shooter, ItemStack projectile, CallbackInfoReturnable<Boolean> cir) {
-        multishotLevel = EnchantmentHelper.getLevel(Enchantments.MULTISHOT, projectile);
-    }
-
     @ModifyConstant(
         method="loadProjectiles(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;)Z",
         constant=@Constant(intValue=3))
-    private static int enchanttweaker$moreMultishot$modifyNumProjectiles(int orig) {
-        return multishotLevel * 2 + 1;
+    private static int enchanttweaker$moreMultishot$modifyNumProjectiles(int orig, LivingEntity shooter, ItemStack projectile) {
+        return EnchantmentHelper.getLevel(Enchantments.MULTISHOT, projectile) * 2 + 1;
     }
 
     @Inject(
