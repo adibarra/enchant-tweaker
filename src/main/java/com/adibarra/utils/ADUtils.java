@@ -16,6 +16,8 @@ import java.util.function.Predicate;
 @SuppressWarnings("unused")
 public class ADUtils {
 
+    private static final Random RAND = new Random();
+
     private ADUtils() {
         throw new IllegalStateException("Utility class. Do not instantiate.");
     }
@@ -75,7 +77,7 @@ public class ADUtils {
                 }
             }
             if (list.isEmpty()) continue;
-            return list.get(new Random().nextInt(list.size()));
+            return list.get(RAND.nextInt(list.size()));
         }
         return null;
     }
