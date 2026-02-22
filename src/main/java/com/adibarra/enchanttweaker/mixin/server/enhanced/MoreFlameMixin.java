@@ -29,9 +29,9 @@ public abstract class MoreFlameMixin {
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
         at=@At("HEAD"))
     private void enchanttweaker$moreFlame$captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
-        Entity hitEntity = entityHitResult.getEntity();
-        if (hitEntity instanceof LivingEntity) {
-            flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) hitEntity);
+        Entity owner = ((PersistentProjectileEntity)(Object)this).getOwner();
+        if (owner instanceof LivingEntity) {
+            flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) owner);
         }
     }
 
