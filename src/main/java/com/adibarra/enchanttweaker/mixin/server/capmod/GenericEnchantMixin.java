@@ -30,7 +30,6 @@ public abstract class GenericEnchantMixin {
     private final static Map<Class<?>, String> ENCHANTS = new HashMap<>();
 
     static {
-        ENCHANTS.put(ChannelingEnchantment.class,     "channeling");
         ENCHANTS.put(DepthStriderEnchantment.class,   "depth_strider");
         ENCHANTS.put(EfficiencyEnchantment.class,     "efficiency");
         ENCHANTS.put(FireAspectEnchantment.class,     "fire_aspect");
