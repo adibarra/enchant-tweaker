@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.ADMath;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.item.BowItem;
@@ -27,6 +28,7 @@ public abstract class MoreInfinityMixin {
             value="INVOKE",
             target="Lnet/minecraft/enchantment/EnchantmentHelper;getLevel(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/item/ItemStack;)I"))
     private int enchanttweaker$moreInfinity$freeArrow(int infinityLevel) {
+        if (!ETMixinPlugin.getMixinConfig("MoreInfinityMixin")) return infinityLevel;
         if (RAND.nextFloat() > ADMath.clamp(1.0 - 0.03 * infinityLevel, 0, 1.0)) {
             return infinityLevel;
         }

@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,6 +19,7 @@ public abstract class PriorWorkFreeMixin {
         at=@At("HEAD"),
         cancellable=true)
     private void enchanttweaker$priorWorkFree$modifyRepairCost(CallbackInfoReturnable<Integer> cir) {
+        if (!ETMixinPlugin.getMixinConfig("PriorWorkFreeMixin")) return;
         cir.setReturnValue(0);
     }
 }

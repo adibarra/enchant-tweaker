@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.*;
 import net.minecraft.entity.EquipmentSlot;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,6 +26,7 @@ public abstract class MultishotPiercingMixin extends Enchantment {
         at=@At("HEAD"),
         cancellable=true)
     private void enchanttweaker$multishotPiercing$allowCoexist(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("MultishotPiercingMixin")) return;
         cir.setReturnValue(super.canAccept(other));
     }
 }

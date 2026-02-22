@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.*;
 import net.minecraft.entity.EquipmentSlot;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,6 +24,7 @@ public abstract class InfiniteMendingMixin extends Enchantment {
         at=@At("HEAD"),
         cancellable=true)
     private void enchanttweaker$infiniteMending$allowCoexist(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("InfiniteMendingMixin")) return;
         cir.setReturnValue(super.canAccept(other));
     }
 }

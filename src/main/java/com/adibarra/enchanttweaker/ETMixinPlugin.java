@@ -110,8 +110,8 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
             return compatEntry.shouldApply();
         }
 
-        // assume no compatibility entries, use config
-        return getMixinConfig(mixinName);
+        // check feature flags at runtime
+        return true;
     }
 
     public static void reloadConfig() {

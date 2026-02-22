@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.*;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +30,7 @@ public abstract class CheapNamesMixin extends ForgingScreenHandler {
         method="updateResult()V",
         at=@At("TAIL"))
     private void enchanttweaker$cheapNames$modifyLevelCost(CallbackInfo ci) {
+        if (!ETMixinPlugin.getMixinConfig("CheapNamesMixin")) return;
         if (this.input.getStack(1).isEmpty()) {
             levelCost.set(1);
         }

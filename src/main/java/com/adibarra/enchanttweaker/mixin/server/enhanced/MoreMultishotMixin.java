@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
@@ -47,6 +48,7 @@ public abstract class MoreMultishotMixin {
         method="loadProjectiles(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;)Z",
         constant=@Constant(intValue=3))
     private static int enchanttweaker$moreMultishot$modifyNumProjectiles(int orig, LivingEntity shooter, ItemStack projectile) {
+        if (!ETMixinPlugin.getMixinConfig("MoreMultishotMixin")) return orig;
         return EnchantmentHelper.getLevel(Enchantments.MULTISHOT, projectile) * 2 + 1;
     }
 
@@ -58,6 +60,7 @@ public abstract class MoreMultishotMixin {
             target="Lnet/minecraft/item/CrossbowItem;getSoundPitches(Lnet/minecraft/util/math/random/Random;)[F"),
         cancellable=true)
     private static void enchanttweaker$moreMultishot$modifyShootAll(World world, LivingEntity entity, Hand hand, ItemStack stack, float speed, float divergence, CallbackInfo ci) {
+        if (!ETMixinPlugin.getMixinConfig("MoreMultishotMixin")) return;
         List<ItemStack> list = getProjectiles(stack);
         float[] fs = getSoundPitches(entity.getRandom());
         float range = Math.max(10.0F, list.size() * 0.2F);

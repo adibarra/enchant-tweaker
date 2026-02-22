@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -38,6 +39,7 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
         method="tick()V",
         at=@At("HEAD"))
     private void enchanttweaker$loyalVoidTridents$returnFromVoid(CallbackInfo ci) {
+        if (!ETMixinPlugin.getMixinConfig("LoyalVoidTridentsMixin")) return;
         if (dataTracker.get(LOYALTY) == 0 || this.dealtDamage) return;
 
         if (this.getY() <= this.getWorld().getBottomY()) {

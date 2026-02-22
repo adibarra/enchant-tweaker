@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.DamageEnchantment;
 import net.minecraft.enchantment.Enchantment;
 import org.spongepowered.asm.mixin.Final;
@@ -24,6 +25,7 @@ public abstract class GodWeaponsMixin {
         at=@At("HEAD"),
         cancellable=true)
     private void enchanttweaker$godWeapons$allowAllDamageEnchants(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("GodWeaponsMixin")) return;
         if (other instanceof DamageEnchantment damageEnchantment) {
             cir.setReturnValue(this.typeIndex != damageEnchantment.typeIndex);
         }

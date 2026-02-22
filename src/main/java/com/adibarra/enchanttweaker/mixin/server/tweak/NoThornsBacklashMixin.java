@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.ThornsEnchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -17,6 +18,7 @@ public abstract class NoThornsBacklashMixin {
         method="onUserDamaged(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/Entity;I)V",
         constant=@Constant(intValue=2))
     private int enchanttweaker$noThornsBacklash$noBacklash(int orig) {
+        if (!ETMixinPlugin.getMixinConfig("NoThornsBacklashMixin")) return orig;
         return 0;
     }
 }

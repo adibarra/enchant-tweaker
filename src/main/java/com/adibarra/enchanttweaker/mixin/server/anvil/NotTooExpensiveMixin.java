@@ -20,6 +20,7 @@ public abstract class NotTooExpensiveMixin {
             ordinal=2,
             intValue=40))
     private int enchanttweaker$notTooExpensive$modifyTooExpensive(int orig) {
+        if (!ETMixinPlugin.getMixinConfig("NotTooExpensiveMixin")) return orig;
         int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
         return ADMath.clamp(maxCost, 0, Integer.MAX_VALUE);
     }

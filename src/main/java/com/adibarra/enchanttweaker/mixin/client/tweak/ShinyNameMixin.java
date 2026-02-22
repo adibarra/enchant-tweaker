@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.client.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -39,6 +40,7 @@ public abstract class ShinyNameMixin {
         method="getName(I)Lnet/minecraft/text/Text;",
         at=@At("TAIL"))
     private void getName(int level, CallbackInfoReturnable<Text> cir, @Local MutableText mutableText) {
+        if (!ETMixinPlugin.getMixinConfig("ShinyNameMixin")) return;
         if (level < this.getMaxLevel()) return;
 
         if (!this.isCursed()) {

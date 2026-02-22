@@ -24,6 +24,7 @@ public abstract class NotTooExpensiveMixin {
         method="drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V",
         constant=@Constant(intValue=40))
     private int notTooExpensiveClient(int orig) {
+        if (!ETMixinPlugin.getMixinConfig("NotTooExpensiveMixin")) return orig;
         int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
         return ADMath.clamp(maxCost, 0, Integer.MAX_VALUE);
     }

@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.MiningToolItem;
@@ -18,6 +19,7 @@ public abstract class AxesNotToolsMixin {
         method="postHit(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/LivingEntity;)Z",
         constant=@Constant(intValue=2))
     private int enchanttweaker$axesNotTools$modifySelfDamage(int orig, ItemStack stack) {
+        if (!ETMixinPlugin.getMixinConfig("AxesNotToolsMixin")) return orig;
         boolean isAxe = stack.getItem() instanceof AxeItem;
         return isAxe ? 1 : orig;
     }

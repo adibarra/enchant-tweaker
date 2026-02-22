@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -23,6 +24,7 @@ public abstract class BowInfinityFixMixin {
             value="INVOKE",
             target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private boolean enchanttweaker$bowInfinityFix$fireNoArrow(boolean orig, @Local ItemStack stack) {
+        if (!ETMixinPlugin.getMixinConfig("BowInfinityFixMixin")) return orig;
         if (EnchantmentHelper.getLevel(Enchantments.INFINITY, stack) > 0) {
             return false;
         }

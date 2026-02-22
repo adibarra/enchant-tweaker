@@ -23,6 +23,7 @@ public abstract class ProtectionEnchantMixin {
         method="getMaxLevel()I",
         at=@At("RETURN"))
     private int enchanttweaker$protectionEnchant$modifyMaxLevel(int orig) {
+        if (!ETMixinPlugin.getMixinConfig("ProtectionEnchantMixin")) return orig;
         int lvlCap = switch (this.protectionType) {
             case ALL -> ETMixinPlugin.getConfig().getOrDefault("protection", orig);
             case FIRE -> ETMixinPlugin.getConfig().getOrDefault("fire_protection", orig);

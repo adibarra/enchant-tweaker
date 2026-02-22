@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.AxeItem;
@@ -21,6 +22,7 @@ public abstract class AxeWeaponsMixin {
         at=@At("HEAD"),
         cancellable=true)
     private void enchanttweaker$axeWeapons$allowFireAspectKnockbackLooting(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("AxeWeaponsMixin")) return;
         boolean isAxe = stack.getItem() instanceof AxeItem;
         if (!isAxe) return;
 

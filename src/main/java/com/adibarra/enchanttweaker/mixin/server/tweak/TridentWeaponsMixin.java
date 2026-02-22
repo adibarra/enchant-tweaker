@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.DamageEnchantment;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
@@ -22,6 +23,7 @@ public abstract class TridentWeaponsMixin {
         at=@At("HEAD"),
         cancellable=true)
     private void enchanttweaker$tridentWeapons$allowFireAspectKnockbackLooting(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("TridentWeaponsMixin")) return;
         boolean isTrident = stack.getItem() instanceof TridentItem;
         if (!isTrident) return;
 

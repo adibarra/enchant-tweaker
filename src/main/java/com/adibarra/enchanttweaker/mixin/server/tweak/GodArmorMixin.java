@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.ProtectionEnchantment;
 import org.spongepowered.asm.mixin.Final;
@@ -24,6 +25,7 @@ public abstract class GodArmorMixin {
         at=@At("HEAD"),
         cancellable=true)
     private void enchanttweaker$godArmor$allowAllProtectionEnchants(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("GodArmorMixin")) return;
         if (other instanceof ProtectionEnchantment protectionEnchantment) {
             cir.setReturnValue(this.protectionType != protectionEnchantment.protectionType);
         }

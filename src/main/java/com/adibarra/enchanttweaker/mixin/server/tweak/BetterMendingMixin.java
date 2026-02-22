@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.ADUtils;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -40,6 +41,7 @@ public abstract class BetterMendingMixin {
         at=@At("HEAD"),
         cancellable=true)
     private void enchanttweaker$betterMending$modifyRepairPlayerGears(PlayerEntity player, int amount, CallbackInfoReturnable<Integer> cir) {
+        if (!ETMixinPlugin.getMixinConfig("BetterMendingMixin")) return;
         PlayerInventory inv = player.getInventory();
         ItemStack repairItem = ADUtils.getMatchingItem(
             List.of(

@@ -21,6 +21,7 @@ public abstract class PriorWorkCheaperMixin {
         at=@At("HEAD"),
         cancellable=true)
     private static void enchanttweaker$priorWorkCheaper$modifyRepairCost(int cost, CallbackInfoReturnable<Integer> cir) {
+        if (!ETMixinPlugin.getMixinConfig("PriorWorkCheaperMixin")) return;
         double coefficient = ETMixinPlugin.getConfig().getOrDefault("pw_cost_multiplier", 2.0);
         double newCost = ADMath.clamp(coefficient, 0, Double.MAX_VALUE) * cost + 1;
         cir.setReturnValue((int) Math.round(newCost));

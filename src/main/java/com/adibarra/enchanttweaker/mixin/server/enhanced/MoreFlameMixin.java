@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
@@ -29,6 +30,7 @@ public abstract class MoreFlameMixin {
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
         at=@At("HEAD"))
     private void enchanttweaker$moreFlame$captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
+        if (!ETMixinPlugin.getMixinConfig("MoreFlameMixin")) return;
         Entity owner = ((PersistentProjectileEntity)(Object)this).getOwner();
         if (owner instanceof LivingEntity) {
             flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) owner);
@@ -39,6 +41,7 @@ public abstract class MoreFlameMixin {
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
         constant=@Constant(intValue=5))
     private int enchanttweaker$moreFlame$modifyBurnTime(int orig) {
+        if (!ETMixinPlugin.getMixinConfig("MoreFlameMixin")) return orig;
         return 2 * (flameLevel - 1) + orig;
     }
 }

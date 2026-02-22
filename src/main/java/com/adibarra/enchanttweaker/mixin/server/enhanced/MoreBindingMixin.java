@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.ADMath;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -56,6 +57,7 @@ public abstract class MoreBindingMixin {
             value="INVOKE",
             target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
         private boolean enchanttweaker$moreBinding$modifyDropAll(boolean orig, @Local ItemStack stack) {
+        if (!ETMixinPlugin.getMixinConfig("MoreBindingMixin")) return orig;
         if (orig) return true;
         if (!armor.contains(stack)) return false;
 
