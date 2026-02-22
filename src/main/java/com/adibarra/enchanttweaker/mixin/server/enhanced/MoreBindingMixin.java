@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.collection.DefaultedList;
@@ -15,9 +16,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @description Scales the Binding Curse enchantment to have a chance of not dropping the item on death.
@@ -30,18 +32,22 @@ public abstract class MoreBindingMixin {
     private static final Random RAND = new Random();
 
     @Unique
-    private static final Map<Integer, ItemStack> BOUND_ARMOR = new HashMap<>();
+    private static final Map<UUID, Map<Integer, ItemStack>> BOUND_ARMOR = new ConcurrentHashMap<>();
     static {
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
-            for (Map.Entry<Integer, ItemStack> c : BOUND_ARMOR.entrySet()) {
-                newPlayer.getInventory().armor.set(c.getKey(), c.getValue());
+            Map<Integer, ItemStack> armorMap = BOUND_ARMOR.remove(oldPlayer.getUuid());
+            if (armorMap == null) return;
+            for (Map.Entry<Integer, ItemStack> entry : armorMap.entrySet()) {
+                newPlayer.getInventory().armor.set(entry.getKey(), entry.getValue());
             }
-            BOUND_ARMOR.clear();
         });
     }
 
     @Shadow @Final
     public DefaultedList<ItemStack> armor;
+
+    @Shadow @Final
+    public PlayerEntity player;
 
     @ModifyExpressionValue(
         method="dropAll()V",
@@ -55,7 +61,8 @@ public abstract class MoreBindingMixin {
 
         int bindingLevel = EnchantmentHelper.getLevel(Enchantments.BINDING_CURSE, stack);
         if (RAND.nextFloat() > ADMath.clamp(1.1 - 0.1 * bindingLevel, 0.1, 1.0)) {
-            BOUND_ARMOR.put(armor.indexOf(stack), stack.copy());
+            BOUND_ARMOR.computeIfAbsent(player.getUuid(), k -> new ConcurrentHashMap<>())
+                       .put(armor.indexOf(stack), stack.copy());
             return true;
         }
         return false;
