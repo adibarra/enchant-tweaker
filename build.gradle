@@ -1,6 +1,6 @@
 plugins {
     id 'maven-publish'
-	id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'fabric-loom' version '1.6-SNAPSHOT'
     id "com.modrinth.minotaur" version "2.+"
 }
 
@@ -22,71 +22,81 @@ version = "${project.mod_version}+mc${supportedVersions}"
 group = project.maven_group
 
 base {
-	archivesName = project.archives_base_name
-}
-
-repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
+    archivesName = project.archives_base_name
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    // To change the versions see the gradle.properties file
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
 processResources {
-	inputs.property "version", project.version
+    inputs.property "version", project.version
 
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release.set(17)
-	it.options.encoding = "UTF-8"
+    it.options.release.set(17)
+    it.options.encoding = "UTF-8"
 }
 
 java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
-
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {
-	from "LICENSE"
-	exclude "**/*.pdn"
+    from "LICENSE"
+    exclude "**/*.pdn"
 }
 
-// configure the maven publication
+sourceSets {
+    gametest {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += main.output
+        runtimeClasspath += main.output
+    }
+}
+
+loom {
+    runs {
+        gametest {
+            server()
+            name "Game Tests"
+            source sourceSets.gametest
+            property "fabric-api.gametest"
+            property "fabric-api.gametest.report-file", "${project.buildDir}/junit.xml"
+            runDir "run/gametest"
+        }
+    }
+}
+
 publishing {
-	publications {
-		//noinspection GroovyAssignabilityCheck
+    publications {
+        //noinspection GroovyAssignabilityCheck
         mavenJava(MavenPublication) {
             //noinspection GroovyAssignabilityCheck, GrUnresolvedAccess
             from components.java
-		}
-	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
+        }
+    }
 }
+
+// Extract only the current version's section from CHANGELOG.md for Modrinth upload
+def rawChangelog = new File("CHANGELOG.md").text
+def versionHeader = "## ${project.mod_version}"
+def changelogIdx = rawChangelog.indexOf(versionHeader)
+def changelogEntry = changelogIdx < 0 ? "" : rawChangelog
+    .substring(changelogIdx + versionHeader.length())
+    .split("(?m)^## ")[0]
+    .trim()
 
 modrinth {
     debugMode = true
@@ -95,7 +105,7 @@ modrinth {
     versionName = "Enchant Tweaker ${project.mod_version}+mc${supportedVersions}"
     versionNumber = "${project.mod_version}+mc${supportedVersions}"
     gameVersions = supportedVersionsArray
-    changelog = new File("VERSION_CHANGES.md").text
+    changelog = changelogEntry
     versionType = "release"
     uploadFile = remapJar
     additionalFiles = [sourcesJar]
