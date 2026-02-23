@@ -1,22 +1,12 @@
 plugins {
     id 'maven-publish'
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'fabric-loom' version '1.15.3'
     id "com.modrinth.minotaur" version "2.+"
 }
 
 // Name jar with supported MC versions
 String supportedVersions = project.minecraft_version
 List<String> supportedVersionsArray = [project.minecraft_version]
-if (project.minecraft_version == "1.19.2") {
-    supportedVersions = "1.19-1.19.2"
-    supportedVersionsArray = ["1.19", "1.19.1", "1.19.2"]
-} else if (project.minecraft_version == "1.20.1") {
-    supportedVersions = "1.20-1.20.1"
-    supportedVersionsArray = ["1.20", "1.20.1"]
-} else if (project.minecraft_version == "1.20.3") {
-    supportedVersions = "1.20.3-1.20.4"
-    supportedVersionsArray = ["1.20.3", "1.20.4"]
-}
 
 version = "${project.mod_version}+mc${supportedVersions}"
 group = project.maven_group
@@ -42,14 +32,14 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release.set(17)
+    it.options.release.set(21)
     it.options.encoding = "UTF-8"
 }
 
 java {
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
