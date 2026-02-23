@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.0
+
+- Add support for modifying config at runtime when using commands without needing to restart
+- Fixes several bugs
+
 ## 1.4.9.1
 
 - Fix crash on 1.20.1
