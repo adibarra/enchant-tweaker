@@ -205,6 +205,32 @@ public class TweakGameTest implements FabricGameTest {
         helper.complete();
     }
 
+    // ─── BowLooting ─────────────────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void bowLootingEnabled(TestContext helper) {
+        ETTestHelper.setFeature("bow_looting", true);
+        ItemStack bow = new ItemStack(Items.BOW);
+        ItemStack crossbow = new ItemStack(Items.CROSSBOW);
+        helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, bow),      "Looting should be acceptable on bow");
+        helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, crossbow), "Looting should be acceptable on crossbow");
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void bowLootingDisabled(TestContext helper) {
+        ETTestHelper.setFeature("bow_looting", false);
+        ItemStack bow = new ItemStack(Items.BOW);
+        ItemStack crossbow = new ItemStack(Items.CROSSBOW);
+        try {
+            helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.LOOTING, bow),      "Looting should not be acceptable on bow when disabled");
+            helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.LOOTING, crossbow), "Looting should not be acceptable on crossbow when disabled");
+        } finally {
+            ETTestHelper.setFeature("bow_looting", true);
+        }
+        helper.complete();
+    }
+
     // ─── AxesNotTools ────────────────────────────────────────────────
 
     @GameTest(templateName = EMPTY_STRUCTURE)

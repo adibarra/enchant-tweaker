@@ -26,6 +26,9 @@ import net.minecraft.util.math.Box;
 import net.minecraft.entity.LightningEntity;
 import net.minecraft.world.GameMode;
 
+import net.minecraft.entity.ExperienceOrbEntity;
+
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -953,6 +956,152 @@ public class EnhancedGameTest implements FabricGameTest {
             ETTestHelper.setConfigValue("more_flame_per_level", "2");
             ETTestHelper.setCapmod(false);
             ETTestHelper.setEnchantCap("flame", -1);
+        }
+        helper.complete();
+    }
+
+    // ─── More Looting (XP Boost) ─────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreLootingEnabled(TestContext helper) {
+        ETTestHelper.setFeature("more_looting", true);
+        ETTestHelper.setConfigValue("more_looting_multiplier", "0.5");
+        ServerWorld world = helper.getWorld();
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        sword.addEnchantment(Enchantments.LOOTING, 3);
+        player.equipStack(EquipmentSlot.MAINHAND, sword);
+
+        ZombieEntity zombie = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        try {
+            // Set attackingPlayer and playerHitTimer so dropXp fires
+            Field attackingPlayerField = LivingEntity.class.getDeclaredField("attackingPlayer");
+            attackingPlayerField.setAccessible(true);
+            attackingPlayerField.set(zombie, player);
+            Field playerHitTimerField = LivingEntity.class.getDeclaredField("playerHitTimer");
+            playerHitTimerField.setAccessible(true);
+            playerHitTimerField.setInt(zombie, 100);
+
+            // Get base XP
+            int baseXp = zombie.getXpToDrop();
+            if (baseXp <= 0) {
+                // Force a known XP value via experiencePoints field on MobEntity
+                Field xpField = net.minecraft.entity.mob.MobEntity.class.getDeclaredField("experiencePoints");
+                xpField.setAccessible(true);
+                xpField.setInt(zombie, 10);
+                baseXp = 10;
+            }
+
+            // Clear existing XP orbs
+            BlockPos absPos = helper.getAbsolutePos(new BlockPos(0, 2, 0));
+            Box searchBox = new Box(absPos).expand(10);
+            world.getEntitiesByClass(ExperienceOrbEntity.class, searchBox, e -> true).forEach(e -> e.discard());
+
+            // Call dropXp
+            Method dropXp = LivingEntity.class.getDeclaredMethod("dropXp");
+            dropXp.setAccessible(true);
+            dropXp.invoke(zombie);
+
+            // Sum XP orbs
+            List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(ExperienceOrbEntity.class, searchBox, e -> true);
+            int totalXp = orbs.stream().mapToInt(ExperienceOrbEntity::getExperienceAmount).sum();
+
+            // Looting 3 with multiplier 0.5: xp * (1 + 3 * 0.5) = xp * 2.5
+            int expectedXp = (int)(baseXp * 2.5);
+            helper.assertTrue(totalXp == expectedXp,
+                "MoreLooting should boost XP: expected " + expectedXp + " (got " + totalXp + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setFeature("more_looting", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreLootingDisabled(TestContext helper) {
+        ETTestHelper.setFeature("more_looting", false);
+        ServerWorld world = helper.getWorld();
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        sword.addEnchantment(Enchantments.LOOTING, 3);
+        player.equipStack(EquipmentSlot.MAINHAND, sword);
+
+        ZombieEntity zombie = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        try {
+            Field attackingPlayerField = LivingEntity.class.getDeclaredField("attackingPlayer");
+            attackingPlayerField.setAccessible(true);
+            attackingPlayerField.set(zombie, player);
+            Field playerHitTimerField = LivingEntity.class.getDeclaredField("playerHitTimer");
+            playerHitTimerField.setAccessible(true);
+            playerHitTimerField.setInt(zombie, 100);
+
+            Field xpField = net.minecraft.entity.mob.MobEntity.class.getDeclaredField("experiencePoints");
+            xpField.setAccessible(true);
+            xpField.setInt(zombie, 10);
+
+            BlockPos absPos = helper.getAbsolutePos(new BlockPos(0, 2, 0));
+            Box searchBox = new Box(absPos).expand(10);
+            world.getEntitiesByClass(ExperienceOrbEntity.class, searchBox, e -> true).forEach(e -> e.discard());
+
+            Method dropXp = LivingEntity.class.getDeclaredMethod("dropXp");
+            dropXp.setAccessible(true);
+            dropXp.invoke(zombie);
+
+            List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(ExperienceOrbEntity.class, searchBox, e -> true);
+            int totalXp = orbs.stream().mapToInt(ExperienceOrbEntity::getExperienceAmount).sum();
+
+            // Feature disabled: XP should be unmodified (10)
+            helper.assertTrue(totalXp == 10,
+                "MoreLooting disabled should not boost XP: expected 10 (got " + totalXp + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreLootingCustomMultiplier(TestContext helper) {
+        ETTestHelper.setFeature("more_looting", true);
+        ETTestHelper.setConfigValue("more_looting_multiplier", "1.0");
+        ServerWorld world = helper.getWorld();
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        sword.addEnchantment(Enchantments.LOOTING, 2);
+        player.equipStack(EquipmentSlot.MAINHAND, sword);
+
+        ZombieEntity zombie = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        try {
+            Field attackingPlayerField = LivingEntity.class.getDeclaredField("attackingPlayer");
+            attackingPlayerField.setAccessible(true);
+            attackingPlayerField.set(zombie, player);
+            Field playerHitTimerField = LivingEntity.class.getDeclaredField("playerHitTimer");
+            playerHitTimerField.setAccessible(true);
+            playerHitTimerField.setInt(zombie, 100);
+
+            Field xpField = net.minecraft.entity.mob.MobEntity.class.getDeclaredField("experiencePoints");
+            xpField.setAccessible(true);
+            xpField.setInt(zombie, 10);
+
+            BlockPos absPos = helper.getAbsolutePos(new BlockPos(0, 2, 0));
+            Box searchBox = new Box(absPos).expand(10);
+            world.getEntitiesByClass(ExperienceOrbEntity.class, searchBox, e -> true).forEach(e -> e.discard());
+
+            Method dropXp = LivingEntity.class.getDeclaredMethod("dropXp");
+            dropXp.setAccessible(true);
+            dropXp.invoke(zombie);
+
+            List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(ExperienceOrbEntity.class, searchBox, e -> true);
+            int totalXp = orbs.stream().mapToInt(ExperienceOrbEntity::getExperienceAmount).sum();
+
+            // Looting 2 with multiplier 1.0: 10 * (1 + 2 * 1.0) = 30
+            helper.assertTrue(totalXp == 30,
+                "MoreLooting with multiplier=1.0 and Looting II should give 30 XP (got " + totalXp + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setConfigValue("more_looting_multiplier", "0.5");
+            ETTestHelper.setFeature("more_looting", false);
         }
         helper.complete();
     }

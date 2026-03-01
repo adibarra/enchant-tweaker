@@ -17,6 +17,8 @@
 - Add per-damage-type Protection bypass toggle (`protection_bypass_enabled`)
 - Add data-driven villager trade limits with per-enchantment overrides (`villager_trade_limits`)
 - Make enhanced enchantment formula constants configurable (protection bases, mending step/floor, multishot/flame per-level, binding step)
+- Allow Looting on bows and crossbows (`bow_looting`)
+- Add Looting XP boost for mob kills with configurable multiplier (`more_looting`)
 - Upgrade to Java 21, Gradle 9, and Fabric Loom 1.15
 
 ## 1.5.0

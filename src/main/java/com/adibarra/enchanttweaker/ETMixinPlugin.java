@@ -36,19 +36,21 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("SturdyAnvilsMixin",         "sturdy_anvils");
 
         KEYS.put("MoreBindingMixin",          "more_binding");
+        KEYS.put("MoreBlastProtectionMixin",  "more_blast_protection");
         KEYS.put("MoreChannelingMixin",       "more_channeling");
+        KEYS.put("MoreFireProtectionMixin",   "more_fire_protection");
         KEYS.put("MoreFlameMixin",            "more_flame");
         KEYS.put("MoreInfinityMixin",         "more_infinity");
+        KEYS.put("MoreLootingMixin",          "more_looting");
         KEYS.put("MoreMendingMixin",          "more_mending");
         KEYS.put("MoreMultishotMixin",        "more_multishot");
         KEYS.put("MoreProtectionMixin",       "more_protection");
-        KEYS.put("MoreFireProtectionMixin",   "more_fire_protection");
-        KEYS.put("MoreBlastProtectionMixin",  "more_blast_protection");
 
         KEYS.put("AxesNotToolsMixin",         "axes_not_tools");
         KEYS.put("AxeWeaponsMixin",           "axe_weapons");
         KEYS.put("BetterMendingMixin",        "better_mending");
         KEYS.put("BowInfinityFixMixin",       "bow_infinity_fix");
+        KEYS.put("BowLootingMixin",           "bow_looting");
         KEYS.put("GodArmorMixin",             "god_armor");
         KEYS.put("GodWeaponsMixin",           "god_weapons");
         KEYS.put("InfiniteMendingMixin",      "infinite_mending");
@@ -57,9 +59,9 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("NoMendingUnbreakingMixin",  "no_mending_unbreaking");
         KEYS.put("NoSoulSpeedBacklashMixin",  "no_soul_speed_backlash");
         KEYS.put("NoThornsBacklashMixin",     "no_thorns_backlash");
+        KEYS.put("ProtectionBypassMixin",     "protection_bypass_enabled");
         KEYS.put("ShinyNameMixin",            "shiny_name");
         KEYS.put("TridentWeaponsMixin",       "trident_weapons");
-        KEYS.put("ProtectionBypassMixin",     "protection_bypass_enabled");
         KEYS.put("VillagerTradeLimitsMixin",  "villager_trade_limits");
 
         KEYS.put("CapmodMixin",               "capmod_enabled");
