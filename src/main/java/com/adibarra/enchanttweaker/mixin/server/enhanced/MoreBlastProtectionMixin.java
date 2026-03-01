@@ -38,7 +38,8 @@ public abstract class MoreBlastProtectionMixin {
         if (!ETMixinPlugin.getMixinConfig("MoreBlastProtectionMixin")) return result;
         int level = EnchantmentHelper.getEquipmentLevel(Enchantments.BLAST_PROTECTION, entity);
         if (level > 0) {
-            return enchanttweaker$originalBlastKnockback * Math.pow(0.85, level);
+            double base = ETMixinPlugin.getConfig().getOrDefault("more_blast_protection_base", 0.85);
+            return enchanttweaker$originalBlastKnockback * Math.pow(base, level);
         }
         return result;
     }

@@ -58,7 +58,8 @@ public abstract class MoreBindingMixin {
         if (!armor.contains(stack)) return false;
 
         int bindingLevel = EnchantmentHelper.getLevel(Enchantments.BINDING_CURSE, stack);
-        if (ThreadLocalRandom.current().nextFloat() > Math.clamp(1.1 - 0.1 * bindingLevel, 0.1, 1.0)) {
+        double step = ETMixinPlugin.getConfig().getOrDefault("more_binding_step", 0.1);
+        if (ThreadLocalRandom.current().nextFloat() > Math.clamp(1.0 + step - step * bindingLevel, 0.0, 1.0)) {
             BOUND_ARMOR.computeIfAbsent(player.getUuid(), k -> new ConcurrentHashMap<>())
                        .put(armor.indexOf(stack), stack.copy());
             return true;

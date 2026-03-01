@@ -22,6 +22,7 @@ public abstract class MoreMultishotMixin {
         constant=@Constant(intValue=3))
     private static int enchanttweaker$moreMultishot$modifyNumProjectiles(int orig, ItemStack weaponStack, ItemStack projectileStack, LivingEntity shooter) {
         if (!ETMixinPlugin.getMixinConfig("MoreMultishotMixin")) return orig;
-        return EnchantmentHelper.getLevel(Enchantments.MULTISHOT, weaponStack) * 2 + 1;
+        int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_multishot_per_level", 2);
+        return EnchantmentHelper.getLevel(Enchantments.MULTISHOT, weaponStack) * perLevel + 1;
     }
 }

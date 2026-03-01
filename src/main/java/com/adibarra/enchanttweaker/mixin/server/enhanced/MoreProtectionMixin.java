@@ -25,6 +25,7 @@ public abstract class MoreProtectionMixin {
         if (!ETMixinPlugin.getMixinConfig("MoreProtectionMixin")) {
             return original.call(damage, epf);
         }
-        return (float)(damage * Math.pow(0.96, epf));
+        double base = ETMixinPlugin.getConfig().getOrDefault("more_protection_base", 0.96);
+        return (float)(damage * Math.pow(base, epf));
     }
 }

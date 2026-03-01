@@ -42,6 +42,7 @@ public abstract class MoreFlameMixin {
         constant=@Constant(intValue=5))
     private int enchanttweaker$moreFlame$modifyBurnTime(int orig) {
         if (!ETMixinPlugin.getMixinConfig("MoreFlameMixin")) return orig;
-        return 2 * (flameLevel - 1) + orig;
+        int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_flame_per_level", 2);
+        return perLevel * (flameLevel - 1) + orig;
     }
 }

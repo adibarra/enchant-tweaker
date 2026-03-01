@@ -45,6 +45,8 @@ public abstract class MoreMendingMixin {
         cancellable=true)
     private void enchanttweaker$moreMending$modifyRepairCost(int repairAmount, CallbackInfoReturnable<Integer> cir) {
         if (!ETMixinPlugin.getMixinConfig("MoreMendingMixin")) return;
-        cir.setReturnValue((int) Math.round(repairAmount * Math.clamp(0.6 - 0.05 * mendingLevel, 0.1, 0.6)));
+        double step = ETMixinPlugin.getConfig().getOrDefault("more_mending_step", 0.05);
+        double floor = ETMixinPlugin.getConfig().getOrDefault("more_mending_floor", 0.1);
+        cir.setReturnValue((int) Math.round(repairAmount * Math.clamp(0.6 - step * mendingLevel, floor, 0.6)));
     }
 }

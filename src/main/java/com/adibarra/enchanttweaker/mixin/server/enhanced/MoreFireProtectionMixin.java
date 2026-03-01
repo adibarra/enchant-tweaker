@@ -38,7 +38,8 @@ public abstract class MoreFireProtectionMixin {
         if (!ETMixinPlugin.getMixinConfig("MoreFireProtectionMixin")) return result;
         int level = EnchantmentHelper.getEquipmentLevel(Enchantments.FIRE_PROTECTION, entity);
         if (level > 0) {
-            return (int)(enchanttweaker$originalFireDuration * Math.pow(0.85, level));
+            double base = ETMixinPlugin.getConfig().getOrDefault("more_fire_protection_base", 0.85);
+            return (int)(enchanttweaker$originalFireDuration * Math.pow(base, level));
         }
         return result;
     }

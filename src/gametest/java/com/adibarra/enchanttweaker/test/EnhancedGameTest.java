@@ -772,7 +772,7 @@ public class EnhancedGameTest implements FabricGameTest {
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreBindingLevel1AlwaysDrops(TestContext helper) {
-        // Level 1: clamp(1.1 - 0.1*1, 0.1, 1.0) = 1.0 → random > 1.0 is never true → always drops
+        // Level 1: clamp(1.0 + 0.1 - 0.1*1, 0.0, 1.0) = 1.0 → random > 1.0 is never true → always drops
         ETTestHelper.setFeature("more_binding", true);
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("binding_curse", 1);
@@ -790,6 +790,169 @@ public class EnhancedGameTest implements FabricGameTest {
             ETTestHelper.setFeature("more_binding", false);
             ETTestHelper.setCapmod(false);
             ETTestHelper.setEnchantCap("binding_curse", -1);
+        }
+        helper.complete();
+    }
+
+    // ─── Configurable values ──────────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreProtectionCustomBase(TestContext helper) {
+        // Custom base 0.90 instead of default 0.96
+        ETTestHelper.setFeature("more_protection", true);
+        ETTestHelper.setConfigValue("more_protection_base", "0.90");
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack armor = new ItemStack(switch (slot) {
+                case HEAD -> Items.DIAMOND_HELMET;
+                case CHEST -> Items.DIAMOND_CHESTPLATE;
+                case LEGS -> Items.DIAMOND_LEGGINGS;
+                case FEET -> Items.DIAMOND_BOOTS;
+                default -> Items.DIAMOND_HELMET;
+            });
+            armor.addEnchantment(Enchantments.PROTECTION, 4);
+            entity.equipStack(slot, armor);
+        }
+        net.minecraft.entity.damage.DamageSource source = helper.getWorld().getDamageSources().generic();
+        float result = ETTestHelper.modifyAppliedDamage(entity, source, 20.0f);
+        float expected = (float)(20.0 * Math.pow(0.90, 16));
+        try {
+            helper.assertTrue(Math.abs(result - expected) < 0.01f,
+                "MoreProtection with base=0.90 should give ~" + expected + " (got " + result + ")");
+        } finally {
+            ETTestHelper.setConfigValue("more_protection_base", "0.96");
+            ETTestHelper.setFeature("more_protection", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreFireProtectionCustomBase(TestContext helper) {
+        ETTestHelper.setFeature("more_fire_protection", true);
+        ETTestHelper.setConfigValue("more_fire_protection_base", "0.70");
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
+        boots.addEnchantment(Enchantments.FIRE_PROTECTION, 4);
+        entity.equipStack(EquipmentSlot.FEET, boots);
+        int result = net.minecraft.enchantment.ProtectionEnchantment.transformFireDuration(entity, 200);
+        int expected = (int)(200 * Math.pow(0.70, 4));
+        try {
+            helper.assertTrue(result == expected,
+                "MoreFireProtection with base=0.70 should give duration " + expected + " (got " + result + ")");
+        } finally {
+            ETTestHelper.setConfigValue("more_fire_protection_base", "0.85");
+            ETTestHelper.setFeature("more_fire_protection", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreBlastProtectionCustomBase(TestContext helper) {
+        ETTestHelper.setFeature("more_blast_protection", true);
+        ETTestHelper.setConfigValue("more_blast_protection_base", "0.70");
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
+        boots.addEnchantment(Enchantments.BLAST_PROTECTION, 4);
+        entity.equipStack(EquipmentSlot.FEET, boots);
+        double result = net.minecraft.enchantment.ProtectionEnchantment.transformExplosionKnockback(entity, 1.0);
+        double expected = Math.pow(0.70, 4);
+        try {
+            helper.assertTrue(Math.abs(result - expected) < 0.001,
+                "MoreBlastProtection with base=0.70 should give knockback ~" + expected + " (got " + result + ")");
+        } finally {
+            ETTestHelper.setConfigValue("more_blast_protection_base", "0.85");
+            ETTestHelper.setFeature("more_blast_protection", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreMendingCustomStepAndFloor(TestContext helper) {
+        // Custom step=0.1, floor=0.05. At mendingLevel=0: clamp(0.6 - 0.1*0, 0.05, 0.6) = 0.6
+        // Same as vanilla-equivalent at level 0. Test the formula reads config.
+        ETTestHelper.setFeature("more_mending", true);
+        ETTestHelper.setConfigValue("more_mending_step", "0.1");
+        ETTestHelper.setConfigValue("more_mending_floor", "0.05");
+        ServerWorld world = helper.getWorld();
+        BlockPos pos = helper.getAbsolutePos(new BlockPos(0, 2, 0));
+        net.minecraft.entity.ExperienceOrbEntity orb = new net.minecraft.entity.ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), 0);
+        try {
+            Method getMRC = net.minecraft.entity.ExperienceOrbEntity.class.getDeclaredMethod("getMendingRepairCost", int.class);
+            getMRC.setAccessible(true);
+            boolean isStatic = java.lang.reflect.Modifier.isStatic(getMRC.getModifiers());
+            int cost = (int) getMRC.invoke(isStatic ? null : orb, 100);
+            // mendingLevel=0: clamp(0.6 - 0.1*0, 0.05, 0.6) = 0.6 → round(100*0.6) = 60
+            helper.assertTrue(cost == 60,
+                "MoreMending custom step/floor at level 0 should be 60 (got " + cost + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setConfigValue("more_mending_step", "0.05");
+            ETTestHelper.setConfigValue("more_mending_floor", "0.1");
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreMultishotCustomPerLevel(TestContext helper) {
+        // Custom per_level=3: level 2 → 2*3+1 = 7 projectiles
+        ETTestHelper.setFeature("more_multishot", true);
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("multishot", 2);
+        ETTestHelper.setConfigValue("more_multishot_per_level", "3");
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        ItemStack crossbow = new ItemStack(Items.CROSSBOW);
+        crossbow.addEnchantment(Enchantments.MULTISHOT, 2);
+        player.getInventory().insertStack(new ItemStack(Items.ARROW, 64));
+        try {
+            Method loadProjectiles = CrossbowItem.class.getDeclaredMethod("loadProjectiles", LivingEntity.class, ItemStack.class);
+            loadProjectiles.setAccessible(true);
+            loadProjectiles.invoke(null, player, crossbow);
+            var charged = crossbow.get(DataComponentTypes.CHARGED_PROJECTILES);
+            List<ItemStack> projectiles = charged != null ? charged.getProjectiles() : List.of();
+            helper.assertTrue(projectiles.size() == 7,
+                "Multishot II with per_level=3 should load 7 projectiles (got " + projectiles.size() + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setConfigValue("more_multishot_per_level", "2");
+            ETTestHelper.setCapmod(false);
+            ETTestHelper.setEnchantCap("multishot", -1);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreFlameCustomPerLevel(TestContext helper) {
+        // Custom per_level=5: Flame II → 5*(2-1)+5 = 10s = 200 ticks
+        ETTestHelper.setFeature("more_flame", true);
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("flame", 2);
+        ETTestHelper.setConfigValue("more_flame_per_level", "5");
+        ServerWorld world = helper.getWorld();
+        ZombieEntity shooter = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack flameBow = new ItemStack(Items.BOW);
+        flameBow.addEnchantment(Enchantments.FLAME, 2);
+        shooter.equipStack(EquipmentSlot.MAINHAND, flameBow);
+        BlockPos spawnPos = helper.getAbsolutePos(new BlockPos(0, 3, 0));
+        ArrowEntity arrow = new ArrowEntity(world, (double) spawnPos.getX(), (double) spawnPos.getY(), (double) spawnPos.getZ(), new ItemStack(Items.ARROW));
+        arrow.setOwner(shooter);
+        arrow.setOnFireFor(10);
+        world.spawnEntity(arrow);
+        ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
+        try {
+            Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod("onEntityHit", EntityHitResult.class);
+            onEntityHit.setAccessible(true);
+            onEntityHit.invoke(arrow, new EntityHitResult(target));
+            // 5*(2-1)+5 = 10s = 200 ticks
+            helper.assertTrue(target.getFireTicks() == 200,
+                "Flame II with per_level=5 should burn 200 ticks (got " + target.getFireTicks() + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setConfigValue("more_flame_per_level", "2");
+            ETTestHelper.setCapmod(false);
+            ETTestHelper.setEnchantCap("flame", -1);
         }
         helper.complete();
     }
