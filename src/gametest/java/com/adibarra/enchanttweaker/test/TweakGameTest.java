@@ -519,6 +519,28 @@ public class TweakGameTest implements FabricGameTest {
         helper.complete();
     }
 
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void bowInfinityFixSuppressedByMoreInfinity(TestContext helper) {
+        // When more_infinity is enabled, bow_infinity_fix should be suppressed at runtime
+        ETTestHelper.setFeature("bow_infinity_fix", true);
+        ETTestHelper.setFeature("more_infinity", true);
+        ServerWorld world = helper.getWorld();
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        ItemStack bow = new ItemStack(Items.BOW);
+        bow.addEnchantment(Enchantments.INFINITY, 1);
+        player.getInventory().setStack(0, bow);
+        // No arrows in inventory — bow_infinity_fix would normally allow this, but more_infinity takes precedence
+        TypedActionResult<ItemStack> result = bow.getItem().use(world, player, Hand.MAIN_HAND);
+        try {
+            helper.assertFalse(result.getResult().isAccepted(),
+                "BowInfinityFix should be suppressed when more_infinity is enabled");
+        } finally {
+            ETTestHelper.setFeature("more_infinity", false);
+            ETTestHelper.setFeature("bow_infinity_fix", false);
+        }
+        helper.complete();
+    }
+
     // ─── GodWeapons: all combinations ─────────────────────────────────
 
     @GameTest(templateName = EMPTY_STRUCTURE)

@@ -80,15 +80,6 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
                 () -> FabricLoader.getInstance().isModLoaded("fabrication"),
                 () -> CONFIG.set(getMixinKey("NotTooExpensiveMixin"), Boolean.FALSE.toString()))
         );
-
-        COMPAT.put(
-            "BowInfinityFixMixin",
-            new CompatEntry(
-                false,
-                "MoreInfinityMixin is enabled and takes precedence",
-                () -> getMixinConfig("MoreInfinityMixin"),
-                () -> CONFIG.set(getMixinKey("BowInfinityFixMixin"), Boolean.FALSE.toString()))
-        );
     }
 
     @Override

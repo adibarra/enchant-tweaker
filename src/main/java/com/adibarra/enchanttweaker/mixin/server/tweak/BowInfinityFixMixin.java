@@ -25,6 +25,7 @@ public abstract class BowInfinityFixMixin {
             target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private boolean enchanttweaker$bowInfinityFix$fireNoArrow(boolean orig, @Local ItemStack stack) {
         if (!ETMixinPlugin.getMixinConfig("BowInfinityFixMixin")) return orig;
+        if (ETMixinPlugin.getMixinConfig("MoreInfinityMixin")) return orig;
         if (EnchantmentHelper.getLevel(Enchantments.INFINITY, stack) > 0) {
             return false;
         }
