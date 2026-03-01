@@ -156,6 +156,24 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         CAPMOD_CACHE.clear();
     }
 
+    public static Map<String, String> getConfigMap() {
+        Map<String, String> map = new ConcurrentHashMap<>();
+        for (Map.Entry<String, String> entry : CONFIG.getEntries()) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+        return map;
+    }
+
+    public static void syncConfigFrom(Map<String, String> data) {
+        CONFIG.setAll(data);
+        FEATURE_CACHE.clear();
+        CAPMOD_CACHE.clear();
+    }
+
+    public static void restoreLocalConfig() {
+        reloadConfig();
+    }
+
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
         numMixins++;

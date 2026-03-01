@@ -1,5 +1,6 @@
 package com.adibarra.enchanttweaker.commands;
 
+import com.adibarra.enchanttweaker.ETCommands;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.adibarra.utils.ADText;
@@ -27,6 +28,7 @@ public class SetCommand implements Command<ServerCommandSource> {
         msg.add(Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN));
         if (ETMixinPlugin.getConfig().set(key, value)) {
             ETMixinPlugin.reloadConfig();
+            ETCommands.broadcastConfigSync(context.getSource().getServer());
             msg.add(Text.literal("Key '").formatted(Formatting.GRAY));
             msg.add(Text.literal(key));
             msg.add(Text.literal("' set to '").formatted(Formatting.GRAY));

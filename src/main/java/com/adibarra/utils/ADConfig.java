@@ -222,6 +222,15 @@ public class ADConfig {
     }
 
     /**
+     * Overwrites config entries in-memory without writing to disk.
+     *
+     * @param data the entries to set
+     */
+    public void setAll(Map<String, String> data) {
+        config.putAll(data);
+    }
+
+    /**
      * Gets a list of key value pairs in the config file.
      *
      * @return a list of key value pairs

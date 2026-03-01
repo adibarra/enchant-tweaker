@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker;
 
 import com.adibarra.enchanttweaker.commands.*;
+import com.adibarra.enchanttweaker.network.ConfigSyncPayload;
 import com.adibarra.utils.ADBrigadier;
 import com.adibarra.utils.ADUtils;
 import com.adibarra.utils.ADText;
@@ -8,8 +9,11 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.CommandNode;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -83,7 +87,17 @@ public class ETCommands {
             msg.add(Text.literal("Config Reloaded!").formatted(Formatting.AQUA));
 
             ADUtils.broadcastOps(server, ADText.joinTextMutable(msg));
+            broadcastConfigSync(server);
         });
+    }
+
+    public static void broadcastConfigSync(MinecraftServer server) {
+        ConfigSyncPayload payload = new ConfigSyncPayload(ETMixinPlugin.getConfigMap());
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (ServerPlayNetworking.canSend(player, ConfigSyncPayload.ID)) {
+                ServerPlayNetworking.send(player, payload);
+            }
+        }
     }
 
     public static List<ADBrigadier.Command> getCommands() {
