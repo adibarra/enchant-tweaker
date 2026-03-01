@@ -12,7 +12,7 @@
 
 
 # Enchant Tweaker
-Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 68 configuration options.
+Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 137 configuration options.
 
 
 
@@ -58,22 +58,34 @@ Some vanilla enchantments tweaked to scale better. Some of these require the enc
 <summary> View Enhanced Enchantments </summary>
 
 ### More Binding
-Enabling this tweak will allow Curse of Binding to scale with enchantment level. Higher levels will decrease the chance of the item dropping on death. The effect maxes out at Curse of Binding X, Binding I is kept the same as vanilla. Formula: `Drop Chance on Death = 1.1 - 0.1 * bindingLevel`.
+Enabling this tweak will allow Curse of Binding to scale with enchantment level. Higher levels will decrease the chance of the item dropping on death. The effect maxes out at Curse of Binding X, Binding I is kept the same as vanilla. Formula: `Drop Chance = 1.0 + step - step * bindingLevel`. The step is configurable (default 0.1).
+
+### More Blast Protection
+Enabling this tweak will replace the additive blast protection knockback formula with multiplicative scaling. Knockback never reaches zero. Formula: `Knockback = knockback * base^level`. The base is configurable (default 0.85, meaning 15% reduction per level).
 
 ### More Channeling
 Enabling this tweak will allow Channeling to scale with enchantment level. Channeling I only works during thunderstorms. Channeling II will allow Channeling to work during rain. No scaling for higher levels.
 
+### More Fire Protection
+Enabling this tweak will replace the additive fire protection duration formula with multiplicative scaling. Fire duration never reaches zero. Formula: `Duration = duration * base^level`. The base is configurable (default 0.85, meaning 15% reduction per level).
+
 ### More Flame
-Enabling this tweak will allow Flame to scale with enchantment level. Flame I lasts 5 seconds. Each additional level adds 2 seconds. Continues scaling for higher levels (uncapped). Formula: `Burn Duration = 5 + 2 * flameLevel`.
+Enabling this tweak will allow Flame to scale with enchantment level. Flame I lasts 5 seconds. Each additional level adds extra burn time. Continues scaling for higher levels (uncapped). Formula: `Burn Duration = 5 + per_level * (flameLevel - 1)`. The per-level increment is configurable (default 2).
 
 ### More Infinity
-**Overrides BowInfinityFix.** Enabling this tweak will allow Infinity to scale with enchantment level. Lets bows with Infinity have a chance at shooting without consuming an arrow. Continues scaling for higher levels (capped at 100% chance). Formula: `Free Arrow Chance = 0.03 * infinityLevel`. (+3% chance per level)
+**Overrides BowInfinityFix.** Enabling this tweak will allow Infinity to scale with enchantment level. Lets bows with Infinity have a chance at shooting without consuming an arrow. Continues scaling for higher levels (capped at 100% chance). Formula: `Free Arrow Chance = pct * infinityLevel`. The per-level percentage is configurable (default 0.03, meaning +3% per level).
+
+### More Looting
+Enabling this tweak will make Looting also increase XP drops from mob kills. Higher Looting levels give more bonus XP. Formula: `XP = xp * (1.0 + lootingLevel * multiplier)`. The multiplier is configurable (default 0.5, meaning +50% XP per Looting level).
 
 ### More Mending
-Enabling this tweak will allow Mending to scale with enchantment level. Mending II is the same as vanilla Mending. Mending I has ~10% XP efficiency loss and Mending III has ~10% XP efficiency gain. The effect maxes out at Mending X. Formula: `Repair Cost = 0.6 - 0.05 * mendingLevel`.
+Enabling this tweak will allow Mending to scale with enchantment level. Mending II is the same as vanilla Mending. Mending I has ~10% XP efficiency loss and Mending III has ~10% XP efficiency gain. Formula: `Repair Cost = clamp(0.6 - step * mendingLevel, floor, 0.6)`. Both step (default 0.05) and floor (default 0.1) are configurable.
 
 ### More Multishot
-Enabling this tweak will allow Multishot to scale with enchantment level. Each additional level will add 2 arrows to the shot. Crossbows take damage for **each** Multishot arrow shot. Continues scaling for higher levels (uncapped).
+Enabling this tweak will allow Multishot to scale with enchantment level. Each additional level adds extra arrows to the shot. Crossbows take damage for **each** Multishot arrow shot. Continues scaling for higher levels (uncapped). Formula: `Arrow Count = multishotLevel * per_level + 1`. The per-level increment is configurable (default 2).
+
+### More Protection
+Enabling this tweak will replace the additive EPF protection formula with multiplicative scaling. Protection never reaches 100% immunity. Formula: `Damage = damage * base^epf`. The base is configurable (default 0.96, meaning 4% reduction per EPF point).
 
 </details>
 
@@ -97,11 +109,20 @@ Normally Mending will only repair an item if it is being held or worn by the pla
 ### Bow Infinity Fix
 Normally even though you have Infinity on a bow, you need to have arrows in your inventory to shoot. Enabling this tweak will allow you to shoot arrows without having them in your inventory.
 
+### Bow Looting
+Normally Looting can only be applied to swords. Enabling this tweak allows Looting to be applied to bows and crossbows.
+
+### Disable Enchantments
+Prevent specific enchantments from appearing in enchanting tables, loot, villager trades, and anvils. Provide a comma-separated list of enchantment IDs to disable (e.g. `sharpness,mending,infinity`). Disabled enchantments override villager trade limits — they cannot be traded at all.
+
 ### God Armor
 Allow the combination of damage negation enchantments that normally can not be added together. Enabling this tweak allows you to combine the following enchantments: Protection, Blast Protection, Fire Protection, and Projectile Protection.
 
 ### God Weapons
 Allow the combination of damage enhancement enchantments that normally can not be added together. Enabling this tweak allows you to combine the following enchantments: Sharpness, Smite, and Bane of Arthropods.
+
+### Grindstone Disenchanting
+Extract enchantments from items into books using a grindstone. Place an enchanted item and a regular book in the grindstone to transfer all non-curse enchantments to the book. Also supports splitting: place a multi-enchantment book and a regular book to split one enchantment off. Curses are never extracted and remain on the original item. Optionally keeps the clean item in your inventory (`grindstone_disenchant_keep_item`).
 
 ### Infinite Mending
 Normally you need to choose between having either Mending or Infinity. Enabling this tweak allows both enchantments to coexist.
@@ -112,17 +133,45 @@ Normally tridents enchanted with Loyalty will be lost if thrown into the void. E
 ### Multishot Piercing
 Normally you need to choose between having either Multishot or Piercing. Enabling this tweak allows both enchantments to coexist.
 
+### No Mending + Unbreaking
+Normally Mending and Unbreaking can coexist on the same item. Enabling this tweak makes them mutually exclusive.
+
 ### No Soul Speed Backlash
 Normally boots will take damage when walking on soul sand with Soul Speed. Enabling this tweak will prevent your boots from taking damage from the enchantment.
 
 ### No Thorns Backlash
 Normally armor will take damage when Thorns is triggered. Enabling this tweak will prevent your armor from taking damage from the enchantment.
 
+### Protection Bypass
+Normally all damage types are reduced by the Protection enchantment. Enabling this tweak allows specific damage types to bypass Protection entirely. Provide a comma-separated list of damage type IDs (e.g. `magic,thorns,wither`). Modded damage types are also supported.
+
+### Roman Numerals
+Vanilla only displays enchantment levels I through X (1-10). Enabling this tweak dynamically generates Roman numeral names for all levels above X (e.g. Sharpness XI, Protection XV). Client-side installation is required for this tweak. Enabled by default.
+
 ### Shiny Max Enchantment Names
 Normally everyone knows what the max level for an enchantment is, but what about now? Enabling this tweak will color the name of enchantments at max level to be yellow. Client-side installation is required for this tweak, it uses the client's Enchant Tweaker config.
 
 ### Trident Weapons
 Allow the addition of some weapon enchantments that normally can not be added to tridents. Enabling this tweak allows you to add the following enchantments to tridents: Sharpness, Smite, Bane of Arthropods, Fire Aspect, Knockback, and Looting.
+
+### XP Scaling
+Replace vanilla's tiered XP-per-level formula with a configurable linear curve. Vanilla uses three tiers: levels 0-15 (cheap), 16-30 (medium), 31+ (expensive). This replaces all tiers with: `XP per level = base + step * currentLevel`. Both base (default 7) and step (default 2) are configurable — defaults match vanilla's first tier and continue linearly.
+
+</details>
+
+
+
+## Villager Trade Limits
+Control enchantment trade availability for villagers. Limit how many times enchantment trades can be used and whether they restock. Only affects trades that sell enchanted items (books, tools, weapons, armor). Non-enchantment trades are never affected.
+
+<details>
+<summary> View Villager Trade Limits </summary>
+
+### Global Settings
+Set `enchant_trade_max_uses` to limit all enchantment trades globally (-1 = vanilla). Toggle `enchant_trade_restock` to control whether trades restock. Add enchantment IDs to `enchant_trade_no_restock` (comma-separated) to prevent specific trades from restocking.
+
+### Per-Enchantment Overrides
+Override max uses for individual enchantment trades with `trade_<enchantment>` keys. Accepted values: -1 (use global default), 0 (disable trade entirely), 1+ (custom max uses). When a trade sells multiple enchantments (e.g. enchanted tools), the most restrictive limit wins.
 
 </details>
 

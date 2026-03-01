@@ -43,6 +43,7 @@
   ],
   "client": [
     "client.anvil.NotTooExpensiveMixin",
+    "client.lang.RomanNumeralMixin",
     "client.tweak.ShinyNameMixin"
   ],
   "injectors": {
