@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -148,6 +149,11 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
 
     public static ADConfig getConfig() {
         return CONFIG;
+    }
+
+    public static void clearCaches() {
+        FEATURE_CACHE.clear();
+        CAPMOD_CACHE.clear();
     }
 
     @Override

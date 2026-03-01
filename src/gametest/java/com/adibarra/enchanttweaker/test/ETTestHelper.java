@@ -18,14 +18,17 @@ class ETTestHelper {
 
     static void setCapmod(boolean enabled) {
         ETMixinPlugin.getConfig().set("capmod_enabled", String.valueOf(enabled));
+        ETMixinPlugin.clearCaches();
     }
 
     static void setEnchantCap(String key, int level) {
         ETMixinPlugin.getConfig().set(key, String.valueOf(level));
+        ETMixinPlugin.clearCaches();
     }
 
     static void setFeature(String key, boolean on) {
         ETMixinPlugin.getConfig().set(key, String.valueOf(on));
+        ETMixinPlugin.clearCaches();
     }
 
     /** Calls the protected Enchantment.canAccept via reflection. */
