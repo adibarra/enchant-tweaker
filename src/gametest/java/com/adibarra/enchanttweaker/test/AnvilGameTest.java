@@ -2,6 +2,8 @@ package com.adibarra.enchanttweaker.test;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.block.AnvilBlock;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
@@ -12,8 +14,14 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
+
+import java.lang.reflect.Method;
 
 public class AnvilGameTest implements FabricGameTest {
 
@@ -381,6 +389,130 @@ public class AnvilGameTest implements FabricGameTest {
                 "CheapNames should NOT force cost to 1 when slot 1 has material (got " + handler.getLevelCost() + ")");
         } finally {
             ETTestHelper.setFeature("cheap_names", false);
+        }
+        helper.complete();
+    }
+
+    // ─── AnvilRepair ──────────────────────────────────────────────────
+    // AnvilRepairMixin lets players sneak+right-click a damaged anvil with iron to reverse degradation.
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void anvilRepairDamagedToChipped(TestContext helper) {
+        ETTestHelper.setFeature("anvil_repair", true);
+        ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
+        ETTestHelper.setConfigValue("anvil_repair_block_cost", "1");
+        ServerWorld world = helper.getWorld();
+        BlockPos anvilPos = new BlockPos(0, 2, 0);
+        BlockState damaged = Blocks.DAMAGED_ANVIL.getDefaultState().with(AnvilBlock.FACING, Direction.NORTH);
+        helper.setBlockState(anvilPos, damaged);
+        BlockPos absPos = helper.getAbsolutePos(anvilPos);
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        player.setSneaking(true);
+        player.getInventory().setStack(player.getInventory().selectedSlot, new ItemStack(Items.IRON_INGOT, 9));
+        try {
+            Method onUse = AnvilBlock.class.getDeclaredMethod("onUse", BlockState.class,
+                net.minecraft.world.World.class, BlockPos.class, PlayerEntity.class, BlockHitResult.class);
+            onUse.setAccessible(true);
+            BlockHitResult hit = new BlockHitResult(Vec3d.ofCenter(absPos), Direction.UP, absPos, false);
+            onUse.invoke(Blocks.DAMAGED_ANVIL, world.getBlockState(absPos), world, absPos, player, hit);
+            helper.assertTrue(world.getBlockState(absPos).isOf(Blocks.CHIPPED_ANVIL),
+                "Damaged anvil should become chipped after repair");
+            helper.assertTrue(player.getMainHandStack().getCount() == 0,
+                "Should consume 9 iron ingots (got " + player.getMainHandStack().getCount() + " remaining)");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setFeature("anvil_repair", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void anvilRepairChippedToPristine(TestContext helper) {
+        ETTestHelper.setFeature("anvil_repair", true);
+        ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
+        ETTestHelper.setConfigValue("anvil_repair_block_cost", "1");
+        ServerWorld world = helper.getWorld();
+        BlockPos anvilPos = new BlockPos(0, 2, 0);
+        BlockState chipped = Blocks.CHIPPED_ANVIL.getDefaultState().with(AnvilBlock.FACING, Direction.EAST);
+        helper.setBlockState(anvilPos, chipped);
+        BlockPos absPos = helper.getAbsolutePos(anvilPos);
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        player.setSneaking(true);
+        player.getInventory().setStack(player.getInventory().selectedSlot, new ItemStack(Items.IRON_BLOCK, 1));
+        try {
+            Method onUse = AnvilBlock.class.getDeclaredMethod("onUse", BlockState.class,
+                net.minecraft.world.World.class, BlockPos.class, PlayerEntity.class, BlockHitResult.class);
+            onUse.setAccessible(true);
+            BlockHitResult hit = new BlockHitResult(Vec3d.ofCenter(absPos), Direction.UP, absPos, false);
+            onUse.invoke(Blocks.CHIPPED_ANVIL, world.getBlockState(absPos), world, absPos, player, hit);
+            BlockState result = world.getBlockState(absPos);
+            helper.assertTrue(result.isOf(Blocks.ANVIL),
+                "Chipped anvil should become pristine after repair");
+            helper.assertTrue(result.get(AnvilBlock.FACING) == Direction.EAST,
+                "Facing direction should be preserved after repair");
+            helper.assertTrue(player.getMainHandStack().isEmpty(),
+                "Should consume 1 iron block");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setFeature("anvil_repair", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void anvilRepairPristineNoop(TestContext helper) {
+        ETTestHelper.setFeature("anvil_repair", true);
+        ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
+        ETTestHelper.setConfigValue("anvil_repair_block_cost", "1");
+        ServerWorld world = helper.getWorld();
+        BlockPos anvilPos = new BlockPos(0, 2, 0);
+        helper.setBlockState(anvilPos, Blocks.ANVIL.getDefaultState());
+        BlockPos absPos = helper.getAbsolutePos(anvilPos);
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        player.setSneaking(true);
+        player.getInventory().setStack(player.getInventory().selectedSlot, new ItemStack(Items.IRON_INGOT, 9));
+        try {
+            Method onUse = AnvilBlock.class.getDeclaredMethod("onUse", BlockState.class,
+                net.minecraft.world.World.class, BlockPos.class, PlayerEntity.class, BlockHitResult.class);
+            onUse.setAccessible(true);
+            BlockHitResult hit = new BlockHitResult(Vec3d.ofCenter(absPos), Direction.UP, absPos, false);
+            onUse.invoke(Blocks.ANVIL, world.getBlockState(absPos), world, absPos, player, hit);
+            helper.assertTrue(world.getBlockState(absPos).isOf(Blocks.ANVIL),
+                "Pristine anvil should remain unchanged");
+            helper.assertTrue(player.getMainHandStack().getCount() == 9,
+                "No iron should be consumed on pristine anvil");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setFeature("anvil_repair", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void anvilRepairDisabled(TestContext helper) {
+        ETTestHelper.setFeature("anvil_repair", false);
+        ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
+        ETTestHelper.setConfigValue("anvil_repair_block_cost", "1");
+        ServerWorld world = helper.getWorld();
+        BlockPos anvilPos = new BlockPos(0, 2, 0);
+        helper.setBlockState(anvilPos, Blocks.DAMAGED_ANVIL.getDefaultState());
+        BlockPos absPos = helper.getAbsolutePos(anvilPos);
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        player.setSneaking(true);
+        player.getInventory().setStack(player.getInventory().selectedSlot, new ItemStack(Items.IRON_INGOT, 9));
+        try {
+            Method onUse = AnvilBlock.class.getDeclaredMethod("onUse", BlockState.class,
+                net.minecraft.world.World.class, BlockPos.class, PlayerEntity.class, BlockHitResult.class);
+            onUse.setAccessible(true);
+            BlockHitResult hit = new BlockHitResult(Vec3d.ofCenter(absPos), Direction.UP, absPos, false);
+            onUse.invoke(Blocks.DAMAGED_ANVIL, world.getBlockState(absPos), world, absPos, player, hit);
+            helper.assertTrue(world.getBlockState(absPos).isOf(Blocks.DAMAGED_ANVIL),
+                "Damaged anvil should remain unchanged when feature is disabled");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
         }
         helper.complete();
     }

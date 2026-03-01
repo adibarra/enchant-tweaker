@@ -34,6 +34,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("PriorWorkCheaperMixin",     "prior_work_cheaper");
         KEYS.put("PriorWorkFreeMixin",        "prior_work_free");
         KEYS.put("SturdyAnvilsMixin",         "sturdy_anvils");
+        KEYS.put("AnvilRepairMixin",          "anvil_repair");
 
         KEYS.put("MoreBindingMixin",          "more_binding");
         KEYS.put("MoreBlastProtectionMixin",  "more_blast_protection");

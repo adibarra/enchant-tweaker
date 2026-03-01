@@ -9,6 +9,7 @@
     "server.anvil.PriorWorkCheaperMixin",
     "server.anvil.PriorWorkFreeMixin",
     "server.anvil.SturdyAnvilsMixin",
+    "server.anvil.AnvilRepairMixin",
     "server.capmod.CapmodMixin",
     "server.grindstone.GrindstoneDisenchantMixin",
     "server.grindstone.GrindstoneOutputSlotMixin",

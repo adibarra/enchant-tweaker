@@ -12,7 +12,7 @@
 
 
 # Enchant Tweaker
-Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 137 configuration options.
+Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 140 configuration options.
 
 
 
@@ -46,6 +46,9 @@ Normally when enchanting/repairing an item, each operation will double the cost 
 
 ### Sturdy Anvils
 Normally an anvil has a 12% (0.12) chance to take damage when used. Enabling this tweak will let you customize the damage chance.
+
+### Anvil Repair
+Allows repairing damaged anvils by sneak+right-clicking with iron ingots or iron blocks. Each repair reverses one degradation step (damaged → chipped → pristine). Iron ingot cost (default 9) and iron block cost (default 1) are configurable independently. Set a cost to 0 to disable that repair type.
 
 </details>
 
