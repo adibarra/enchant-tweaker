@@ -40,6 +40,7 @@ public class EnhancedGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreMultishotEnabled(TestContext helper) {
         ETTestHelper.setFeature("more_multishot", true);
+        ETTestHelper.setConfigValue("more_multishot_per_level", "2");
         ETTestHelper.setEnchantCap("multishot", 2);
         ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
         ItemStack crossbow = new ItemStack(Items.CROSSBOW);
@@ -92,6 +93,7 @@ public class EnhancedGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreFlameEnabled(TestContext helper) {
         ETTestHelper.setFeature("more_flame", true);
+        ETTestHelper.setConfigValue("more_flame_per_level", "2");
         ETTestHelper.setEnchantCap("flame", 2);
         ServerWorld world = helper.getWorld();
         ZombieEntity shooter = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
@@ -162,6 +164,8 @@ public class EnhancedGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreMendingEnabled(TestContext helper) {
         ETTestHelper.setFeature("more_mending", true);
+        ETTestHelper.setConfigValue("more_mending_step", "0.05");
+        ETTestHelper.setConfigValue("more_mending_floor", "0.1");
         ServerWorld world = helper.getWorld();
         BlockPos pos = helper.getAbsolutePos(new BlockPos(0, 2, 0));
         net.minecraft.entity.ExperienceOrbEntity orb = new net.minecraft.entity.ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), 0);
@@ -208,6 +212,7 @@ public class EnhancedGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreInfinityEnabled(TestContext helper) {
         ETTestHelper.setFeature("more_infinity", true);
+        ETTestHelper.setConfigValue("more_infinity_pct", "0.03");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("infinity", 34);
         ZombieEntity shooter = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
@@ -261,6 +266,7 @@ public class EnhancedGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreBindingEnabled(TestContext helper) {
         ETTestHelper.setFeature("more_binding", true);
+        ETTestHelper.setConfigValue("more_binding_step", "0.1");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("binding_curse", 10);
         PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
@@ -438,6 +444,7 @@ public class EnhancedGameTest implements FabricGameTest {
     public void moreMultishotLevel1Vanilla(TestContext helper) {
         // Level 1 with mixin enabled: 1*2+1 = 3 = same as vanilla
         ETTestHelper.setFeature("more_multishot", true);
+        ETTestHelper.setConfigValue("more_multishot_per_level", "2");
         ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
         ItemStack crossbow = new ItemStack(Items.CROSSBOW);
         crossbow.addEnchantment(Enchantments.MULTISHOT, 1);
@@ -460,6 +467,7 @@ public class EnhancedGameTest implements FabricGameTest {
     public void moreMultishotLevel3(TestContext helper) {
         // Level 3: 3*2+1 = 7 projectiles
         ETTestHelper.setFeature("more_multishot", true);
+        ETTestHelper.setConfigValue("more_multishot_per_level", "2");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("multishot", 3);
         ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
@@ -489,6 +497,7 @@ public class EnhancedGameTest implements FabricGameTest {
     public void moreFlameLevel1Vanilla(TestContext helper) {
         // Level 1 with mixin enabled: 2*(1-1)+5 = 5s = 100 ticks = vanilla
         ETTestHelper.setFeature("more_flame", true);
+        ETTestHelper.setConfigValue("more_flame_per_level", "2");
         ServerWorld world = helper.getWorld();
         ZombieEntity shooter = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack flameBow = new ItemStack(Items.BOW);
@@ -519,6 +528,8 @@ public class EnhancedGameTest implements FabricGameTest {
         // Mending level 10: round(100 * clamp(0.6 - 0.05*10, 0.1, 0.6)) = round(100 * 0.1) = 10
         // Must disable better_mending so vanilla repairPlayerGears path runs (captureMendingLevel fires)
         ETTestHelper.setFeature("more_mending", true);
+        ETTestHelper.setConfigValue("more_mending_step", "0.05");
+        ETTestHelper.setConfigValue("more_mending_floor", "0.1");
         ETTestHelper.setFeature("better_mending", false);
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("mending", 10);
@@ -555,6 +566,7 @@ public class EnhancedGameTest implements FabricGameTest {
         // ~97% chance to consume arrow (not intangible). Over 100 tries, at least one should consume.
         // P(all 100 are free) = 0.03^100 ≈ 10^-152 → impossible
         ETTestHelper.setFeature("more_infinity", true);
+        ETTestHelper.setConfigValue("more_infinity_pct", "0.03");
         ZombieEntity shooter = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack bow = new ItemStack(Items.BOW);
         bow.addEnchantment(Enchantments.INFINITY, 1);
@@ -648,6 +660,7 @@ public class EnhancedGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreProtectionEnabled(TestContext helper) {
         ETTestHelper.setFeature("more_protection", true);
+        ETTestHelper.setConfigValue("more_protection_base", "0.96");
         ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
         for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
             ItemStack armor = new ItemStack(switch (slot) {
@@ -703,6 +716,7 @@ public class EnhancedGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreFireProtectionEnabled(TestContext helper) {
         ETTestHelper.setFeature("more_fire_protection", true);
+        ETTestHelper.setConfigValue("more_fire_protection_base", "0.85");
         ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         boots.addEnchantment(Enchantments.FIRE_PROTECTION, 4);
@@ -741,6 +755,7 @@ public class EnhancedGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreBlastProtectionEnabled(TestContext helper) {
         ETTestHelper.setFeature("more_blast_protection", true);
+        ETTestHelper.setConfigValue("more_blast_protection_base", "0.85");
         ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         boots.addEnchantment(Enchantments.BLAST_PROTECTION, 4);
@@ -777,6 +792,7 @@ public class EnhancedGameTest implements FabricGameTest {
     public void moreBindingLevel1AlwaysDrops(TestContext helper) {
         // Level 1: clamp(1.0 + 0.1 - 0.1*1, 0.0, 1.0) = 1.0 → random > 1.0 is never true → always drops
         ETTestHelper.setFeature("more_binding", true);
+        ETTestHelper.setConfigValue("more_binding_step", "0.1");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("binding_curse", 1);
         PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);

@@ -70,7 +70,7 @@ public class AnvilGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void notTooExpensiveEnabled(TestContext helper) {
         ETTestHelper.setFeature("not_too_expensive", true);
-        // nte_max_cost defaults to Integer.MAX_VALUE — any realistic cost passes
+        ETTestHelper.setConfigValue("nte_max_cost", String.valueOf(Integer.MAX_VALUE));
         PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
         sword.setDamage(100);

@@ -36,10 +36,12 @@ public class TweakGameTest implements FabricGameTest {
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void xpScalingEnabled(TestContext helper) {
         ETTestHelper.setFeature("xp_scaling", true);
+        ETTestHelper.setConfigValue("xp_scaling_base", "7");
+        ETTestHelper.setConfigValue("xp_scaling_step", "2");
         ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
         player.experienceLevel = 35;
         try {
-            // Default: base=7, step=2 → 7 + 2*35 = 77
+            // base=7, step=2 → 7 + 2*35 = 77
             int xp = player.getNextLevelExperience();
             helper.assertTrue(xp == 77,
                 "XP scaling at level 35 should be 77 (got " + xp + ")");
