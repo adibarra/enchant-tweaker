@@ -11,6 +11,9 @@
 - Fix dead channeling entry in capmod config
 - Add configurable free-arrow rate for MoreInfinity (`more_infinity_pct`)
 - Add Mending/Unbreaking incompatibility toggle (`no_mending_unbreaking`)
+- Add multiplicative Protection damage reduction (`more_protection`)
+- Add multiplicative Fire Protection duration reduction (`more_fire_protection`)
+- Add multiplicative Blast Protection knockback reduction (`more_blast_protection`)
 - Upgrade to Java 21, Gradle 9, and Fabric Loom 1.15
 
 ## 1.5.0

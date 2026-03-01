@@ -635,6 +635,139 @@ public class EnhancedGameTest implements FabricGameTest {
         helper.complete();
     }
 
+    // ─── MoreProtection ─────────────────────────────────────────────────
+    // Vanilla EPF formula: damage * (1 - clamp(epf, 0, 20) / 25)
+    // Multiplicative:      damage * 0.96^epf
+    // 4x Protection IV = EPF 16. Damage 20:
+    //   Vanilla:        20 * (1 - 16/25) = 20 * 0.36 = 7.2
+    //   Multiplicative: 20 * 0.96^16     ≈ 10.397
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreProtectionEnabled(TestContext helper) {
+        ETTestHelper.setFeature("more_protection", true);
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack armor = new ItemStack(switch (slot) {
+                case HEAD -> Items.DIAMOND_HELMET;
+                case CHEST -> Items.DIAMOND_CHESTPLATE;
+                case LEGS -> Items.DIAMOND_LEGGINGS;
+                case FEET -> Items.DIAMOND_BOOTS;
+                default -> Items.DIAMOND_HELMET;
+            });
+            armor.addEnchantment(Enchantments.PROTECTION, 4);
+            entity.equipStack(slot, armor);
+        }
+        net.minecraft.entity.damage.DamageSource source = helper.getWorld().getDamageSources().generic();
+        float result = ETTestHelper.modifyAppliedDamage(entity, source, 20.0f);
+        float expected = (float)(20.0 * Math.pow(0.96, 16));
+        try {
+            helper.assertTrue(Math.abs(result - expected) < 0.01f,
+                "MoreProtection should give ~" + expected + " damage (got " + result + ")");
+        } finally {
+            ETTestHelper.setFeature("more_protection", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreProtectionDisabled(TestContext helper) {
+        ETTestHelper.setFeature("more_protection", false);
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack armor = new ItemStack(switch (slot) {
+                case HEAD -> Items.DIAMOND_HELMET;
+                case CHEST -> Items.DIAMOND_CHESTPLATE;
+                case LEGS -> Items.DIAMOND_LEGGINGS;
+                case FEET -> Items.DIAMOND_BOOTS;
+                default -> Items.DIAMOND_HELMET;
+            });
+            armor.addEnchantment(Enchantments.PROTECTION, 4);
+            entity.equipStack(slot, armor);
+        }
+        net.minecraft.entity.damage.DamageSource source = helper.getWorld().getDamageSources().generic();
+        float result = ETTestHelper.modifyAppliedDamage(entity, source, 20.0f);
+        float expected = net.minecraft.entity.DamageUtil.getInflictedDamage(20.0f, 16.0f);
+        helper.assertTrue(Math.abs(result - expected) < 0.01f,
+            "Vanilla protection should give ~" + expected + " damage (got " + result + ")");
+        helper.complete();
+    }
+
+    // ─── MoreFireProtection ─────────────────────────────────────────────
+    // Fire Protection IV: level = 4, duration = 200.
+    //   Vanilla:        200 - floor(200 * 4 * 0.15) = 200 - 120 = 80
+    //   Multiplicative: (int)(200 * 0.85^4) = 104
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreFireProtectionEnabled(TestContext helper) {
+        ETTestHelper.setFeature("more_fire_protection", true);
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
+        boots.addEnchantment(Enchantments.FIRE_PROTECTION, 4);
+        entity.equipStack(EquipmentSlot.FEET, boots);
+        int result = net.minecraft.enchantment.ProtectionEnchantment.transformFireDuration(entity, 200);
+        int expected = (int)(200 * Math.pow(0.85, 4));
+        try {
+            helper.assertTrue(result == expected,
+                "MoreFireProtection should give duration " + expected + " (got " + result + ")");
+        } finally {
+            ETTestHelper.setFeature("more_fire_protection", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreFireProtectionDisabled(TestContext helper) {
+        ETTestHelper.setFeature("more_fire_protection", false);
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
+        boots.addEnchantment(Enchantments.FIRE_PROTECTION, 4);
+        entity.equipStack(EquipmentSlot.FEET, boots);
+        int result = net.minecraft.enchantment.ProtectionEnchantment.transformFireDuration(entity, 200);
+        // Vanilla: 200 - floor(200 * 4 * 0.15) = 80
+        int expected = 80;
+        helper.assertTrue(result == expected,
+            "Vanilla fire protection should give duration " + expected + " (got " + result + ")");
+        helper.complete();
+    }
+
+    // ─── MoreBlastProtection ────────────────────────────────────────────
+    // Blast Protection IV: level = 4, knockback = 1.0.
+    //   Vanilla:        1.0 * clamp(1 - 4*0.15, 0, 1) = 0.4
+    //   Multiplicative: 1.0 * 0.85^4 ≈ 0.522
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreBlastProtectionEnabled(TestContext helper) {
+        ETTestHelper.setFeature("more_blast_protection", true);
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
+        boots.addEnchantment(Enchantments.BLAST_PROTECTION, 4);
+        entity.equipStack(EquipmentSlot.FEET, boots);
+        double result = net.minecraft.enchantment.ProtectionEnchantment.transformExplosionKnockback(entity, 1.0);
+        double expected = Math.pow(0.85, 4);
+        try {
+            helper.assertTrue(Math.abs(result - expected) < 0.001,
+                "MoreBlastProtection should give knockback ~" + expected + " (got " + result + ")");
+        } finally {
+            ETTestHelper.setFeature("more_blast_protection", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreBlastProtectionDisabled(TestContext helper) {
+        ETTestHelper.setFeature("more_blast_protection", false);
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
+        boots.addEnchantment(Enchantments.BLAST_PROTECTION, 4);
+        entity.equipStack(EquipmentSlot.FEET, boots);
+        double result = net.minecraft.enchantment.ProtectionEnchantment.transformExplosionKnockback(entity, 1.0);
+        // Vanilla: 1.0 * clamp(1 - 4*0.15, 0, 1) = 0.4
+        double expected = 0.4;
+        helper.assertTrue(Math.abs(result - expected) < 0.001,
+            "Vanilla blast protection should give knockback ~" + expected + " (got " + result + ")");
+        helper.complete();
+    }
+
     // ─── MoreBinding: level 1 = always drops (vanilla) ────────────────
 
     @GameTest(templateName = EMPTY_STRUCTURE)

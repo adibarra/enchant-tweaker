@@ -123,6 +123,17 @@ class ETTestHelper {
         }
     }
 
+    /** Calls protected LivingEntity.modifyAppliedDamage(DamageSource, float) via reflection. */
+    static float modifyAppliedDamage(net.minecraft.entity.LivingEntity entity, net.minecraft.entity.damage.DamageSource source, float damage) {
+        try {
+            Method m = net.minecraft.entity.LivingEntity.class.getDeclaredMethod("modifyAppliedDamage", net.minecraft.entity.damage.DamageSource.class, float.class);
+            m.setAccessible(true);
+            return (float) m.invoke(entity, source, damage);
+        } catch (Exception e) {
+            throw new RuntimeException("modifyAppliedDamage reflection failed", e);
+        }
+    }
+
     /**
      * Forces World.rainGradient so World.isRaining() immediately reflects the desired state.
      * World.setWeather() sets the rain flag but the gradient updates lazily one tick at a time.
