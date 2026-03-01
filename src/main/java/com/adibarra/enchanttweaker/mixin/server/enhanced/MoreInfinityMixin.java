@@ -8,10 +8,9 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.RangedWeaponItem;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @description Lets bows with Infinity enchant have a chance at shooting
@@ -20,9 +19,6 @@ import java.util.Random;
  */
 @Mixin(value=RangedWeaponItem.class)
 public abstract class MoreInfinityMixin {
-
-    @Unique
-    private static final Random RAND = new Random();
 
     @ModifyExpressionValue(
         method="getProjectile(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;Z)Lnet/minecraft/item/ItemStack;",
@@ -34,7 +30,7 @@ public abstract class MoreInfinityMixin {
         if (!ETMixinPlugin.getMixinConfig("MoreInfinityMixin")) return orig;
         if (!orig) return false; // already no infinity, don't change
         int infinityLevel = EnchantmentHelper.getLevel(Enchantments.INFINITY, weaponStack);
-        if (RAND.nextFloat() > Math.clamp(1.0 - 0.03 * infinityLevel, 0, 1.0)) {
+        if (ThreadLocalRandom.current().nextFloat() > Math.clamp(1.0 - 0.03 * infinityLevel, 0, 1.0)) {
             return true; // keep infinity: free arrow
         }
         return false; // lose infinity: consume arrow

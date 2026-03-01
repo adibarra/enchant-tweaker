@@ -17,9 +17,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @description Scales the Binding Curse enchantment to have a chance of not dropping the item on death.
@@ -27,9 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Mixin(value=PlayerInventory.class)
 public abstract class MoreBindingMixin {
-
-    @Unique
-    private static final Random RAND = new Random();
 
     @Unique
     private static final Map<UUID, Map<Integer, ItemStack>> BOUND_ARMOR = new ConcurrentHashMap<>();
@@ -61,7 +58,7 @@ public abstract class MoreBindingMixin {
         if (!armor.contains(stack)) return false;
 
         int bindingLevel = EnchantmentHelper.getLevel(Enchantments.BINDING_CURSE, stack);
-        if (RAND.nextFloat() > Math.clamp(1.1 - 0.1 * bindingLevel, 0.1, 1.0)) {
+        if (ThreadLocalRandom.current().nextFloat() > Math.clamp(1.1 - 0.1 * bindingLevel, 0.1, 1.0)) {
             BOUND_ARMOR.computeIfAbsent(player.getUuid(), k -> new ConcurrentHashMap<>())
                        .put(armor.indexOf(stack), stack.copy());
             return true;

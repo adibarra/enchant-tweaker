@@ -10,12 +10,11 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @description Makes the enchantment name yellow when at max level.
@@ -26,9 +25,6 @@ import java.util.Random;
 @Environment(EnvType.CLIENT)
 @Mixin(value=Enchantment.class)
 public abstract class ShinyNameMixin {
-
-    @Unique
-    private static final Random RAND = new Random();
 
     @Shadow
     public abstract int getMaxLevel();
@@ -47,7 +43,7 @@ public abstract class ShinyNameMixin {
             mutableText.formatted(Formatting.YELLOW);
         }
 
-        if (RAND.nextFloat() < 0.005f) {
+        if (ThreadLocalRandom.current().nextFloat() < 0.005f) {
             mutableText.formatted(Formatting.OBFUSCATED);
         }
     }

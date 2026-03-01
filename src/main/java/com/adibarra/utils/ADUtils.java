@@ -12,17 +12,16 @@ import net.minecraft.text.MutableText;
 import net.minecraft.util.collection.DefaultedList;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
 public class ADUtils {
 
-    private static final Random RAND = new Random();
-    private static final Map<Enchantment, String> ENCHANTMENT_PATH_CACHE = new HashMap<>();
+    private static final Map<Enchantment, String> ENCHANTMENT_PATH_CACHE = new ConcurrentHashMap<>();
 
     private ADUtils() {
         throw new IllegalStateException("Utility class. Do not instantiate.");
@@ -44,9 +43,10 @@ public class ADUtils {
      * @return the path, or empty if not registered
      */
     public static @Nullable String getEnchantmentPath(Enchantment enchantment) {
-        if (ENCHANTMENT_PATH_CACHE.containsKey(enchantment)) return ENCHANTMENT_PATH_CACHE.get(enchantment);
+        String cached = ENCHANTMENT_PATH_CACHE.get(enchantment);
+        if (cached != null) return cached;
         String path = Registries.ENCHANTMENT.getKey(enchantment).map(key -> key.getValue().getPath()).orElse(null);
-        ENCHANTMENT_PATH_CACHE.put(enchantment, path);
+        if (path != null) ENCHANTMENT_PATH_CACHE.put(enchantment, path);
         return path;
     }
 
@@ -96,7 +96,7 @@ public class ADUtils {
                 }
             }
             if (list.isEmpty()) continue;
-            return list.get(RAND.nextInt(list.size()));
+            return list.get(ThreadLocalRandom.current().nextInt(list.size()));
         }
         return null;
     }

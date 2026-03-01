@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
 
 public final class ETMixinPlugin implements IMixinConfigPlugin {
@@ -22,8 +22,8 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(EnchantTweaker.MOD_NAME);
     private static final Map<String, String> KEYS = new HashMap<>();
     private static final Map<String, CompatEntry> COMPAT = new HashMap<>();
-    private static final Map<String, Boolean> FEATURE_CACHE = new HashMap<>();
-    private static final Map<String, Integer> CAPMOD_CACHE = new HashMap<>();
+    private static final Map<String, Boolean> FEATURE_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> CAPMOD_CACHE = new ConcurrentHashMap<>();
 
     private record CompatEntry(boolean shouldApply, String reason, BooleanSupplier condition, Runnable callback) { }
 
