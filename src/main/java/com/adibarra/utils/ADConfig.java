@@ -195,7 +195,7 @@ public class ADConfig {
             line = line.trim().toLowerCase();
             if (line.isEmpty() || line.startsWith("#")) continue;
 
-            String[] keyPair = line.split("=");
+            String[] keyPair = line.split("=", 2);
             if (keyPair.length != 2) {
                 LOGGER.warn(PREFIX + "'{}' line {}: Found a syntax error! Skipping line...", filename, lineNum);
                 continue;

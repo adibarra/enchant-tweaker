@@ -1,8 +1,11 @@
 package com.adibarra.utils;
 
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.player.PlayerEntity;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
@@ -29,6 +32,16 @@ public class ADUtils {
         public Inventory(ItemStack inv) {
             this(List.of(inv));
         }
+    }
+
+    /**
+     * Gets the registry path of an enchantment (e.g. "sharpness", "mending").
+     *
+     * @param ench the enchantment
+     * @return the path, or empty if not registered
+     */
+    public static @Nullable String getEnchantmentPath(Enchantment ench) {
+        return Registries.ENCHANTMENT.getKey(ench).map(key -> key.getValue().getPath()).orElse(null);
     }
 
     /**

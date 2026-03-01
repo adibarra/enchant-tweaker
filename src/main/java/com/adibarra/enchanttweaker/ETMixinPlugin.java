@@ -53,11 +53,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("ShinyNameMixin",            "shiny_name");
         KEYS.put("TridentWeaponsMixin",       "trident_weapons");
 
-        KEYS.put("DamageEnchantMixin",        "capmod_enabled");
-        KEYS.put("GenericEnchantMixin",       "capmod_enabled");
-        KEYS.put("LuckEnchantMixin",          "capmod_enabled");
-        KEYS.put("ProtectionEnchantMixin",    "capmod_enabled");
-        KEYS.put("SpecialEnchantMixin",       "capmod_enabled");
+        KEYS.put("CapmodMixin",               "capmod_enabled");
 
         COMPAT.put(
             "AxesNotToolsMixin",
@@ -128,6 +124,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     }
 
     public static boolean getMixinConfig(String mixinName) {
+        if (!CONFIG.getOrDefault("mod_enabled", false)) return false;
         return CONFIG.getOrDefault(getMixinKey(mixinName), false);
     }
 

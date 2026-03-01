@@ -3,7 +3,11 @@ package com.adibarra.enchanttweaker.mixin.server.enhanced;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.ADMath;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.item.BowItem;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.RangedWeaponItem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,24 +19,26 @@ import java.util.Random;
  * without consuming an arrow. Overrides BowInfinityFix.
  * @environment Server
  */
-@Mixin(value=BowItem.class)
+@Mixin(value=RangedWeaponItem.class)
 public abstract class MoreInfinityMixin {
 
     @Unique
     private static final Random RAND = new Random();
 
     @ModifyExpressionValue(
-        method="onStoppedUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;I)V",
+        method="getProjectile(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;Z)Lnet/minecraft/item/ItemStack;",
         at=@At(
             ordinal=0,
             value="INVOKE",
-            target="Lnet/minecraft/enchantment/EnchantmentHelper;getLevel(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/item/ItemStack;)I"))
-    private int enchanttweaker$moreInfinity$freeArrow(int infinityLevel) {
-        if (!ETMixinPlugin.getMixinConfig("MoreInfinityMixin")) return infinityLevel;
+            target="Lnet/minecraft/item/RangedWeaponItem;isInfinity(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Z)Z"))
+    private static boolean enchanttweaker$moreInfinity$freeArrow(boolean orig, @Local(argsOnly=true, ordinal=0) ItemStack weaponStack) {
+        if (!ETMixinPlugin.getMixinConfig("MoreInfinityMixin")) return orig;
+        if (!orig) return false; // already no infinity, don't change
+        int infinityLevel = EnchantmentHelper.getLevel(Enchantments.INFINITY, weaponStack);
         if (RAND.nextFloat() > ADMath.clamp(1.0 - 0.03 * infinityLevel, 0, 1.0)) {
-            return infinityLevel;
+            return true; // keep infinity: free arrow
         }
-        return 0;
+        return false; // lose infinity: consume arrow
     }
 
 }

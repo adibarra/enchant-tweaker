@@ -26,12 +26,13 @@ public class SetCommand implements Command<ServerCommandSource> {
 
         msg.add(Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN));
         if (ETMixinPlugin.getConfig().set(key, value)) {
+            ETMixinPlugin.reloadConfig();
             msg.add(Text.literal("Key '").formatted(Formatting.GRAY));
             msg.add(Text.literal(key));
             msg.add(Text.literal("' set to '").formatted(Formatting.GRAY));
             msg.add(ADText.colorValue(value));
             msg.add(Text.literal("'.").formatted(Formatting.GRAY));
-            if (boolString(value).equals("true") || boolString(value).equals("false")) {
+            if (key.equals("mod_enabled") && (boolString(value).equals("true") || boolString(value).equals("false"))) {
                 String isServer = context.getSource().getServer().isDedicated() ? "server " : "";
                 msg.add(Text.literal("\nThis change requires a " + isServer + "restart to take effect.").formatted(Formatting.LIGHT_PURPLE));
             }

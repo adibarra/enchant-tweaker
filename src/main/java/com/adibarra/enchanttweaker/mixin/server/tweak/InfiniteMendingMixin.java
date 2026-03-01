@@ -1,8 +1,9 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import net.minecraft.enchantment.*;
-import net.minecraft.entity.EquipmentSlot;
+import com.adibarra.utils.ADUtils;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.InfinityEnchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,11 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @environment Server
  */
 @Mixin(value=InfinityEnchantment.class)
-public abstract class InfiniteMendingMixin extends Enchantment {
-
-    protected InfiniteMendingMixin(Rarity rarity, EnchantmentTarget target, EquipmentSlot[] slotTypes) {
-        super(rarity, target, slotTypes);
-    }
+public abstract class InfiniteMendingMixin {
 
     @Inject(
         method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
@@ -25,6 +22,12 @@ public abstract class InfiniteMendingMixin extends Enchantment {
         cancellable=true)
     private void enchanttweaker$infiniteMending$allowCoexist(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
         if (!ETMixinPlugin.getMixinConfig("InfiniteMendingMixin")) return;
-        cir.setReturnValue(super.canAccept(other));
+        String selfP = ADUtils.getEnchantmentPath((Enchantment)(Object)this);
+        String otherP = ADUtils.getEnchantmentPath(other);
+        if (selfP == null || otherP == null) return;
+        if ((selfP.equals("infinity") && otherP.equals("mending")) ||
+            (selfP.equals("mending") && otherP.equals("infinity"))) {
+            cir.setReturnValue(true);
+        }
     }
 }
