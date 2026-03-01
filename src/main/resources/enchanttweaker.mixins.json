@@ -25,6 +25,7 @@
     "server.tweak.BetterMendingMixin",
     "server.tweak.BowLootingMixin",
     "server.tweak.BowInfinityFixMixin",
+    "server.tweak.DisableEnchantmentsMixin",
     "server.tweak.GodArmorMixin",
     "server.tweak.GodWeaponsMixin",
     "server.tweak.InfiniteMendingMixin",

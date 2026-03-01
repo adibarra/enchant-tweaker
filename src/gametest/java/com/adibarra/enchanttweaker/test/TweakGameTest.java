@@ -30,6 +30,71 @@ import java.lang.reflect.Method;
 
 public class TweakGameTest implements FabricGameTest {
 
+    // ─── DisableEnchantments ───────────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void disableEnchantmentsRandomSelection(TestContext helper) {
+        ETTestHelper.setFeature("disable_enchantments_enabled", true);
+        ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
+        try {
+            helper.assertFalse(Enchantments.SHARPNESS.isAvailableForRandomSelection(),
+                "Sharpness should not be available for random selection when disabled");
+            helper.assertTrue(Enchantments.SMITE.isAvailableForRandomSelection(),
+                "Smite should still be available for random selection");
+        } finally {
+            ETTestHelper.setConfigValue("disable_enchantments", "");
+            ETTestHelper.setFeature("disable_enchantments_enabled", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void disableEnchantmentsBookOffer(TestContext helper) {
+        ETTestHelper.setFeature("disable_enchantments_enabled", true);
+        ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
+        try {
+            helper.assertFalse(Enchantments.SHARPNESS.isAvailableForEnchantedBookOffer(),
+                "Sharpness should not be available for book offers when disabled");
+            helper.assertTrue(Enchantments.SMITE.isAvailableForEnchantedBookOffer(),
+                "Smite should still be available for book offers");
+        } finally {
+            ETTestHelper.setConfigValue("disable_enchantments", "");
+            ETTestHelper.setFeature("disable_enchantments_enabled", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void disableEnchantmentsMaxLevel(TestContext helper) {
+        ETTestHelper.setFeature("disable_enchantments_enabled", true);
+        ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
+        try {
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 0,
+                "Sharpness max level should be 0 when disabled (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
+            helper.assertTrue(Enchantments.SMITE.getMaxLevel() > 0,
+                "Smite max level should be unchanged");
+        } finally {
+            ETTestHelper.setConfigValue("disable_enchantments", "");
+            ETTestHelper.setFeature("disable_enchantments_enabled", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void disableEnchantmentsEmpty(TestContext helper) {
+        ETTestHelper.setFeature("disable_enchantments_enabled", true);
+        ETTestHelper.setConfigValue("disable_enchantments", "");
+        try {
+            helper.assertTrue(Enchantments.SHARPNESS.isAvailableForRandomSelection(),
+                "Sharpness should be available when disable list is empty");
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() > 0,
+                "Sharpness max level should be normal when disable list is empty");
+        } finally {
+            ETTestHelper.setFeature("disable_enchantments_enabled", false);
+        }
+        helper.complete();
+    }
+
     // ─── GodArmor ────────────────────────────────────────────────────
 
     @GameTest(templateName = EMPTY_STRUCTURE)

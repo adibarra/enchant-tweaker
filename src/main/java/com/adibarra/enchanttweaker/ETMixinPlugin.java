@@ -51,6 +51,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("BetterMendingMixin",        "better_mending");
         KEYS.put("BowInfinityFixMixin",       "bow_infinity_fix");
         KEYS.put("BowLootingMixin",           "bow_looting");
+        KEYS.put("DisableEnchantmentsMixin",  "disable_enchantments_enabled");
         KEYS.put("GodArmorMixin",             "god_armor");
         KEYS.put("GodWeaponsMixin",           "god_weapons");
         KEYS.put("InfiniteMendingMixin",      "infinite_mending");
