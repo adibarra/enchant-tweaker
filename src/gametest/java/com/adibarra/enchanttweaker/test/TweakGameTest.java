@@ -105,6 +105,28 @@ public class TweakGameTest implements FabricGameTest {
         helper.complete();
     }
 
+    // ─── NoMendingUnbreaking ──────────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void noMendingUnbreakingEnabled(TestContext helper) {
+        ETTestHelper.setFeature("no_mending_unbreaking", true);
+        try {
+            helper.assertFalse(ETTestHelper.canAccept(Enchantments.MENDING, Enchantments.UNBREAKING),
+                "Mending should not accept Unbreaking when no_mending_unbreaking enabled");
+        } finally {
+            ETTestHelper.setFeature("no_mending_unbreaking", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void noMendingUnbreakingDisabled(TestContext helper) {
+        ETTestHelper.setFeature("no_mending_unbreaking", false);
+        helper.assertTrue(ETTestHelper.canAccept(Enchantments.MENDING, Enchantments.UNBREAKING),
+            "Mending should accept Unbreaking when no_mending_unbreaking disabled");
+        helper.complete();
+    }
+
     // ─── MultishotPiercing ───────────────────────────────────────────
 
     @GameTest(templateName = EMPTY_STRUCTURE)

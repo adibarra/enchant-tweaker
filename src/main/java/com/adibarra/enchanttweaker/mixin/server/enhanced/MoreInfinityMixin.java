@@ -30,7 +30,8 @@ public abstract class MoreInfinityMixin {
         if (!ETMixinPlugin.getMixinConfig("MoreInfinityMixin")) return orig;
         if (!orig) return false; // already no infinity, don't change
         int infinityLevel = EnchantmentHelper.getLevel(Enchantments.INFINITY, weaponStack);
-        if (ThreadLocalRandom.current().nextFloat() > Math.clamp(1.0 - 0.03 * infinityLevel, 0, 1.0)) {
+        double pct = ETMixinPlugin.getConfig().getOrDefault("more_infinity_pct", 0.03);
+        if (ThreadLocalRandom.current().nextFloat() > Math.clamp(1.0 - pct * infinityLevel, 0, 1.0)) {
             return true; // keep infinity: free arrow
         }
         return false; // lose infinity: consume arrow

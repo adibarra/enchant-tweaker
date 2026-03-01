@@ -577,6 +577,64 @@ public class EnhancedGameTest implements FabricGameTest {
         helper.complete();
     }
 
+    // ─── MoreInfinity: custom rate ─────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreInfinityCustomRateHigh(TestContext helper) {
+        // more_infinity_pct=1.0, level 1: threshold = clamp(1 - 1.0*1, 0, 1) = 0 → always free
+        ETTestHelper.setFeature("more_infinity", true);
+        ETTestHelper.setConfigValue("more_infinity_pct", "1.0");
+        ZombieEntity shooter = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack bow = new ItemStack(Items.BOW);
+        bow.addEnchantment(Enchantments.INFINITY, 1);
+        ItemStack arrow = new ItemStack(Items.ARROW);
+        try {
+            Method m = RangedWeaponItem.class.getDeclaredMethod("getProjectile", ItemStack.class, ItemStack.class, LivingEntity.class, boolean.class);
+            m.setAccessible(true);
+            for (int i = 0; i < 50; i++) {
+                ItemStack proj = (ItemStack) m.invoke(null, bow, arrow, shooter, false);
+                helper.assertTrue(proj.contains(DataComponentTypes.INTANGIBLE_PROJECTILE),
+                    "more_infinity_pct=1.0 level 1 should always give free arrow (iteration " + i + ")");
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setConfigValue("more_infinity_pct", "0.03");
+            ETTestHelper.setFeature("more_infinity", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreInfinityCustomRateZero(TestContext helper) {
+        // more_infinity_pct=0.0, level 34: threshold = clamp(1 - 0*34, 0, 1) = 1.0 → never free
+        ETTestHelper.setFeature("more_infinity", true);
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("infinity", 34);
+        ETTestHelper.setConfigValue("more_infinity_pct", "0.0");
+        ZombieEntity shooter = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack bow = new ItemStack(Items.BOW);
+        bow.addEnchantment(Enchantments.INFINITY, 34);
+        ItemStack arrow = new ItemStack(Items.ARROW);
+        try {
+            Method m = RangedWeaponItem.class.getDeclaredMethod("getProjectile", ItemStack.class, ItemStack.class, LivingEntity.class, boolean.class);
+            m.setAccessible(true);
+            for (int i = 0; i < 100; i++) {
+                ItemStack proj = (ItemStack) m.invoke(null, bow, arrow, shooter, false);
+                helper.assertTrue(!proj.contains(DataComponentTypes.INTANGIBLE_PROJECTILE),
+                    "more_infinity_pct=0.0 should never give free arrow (iteration " + i + ")");
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setConfigValue("more_infinity_pct", "0.03");
+            ETTestHelper.setFeature("more_infinity", false);
+            ETTestHelper.setCapmod(false);
+            ETTestHelper.setEnchantCap("infinity", -1);
+        }
+        helper.complete();
+    }
+
     // ─── MoreBinding: level 1 = always drops (vanilla) ────────────────
 
     @GameTest(templateName = EMPTY_STRUCTURE)

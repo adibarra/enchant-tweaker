@@ -17,17 +17,22 @@ import java.util.List;
 class ETTestHelper {
 
     static void setCapmod(boolean enabled) {
-        ETMixinPlugin.getConfig().set("capmod_enabled", String.valueOf(enabled));
+        ETMixinPlugin.getConfig().setAll(java.util.Map.of("capmod_enabled", String.valueOf(enabled)));
         ETMixinPlugin.clearCaches();
     }
 
     static void setEnchantCap(String key, int level) {
-        ETMixinPlugin.getConfig().set(key, String.valueOf(level));
+        ETMixinPlugin.getConfig().setAll(java.util.Map.of(key, String.valueOf(level)));
         ETMixinPlugin.clearCaches();
     }
 
     static void setFeature(String key, boolean on) {
-        ETMixinPlugin.getConfig().set(key, String.valueOf(on));
+        ETMixinPlugin.getConfig().setAll(java.util.Map.of(key, String.valueOf(on)));
+        ETMixinPlugin.clearCaches();
+    }
+
+    static void setConfigValue(String key, String value) {
+        ETMixinPlugin.getConfig().setAll(java.util.Map.of(key, value));
         ETMixinPlugin.clearCaches();
     }
 

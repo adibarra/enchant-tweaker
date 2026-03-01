@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.1
+
+- Server config now syncs to clients on join, reload, and config change
+  - ShinyNames and capmod levels update automatically without reconnecting
+- Consolidate capmod system into a single unified mixin
+- Add caching for feature flags and capmod levels (performance improvement)
+- Fix race conditions in MoreBinding, MoreMultishot, and MoreFlame mixins
+- Fix flame level being read from the wrong source in MoreFlame
+- Fix dead channeling entry in capmod config
+- Add configurable free-arrow rate for MoreInfinity (`more_infinity_pct`)
+- Add Mending/Unbreaking incompatibility toggle (`no_mending_unbreaking`)
+- Upgrade to Java 21, Gradle 9, and Fabric Loom 1.15
+
 ## 1.5.0
 
 - Add support for modifying config at runtime when using commands without needing to restart

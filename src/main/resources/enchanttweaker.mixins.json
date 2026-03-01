@@ -25,6 +25,7 @@
     "server.tweak.InfiniteMendingMixin",
     "server.tweak.LoyalVoidTridentsMixin",
     "server.tweak.MultishotPiercingMixin",
+    "server.tweak.NoMendingUnbreakingMixin",
     "server.tweak.NoSoulSpeedBacklashMixin",
     "server.tweak.NoThornsBacklashMixin",
     "server.tweak.TridentWeaponsMixin"
