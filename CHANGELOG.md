@@ -19,6 +19,9 @@
 - Make enhanced enchantment formula constants configurable (protection bases, mending step/floor, multishot/flame per-level, binding step)
 - Allow Looting on bows and crossbows (`bow_looting`)
 - Add Looting XP boost for mob kills with configurable multiplier (`more_looting`)
+- Add grindstone disenchanting: extract enchantments into books, with book splitting support (`grindstone_disenchant`)
+- Add custom XP scaling: replace vanilla's tiered XP formula with a configurable linear curve (`xp_scaling`)
+- Add enchantment disabling: prevent specific enchantments from appearing anywhere (`disable_enchantments_enabled`)
 - Upgrade to Java 21, Gradle 9, and Fabric Loom 1.15
 
 ## 1.5.0

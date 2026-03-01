@@ -67,6 +67,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("ShinyNameMixin",            "shiny_name");
         KEYS.put("TridentWeaponsMixin",       "trident_weapons");
         KEYS.put("VillagerTradeLimitsMixin",  "villager_trade_limits");
+        KEYS.put("XpScalingMixin",             "xp_scaling");
 
         KEYS.put("CapmodMixin",               "capmod_enabled");
 

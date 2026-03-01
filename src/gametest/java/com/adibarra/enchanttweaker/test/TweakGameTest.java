@@ -15,6 +15,7 @@ import net.minecraft.item.BowItem;
 import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
@@ -29,6 +30,56 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class TweakGameTest implements FabricGameTest {
+
+    // ─── XpScaling ──────────────────────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void xpScalingEnabled(TestContext helper) {
+        ETTestHelper.setFeature("xp_scaling", true);
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        player.experienceLevel = 35;
+        try {
+            // Default: base=7, step=2 → 7 + 2*35 = 77
+            int xp = player.getNextLevelExperience();
+            helper.assertTrue(xp == 77,
+                "XP scaling at level 35 should be 77 (got " + xp + ")");
+        } finally {
+            ETTestHelper.setFeature("xp_scaling", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void xpScalingDisabled(TestContext helper) {
+        ETTestHelper.setFeature("xp_scaling", false);
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        player.experienceLevel = 35;
+        // Vanilla tier 3: 9*level - 158 = 9*35 - 158 = 157
+        int xp = player.getNextLevelExperience();
+        helper.assertTrue(xp == 157,
+            "Vanilla XP at level 35 should be 157 (got " + xp + ")");
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void xpScalingCustomValues(TestContext helper) {
+        ETTestHelper.setFeature("xp_scaling", true);
+        ETTestHelper.setConfigValue("xp_scaling_base", "10");
+        ETTestHelper.setConfigValue("xp_scaling_step", "5");
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        player.experienceLevel = 20;
+        try {
+            // 10 + 5*20 = 110
+            int xp = player.getNextLevelExperience();
+            helper.assertTrue(xp == 110,
+                "XP scaling with base=10, step=5 at level 20 should be 110 (got " + xp + ")");
+        } finally {
+            ETTestHelper.setConfigValue("xp_scaling_base", "7");
+            ETTestHelper.setConfigValue("xp_scaling_step", "2");
+            ETTestHelper.setFeature("xp_scaling", false);
+        }
+        helper.complete();
+    }
 
     // ─── DisableEnchantments ───────────────────────────────────────────
 
