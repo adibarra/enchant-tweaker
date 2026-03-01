@@ -264,11 +264,9 @@ public class ADConfig {
      * @return the key value, or def if the key is missing.
      */
     public boolean getOrDefault(String key, boolean def) {
-        try {
-            return Boolean.parseBoolean(config.get(key));
-        } catch (Exception e) {
-            return def;
-        }
+        String val = config.get(key);
+        if (val == null) return def;
+        return Boolean.parseBoolean(val);
     }
 
     /**
@@ -277,9 +275,11 @@ public class ADConfig {
      * @return the key value, or def if the key is missing.
      */
     public int getOrDefault(String key, int def) {
+        String val = config.get(key);
+        if (val == null) return def;
         try {
-            return Integer.parseInt(config.get(key));
-        } catch (Exception e) {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
             return def;
         }
     }
@@ -290,9 +290,11 @@ public class ADConfig {
      * @return the key value, or def if the key is missing.
      */
     public double getOrDefault(String key, double def) {
+        String val = config.get(key);
+        if (val == null) return def;
         try {
-            return Double.parseDouble(config.get(key));
-        } catch (Exception e) {
+            return Double.parseDouble(val);
+        } catch (NumberFormatException e) {
             return def;
         }
     }
@@ -303,9 +305,11 @@ public class ADConfig {
      * @return the key value, or def if the key is missing.
      */
     public float getOrDefault(String key, float def) {
+        String val = config.get(key);
+        if (val == null) return def;
         try {
-            return Float.parseFloat(config.get(key));
-        } catch (Exception e) {
+            return Float.parseFloat(val);
+        } catch (NumberFormatException e) {
             return def;
         }
     }

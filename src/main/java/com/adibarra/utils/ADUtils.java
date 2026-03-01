@@ -12,7 +12,9 @@ import net.minecraft.text.MutableText;
 import net.minecraft.util.collection.DefaultedList;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.function.Predicate;
 
@@ -20,6 +22,7 @@ import java.util.function.Predicate;
 public class ADUtils {
 
     private static final Random RAND = new Random();
+    private static final Map<Enchantment, String> ENCHANTMENT_PATH_CACHE = new HashMap<>();
 
     private ADUtils() {
         throw new IllegalStateException("Utility class. Do not instantiate.");
@@ -40,8 +43,11 @@ public class ADUtils {
      * @param ench the enchantment
      * @return the path, or empty if not registered
      */
-    public static @Nullable String getEnchantmentPath(Enchantment ench) {
-        return Registries.ENCHANTMENT.getKey(ench).map(key -> key.getValue().getPath()).orElse(null);
+    public static @Nullable String getEnchantmentPath(Enchantment enchantment) {
+        if (ENCHANTMENT_PATH_CACHE.containsKey(enchantment)) return ENCHANTMENT_PATH_CACHE.get(enchantment);
+        String path = Registries.ENCHANTMENT.getKey(enchantment).map(key -> key.getValue().getPath()).orElse(null);
+        ENCHANTMENT_PATH_CACHE.put(enchantment, path);
+        return path;
     }
 
     /**

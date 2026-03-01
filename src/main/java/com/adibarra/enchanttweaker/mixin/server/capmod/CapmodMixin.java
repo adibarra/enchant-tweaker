@@ -1,7 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.capmod;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.ADMath;
 import com.adibarra.utils.ADUtils;
 import net.minecraft.enchantment.Enchantment;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,9 +20,6 @@ public abstract class CapmodMixin {
         if (!ETMixinPlugin.getMixinConfig("CapmodMixin")) return;
         String key = ADUtils.getEnchantmentPath((Enchantment)(Object)this);
         if (key == null) return;
-        int orig = cir.getReturnValue();
-        int lvlCap = ETMixinPlugin.getConfig().getOrDefault(key, orig);
-        if (lvlCap < 0) return;
-        cir.setReturnValue(ADMath.clamp(lvlCap, 0, 255));
+        cir.setReturnValue(ETMixinPlugin.getCapmodLevel(key, cir.getReturnValue()));
     }
 }

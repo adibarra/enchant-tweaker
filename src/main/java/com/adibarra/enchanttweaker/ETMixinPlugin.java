@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker;
 
 import com.adibarra.utils.ADConfig;
+import com.adibarra.utils.ADMath;
 import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
 import org.slf4j.Logger;
@@ -22,6 +23,8 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(EnchantTweaker.MOD_NAME);
     private static final Map<String, String> KEYS = new HashMap<>();
     private static final Map<String, CompatEntry> COMPAT = new HashMap<>();
+    private static final Map<String, Boolean> FEATURE_CACHE = new HashMap<>();
+    private static final Map<String, Integer> CAPMOD_CACHE = new HashMap<>();
 
     private record CompatEntry(boolean shouldApply, String reason, BooleanSupplier condition, Runnable callback) { }
 
@@ -115,6 +118,8 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
 
         String internalDefaultConfigPath = "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties";
         CONFIG = new ADConfig(EnchantTweaker.MOD_NAME, "enchant-tweaker.properties", internalDefaultConfigPath);
+        FEATURE_CACHE.clear();
+        CAPMOD_CACHE.clear();
     }
 
     public static String getMixinKey(String mixinName) {
@@ -124,8 +129,18 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     }
 
     public static boolean getMixinConfig(String mixinName) {
-        if (!CONFIG.getOrDefault("mod_enabled", false)) return false;
-        return CONFIG.getOrDefault(getMixinKey(mixinName), false);
+        return FEATURE_CACHE.computeIfAbsent(mixinName, k -> {
+            if (!CONFIG.getOrDefault("mod_enabled", false)) return false;
+            return CONFIG.getOrDefault(getMixinKey(k), false);
+        });
+    }
+
+    public static int getCapmodLevel(String enchantmentPath, int vanillaLevel) {
+        return CAPMOD_CACHE.computeIfAbsent(enchantmentPath, k -> {
+            int cap = CONFIG.getOrDefault(k, -1);
+            if (cap < 0) return vanillaLevel;
+            return ADMath.clamp(cap, 0, 255);
+        });
     }
 
     public static int getNumMixins() {
