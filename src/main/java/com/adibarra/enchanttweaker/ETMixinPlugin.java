@@ -46,6 +46,9 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("MoreMultishotMixin",        "more_multishot");
         KEYS.put("MoreProtectionMixin",       "more_protection");
 
+        KEYS.put("GrindstoneDisenchantMixin",  "grindstone_disenchant");
+        KEYS.put("GrindstoneOutputSlotMixin",  "grindstone_disenchant");
+
         KEYS.put("AxesNotToolsMixin",         "axes_not_tools");
         KEYS.put("AxeWeaponsMixin",           "axe_weapons");
         KEYS.put("BetterMendingMixin",        "better_mending");

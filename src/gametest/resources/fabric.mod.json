@@ -10,7 +10,8 @@
       "com.adibarra.enchanttweaker.test.CapmodGameTest",
       "com.adibarra.enchanttweaker.test.AnvilGameTest",
       "com.adibarra.enchanttweaker.test.TweakGameTest",
-      "com.adibarra.enchanttweaker.test.EnhancedGameTest"
+      "com.adibarra.enchanttweaker.test.EnhancedGameTest",
+      "com.adibarra.enchanttweaker.test.GrindstoneGameTest"
     ]
   }
 }

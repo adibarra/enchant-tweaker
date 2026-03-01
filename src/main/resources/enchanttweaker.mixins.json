@@ -10,6 +10,8 @@
     "server.anvil.PriorWorkFreeMixin",
     "server.anvil.SturdyAnvilsMixin",
     "server.capmod.CapmodMixin",
+    "server.grindstone.GrindstoneDisenchantMixin",
+    "server.grindstone.GrindstoneOutputSlotMixin",
     "server.enhanced.MoreBindingMixin",
     "server.enhanced.MoreChannelingMixin",
     "server.enhanced.MoreFlameMixin",

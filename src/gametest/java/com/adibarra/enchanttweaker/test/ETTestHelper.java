@@ -123,6 +123,42 @@ class ETTestHelper {
         }
     }
 
+    /** Sets the two input slots of a GrindstoneScreenHandler via reflection. */
+    static void setGrindstoneInputs(net.minecraft.screen.GrindstoneScreenHandler handler, ItemStack first, ItemStack second) {
+        try {
+            Field inputField = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredField("input");
+            inputField.setAccessible(true);
+            net.minecraft.inventory.Inventory inv = (net.minecraft.inventory.Inventory) inputField.get(handler);
+            inv.setStack(0, first);
+            inv.setStack(1, second);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("setGrindstoneInputs reflection failed", e);
+        }
+    }
+
+    /** Calls GrindstoneScreenHandler.updateResult() via reflection. */
+    static void grindstoneUpdateResult(net.minecraft.screen.GrindstoneScreenHandler handler) {
+        try {
+            Method m = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredMethod("updateResult");
+            m.setAccessible(true);
+            m.invoke(handler);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("grindstoneUpdateResult reflection failed", e);
+        }
+    }
+
+    /** Gets the result inventory from a GrindstoneScreenHandler via reflection. */
+    static ItemStack getGrindstoneResult(net.minecraft.screen.GrindstoneScreenHandler handler) {
+        try {
+            Field resultField = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredField("result");
+            resultField.setAccessible(true);
+            net.minecraft.inventory.Inventory result = (net.minecraft.inventory.Inventory) resultField.get(handler);
+            return result.getStack(0);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("getGrindstoneResult reflection failed", e);
+        }
+    }
+
     /** Calls protected LivingEntity.modifyAppliedDamage(DamageSource, float) via reflection. */
     static float modifyAppliedDamage(net.minecraft.entity.LivingEntity entity, net.minecraft.entity.damage.DamageSource source, float damage) {
         try {
