@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.5.1
+## 1.6.0
 
 - Server config now syncs to clients on join, reload, and config change
   - ShinyNames and capmod levels update automatically without reconnecting
