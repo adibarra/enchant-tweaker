@@ -249,4 +249,139 @@ public class AnvilGameTest implements FabricGameTest {
         }
         helper.complete();
     }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void priorWorkCheaperZeroMultiplier(TestContext helper) {
+        ETTestHelper.setFeature("prior_work_cheaper", true);
+        ETMixinPlugin.getConfig().set("pw_cost_multiplier", "0.0");
+        ETMixinPlugin.clearCaches();
+        try {
+            int result = ETTestHelper.getNextAnvilCost(4);
+            // formula: round(0.0 * 4 + 1) = 1
+            helper.assertTrue(result == 1,
+                "getNextCost(4) with multiplier 0.0 should be 1 (got " + result + ")");
+        } finally {
+            ETMixinPlugin.getConfig().set("pw_cost_multiplier", "1.33");
+            ETMixinPlugin.clearCaches();
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void priorWorkCheaperHighMultiplier(TestContext helper) {
+        ETTestHelper.setFeature("prior_work_cheaper", true);
+        ETMixinPlugin.getConfig().set("pw_cost_multiplier", "3.0");
+        ETMixinPlugin.clearCaches();
+        try {
+            int result = ETTestHelper.getNextAnvilCost(4);
+            // formula: round(3.0 * 4 + 1) = 13
+            helper.assertTrue(result == 13,
+                "getNextCost(4) with multiplier 3.0 should be 13 (got " + result + ")");
+        } finally {
+            ETMixinPlugin.getConfig().set("pw_cost_multiplier", "1.33");
+            ETMixinPlugin.clearCaches();
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void priorWorkCheaperNegativeMultiplier(TestContext helper) {
+        ETTestHelper.setFeature("prior_work_cheaper", true);
+        ETMixinPlugin.getConfig().set("pw_cost_multiplier", "-1.0");
+        ETMixinPlugin.clearCaches();
+        try {
+            int result = ETTestHelper.getNextAnvilCost(4);
+            // negative clamps to 0: round(0 * 4 + 1) = 1
+            helper.assertTrue(result == 1,
+                "getNextCost(4) with multiplier -1.0 should clamp to 1 (got " + result + ")");
+        } finally {
+            ETMixinPlugin.getConfig().set("pw_cost_multiplier", "1.33");
+            ETMixinPlugin.clearCaches();
+        }
+        helper.complete();
+    }
+
+    // ─── NotTooExpensive: custom max cost ─────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void notTooExpensiveCustomMaxCost(TestContext helper) {
+        ETTestHelper.setFeature("not_too_expensive", true);
+        ETMixinPlugin.getConfig().set("nte_max_cost", "50");
+        ETMixinPlugin.clearCaches();
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        // REPAIR_COST=60 produces total > 50 → should be blocked by custom cap
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        sword.setDamage(100);
+        sword.set(DataComponentTypes.REPAIR_COST, 60);
+        AnvilScreenHandler handler = new AnvilScreenHandler(0, player.getInventory());
+        ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+        handler.updateResult();
+        try {
+            helper.assertTrue(handler.getSlot(AnvilScreenHandler.OUTPUT_ID).getStack().isEmpty(),
+                "Custom nte_max_cost=50 should block repair with cost > 50");
+        } finally {
+            ETTestHelper.setFeature("not_too_expensive", false);
+            ETMixinPlugin.getConfig().set("nte_max_cost", String.valueOf(Integer.MAX_VALUE));
+            ETMixinPlugin.clearCaches();
+        }
+        helper.complete();
+    }
+
+    // ─── SturdyAnvils: always breaks ──────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void sturdyAnvilsAlwaysBreaks(TestContext helper) {
+        ETTestHelper.setFeature("sturdy_anvils", true);
+        ETMixinPlugin.getConfig().set("anvil_damage_chance", "1.0");
+        ETMixinPlugin.clearCaches();
+        ServerWorld world = helper.getWorld();
+        BlockPos anvilPos = new BlockPos(0, 2, 0);
+        helper.setBlockState(anvilPos, Blocks.ANVIL.getDefaultState());
+        BlockPos absPos = helper.getAbsolutePos(anvilPos);
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        player.addExperienceLevels(10000);
+        try {
+            ScreenHandlerContext ctx = ScreenHandlerContext.create(world, absPos);
+            AnvilScreenHandler handler = new AnvilScreenHandler(0, player.getInventory(), ctx);
+            ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+            sword.setDamage(100);
+            ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+            handler.updateResult();
+            ItemStack result = handler.getSlot(AnvilScreenHandler.OUTPUT_ID).getStack();
+            if (!result.isEmpty()) {
+                ETTestHelper.invokeOnTakeOutput(handler, player, result);
+            }
+            // With 100% damage chance, anvil should degrade from pristine on first use
+            helper.assertFalse(world.getBlockState(absPos).isOf(Blocks.ANVIL),
+                "Anvil with damage_chance=1.0 should degrade on first use");
+        } finally {
+            ETTestHelper.setFeature("sturdy_anvils", false);
+            ETMixinPlugin.getConfig().set("anvil_damage_chance", "0.06");
+            ETMixinPlugin.clearCaches();
+        }
+        helper.complete();
+    }
+
+    // ─── CheapNames: with material ────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void cheapNamesWithMaterial(TestContext helper) {
+        ETTestHelper.setFeature("cheap_names", true);
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        sword.setDamage(100);
+        sword.set(DataComponentTypes.REPAIR_COST, 10);
+        // Slot 1 is NOT empty — combining with material, not just renaming
+        AnvilScreenHandler handler = new AnvilScreenHandler(0, player.getInventory());
+        ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+        ETTestHelper.setAnvilNewName(handler, "Test Sword");
+        handler.updateResult();
+        try {
+            helper.assertTrue(handler.getLevelCost() > 1,
+                "CheapNames should NOT force cost to 1 when slot 1 has material (got " + handler.getLevelCost() + ")");
+        } finally {
+            ETTestHelper.setFeature("cheap_names", false);
+        }
+        helper.complete();
+    }
 }

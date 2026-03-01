@@ -385,4 +385,221 @@ public class EnhancedGameTest implements FabricGameTest {
         }
         helper.complete();
     }
+
+    // ─── MoreChanneling: Level I in rain ──────────────────────────────
+    // Channeling I in rain should NOT summon lightning even with mixin enabled.
+    // The mixin only activates for level >= 2.
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreChannelingLevel1RainNoLightning(TestContext helper) {
+        ETTestHelper.setFeature("more_channeling", true);
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("channeling", 1);
+        ServerWorld world = helper.getWorld();
+        world.setWeather(0, 100000, true, false);
+        ETTestHelper.forceRainGradient(world, 1.0f);
+        BlockPos absBase = helper.getAbsolutePos(new BlockPos(0, 0, 0));
+        double skyY = world.getTopY() - 20.0;
+        ZombieEntity target = EntityType.ZOMBIE.create(world);
+        target.setPos(absBase.getX() + 0.5, skyY, absBase.getZ() + 0.5);
+        world.spawnEntity(target);
+        ZombieEntity owner = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
+        ItemStack tridentStack = new ItemStack(Items.TRIDENT);
+        tridentStack.addEnchantment(Enchantments.CHANNELING, 1);
+        TridentEntity trident = new TridentEntity(world, owner, tridentStack);
+        trident.setPos(absBase.getX() + 0.5, skyY + 2.0, absBase.getZ() + 0.5);
+        world.spawnEntity(trident);
+        try {
+            Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod("onEntityHit", EntityHitResult.class);
+            onEntityHit.setAccessible(true);
+            onEntityHit.invoke(trident, new EntityHitResult(target));
+            Box searchBox = new Box(absBase.getX() - 10, skyY - 10, absBase.getZ() - 10,
+                                    absBase.getX() + 10, skyY + 20, absBase.getZ() + 10);
+            List<LightningEntity> lightnings = world.getEntitiesByType(EntityType.LIGHTNING_BOLT, searchBox, e -> true);
+            helper.assertTrue(lightnings.isEmpty(),
+                "Channeling I in rain should NOT summon lightning even with more_channeling enabled");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            world.setWeather(100000, 0, false, false);
+            ETTestHelper.setFeature("more_channeling", false);
+            ETTestHelper.setCapmod(false);
+            ETTestHelper.setEnchantCap("channeling", -1);
+        }
+        helper.complete();
+    }
+
+    // ─── MoreMultishot: level edge cases ──────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreMultishotLevel1Vanilla(TestContext helper) {
+        // Level 1 with mixin enabled: 1*2+1 = 3 = same as vanilla
+        ETTestHelper.setFeature("more_multishot", true);
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        ItemStack crossbow = new ItemStack(Items.CROSSBOW);
+        crossbow.addEnchantment(Enchantments.MULTISHOT, 1);
+        player.getInventory().insertStack(new ItemStack(Items.ARROW, 64));
+        try {
+            Method loadProjectiles = CrossbowItem.class.getDeclaredMethod("loadProjectiles", LivingEntity.class, ItemStack.class);
+            loadProjectiles.setAccessible(true);
+            loadProjectiles.invoke(null, player, crossbow);
+            var charged = crossbow.get(DataComponentTypes.CHARGED_PROJECTILES);
+            List<ItemStack> projectiles = charged != null ? charged.getProjectiles() : List.of();
+            helper.assertTrue(projectiles.size() == 3,
+                "Multishot I with more_multishot should still load 3 projectiles (got " + projectiles.size() + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreMultishotLevel3(TestContext helper) {
+        // Level 3: 3*2+1 = 7 projectiles
+        ETTestHelper.setFeature("more_multishot", true);
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("multishot", 3);
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        ItemStack crossbow = new ItemStack(Items.CROSSBOW);
+        crossbow.addEnchantment(Enchantments.MULTISHOT, 3);
+        player.getInventory().insertStack(new ItemStack(Items.ARROW, 64));
+        try {
+            Method loadProjectiles = CrossbowItem.class.getDeclaredMethod("loadProjectiles", LivingEntity.class, ItemStack.class);
+            loadProjectiles.setAccessible(true);
+            loadProjectiles.invoke(null, player, crossbow);
+            var charged = crossbow.get(DataComponentTypes.CHARGED_PROJECTILES);
+            List<ItemStack> projectiles = charged != null ? charged.getProjectiles() : List.of();
+            helper.assertTrue(projectiles.size() == 7,
+                "Multishot III should load 7 projectiles (got " + projectiles.size() + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setCapmod(false);
+            ETTestHelper.setEnchantCap("multishot", -1);
+        }
+        helper.complete();
+    }
+
+    // ─── MoreFlame: level 1 = vanilla ─────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreFlameLevel1Vanilla(TestContext helper) {
+        // Level 1 with mixin enabled: 2*(1-1)+5 = 5s = 100 ticks = vanilla
+        ETTestHelper.setFeature("more_flame", true);
+        ServerWorld world = helper.getWorld();
+        ZombieEntity shooter = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack flameBow = new ItemStack(Items.BOW);
+        flameBow.addEnchantment(Enchantments.FLAME, 1);
+        shooter.equipStack(EquipmentSlot.MAINHAND, flameBow);
+        BlockPos spawnPos = helper.getAbsolutePos(new BlockPos(0, 3, 0));
+        ArrowEntity arrow = new ArrowEntity(world, (double) spawnPos.getX(), (double) spawnPos.getY(), (double) spawnPos.getZ(), new ItemStack(Items.ARROW));
+        arrow.setOwner(shooter);
+        arrow.setOnFireFor(10);
+        world.spawnEntity(arrow);
+        ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
+        try {
+            Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod("onEntityHit", EntityHitResult.class);
+            onEntityHit.setAccessible(true);
+            onEntityHit.invoke(arrow, new EntityHitResult(target));
+            helper.assertTrue(target.getFireTicks() == 100,
+                "Flame I with more_flame enabled should still burn 100 ticks (got " + target.getFireTicks() + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+        helper.complete();
+    }
+
+    // ─── MoreMending: high level clamp ────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreMendingHighLevel(TestContext helper) {
+        // Mending level 10: round(100 * clamp(0.6 - 0.05*10, 0.1, 0.6)) = round(100 * 0.1) = 10
+        // Must disable better_mending so vanilla repairPlayerGears path runs (captureMendingLevel fires)
+        ETTestHelper.setFeature("more_mending", true);
+        ETTestHelper.setFeature("better_mending", false);
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("mending", 10);
+        ServerWorld world = helper.getWorld();
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        ItemStack mendingSword = new ItemStack(Items.DIAMOND_SWORD);
+        mendingSword.addEnchantment(Enchantments.MENDING, 10);
+        mendingSword.setDamage(200);
+        player.getInventory().setStack(0, mendingSword); // mainhand
+        BlockPos pos = helper.getAbsolutePos(new BlockPos(0, 2, 0));
+        net.minecraft.entity.ExperienceOrbEntity orb = new net.minecraft.entity.ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), 100);
+        try {
+            // repairPlayerGears triggers captureMendingLevel → getMendingRepairCost with level 10
+            int remaining = ETTestHelper.repairPlayerGears(orb, player, 100);
+            // At level 10: clamp(0.6-0.5, 0.1, 0.6) = 0.1 → repair cost = round(repairAmount * 0.1)
+            // Less XP consumed per repair point → more remaining than vanilla (50)
+            helper.assertTrue(remaining > 50,
+                "MoreMending level 10 should consume less XP per repair (remaining=" + remaining + ", vanilla would be ~50)");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setFeature("better_mending", true);
+            ETTestHelper.setCapmod(false);
+            ETTestHelper.setEnchantCap("mending", -1);
+        }
+        helper.complete();
+    }
+
+    // ─── MoreInfinity: level 1 consumes arrows ────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreInfinityLevel1Consumes(TestContext helper) {
+        // Level 1: threshold = clamp(1 - 0.03*1, 0, 1) = 0.97
+        // ~97% chance to consume arrow (not intangible). Over 100 tries, at least one should consume.
+        // P(all 100 are free) = 0.03^100 ≈ 10^-152 → impossible
+        ETTestHelper.setFeature("more_infinity", true);
+        ZombieEntity shooter = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        ItemStack bow = new ItemStack(Items.BOW);
+        bow.addEnchantment(Enchantments.INFINITY, 1);
+        ItemStack arrow = new ItemStack(Items.ARROW);
+        boolean consumedAtLeastOnce = false;
+        try {
+            Method m = RangedWeaponItem.class.getDeclaredMethod("getProjectile", ItemStack.class, ItemStack.class, LivingEntity.class, boolean.class);
+            m.setAccessible(true);
+            for (int i = 0; i < 100; i++) {
+                ItemStack proj = (ItemStack) m.invoke(null, bow, arrow, shooter, false);
+                if (!proj.contains(DataComponentTypes.INTANGIBLE_PROJECTILE)) {
+                    consumedAtLeastOnce = true;
+                    break;
+                }
+            }
+            helper.assertTrue(consumedAtLeastOnce,
+                "MoreInfinity level 1 should consume arrow most of the time (3% free, not 100%)");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setFeature("more_infinity", false);
+        }
+        helper.complete();
+    }
+
+    // ─── MoreBinding: level 1 = always drops (vanilla) ────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreBindingLevel1AlwaysDrops(TestContext helper) {
+        // Level 1: clamp(1.1 - 0.1*1, 0.1, 1.0) = 1.0 → random > 1.0 is never true → always drops
+        ETTestHelper.setFeature("more_binding", true);
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("binding_curse", 1);
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        try {
+            for (int i = 0; i < 50; i++) {
+                ItemStack helmet = new ItemStack(Items.DIAMOND_HELMET);
+                helmet.addEnchantment(Enchantments.BINDING_CURSE, 1);
+                player.getInventory().armor.set(3, helmet);
+                player.getInventory().dropAll();
+                helper.assertTrue(player.getInventory().armor.get(3).isEmpty(),
+                    "MoreBinding level 1 should always drop armor (iteration " + i + ")");
+            }
+        } finally {
+            ETTestHelper.setFeature("more_binding", false);
+            ETTestHelper.setCapmod(false);
+            ETTestHelper.setEnchantCap("binding_curse", -1);
+        }
+        helper.complete();
+    }
 }

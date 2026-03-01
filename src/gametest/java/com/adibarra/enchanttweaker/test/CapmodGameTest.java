@@ -79,14 +79,6 @@ public class CapmodGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
-    public void capmodDamageNegPassthrough(TestContext helper) {
-        ETTestHelper.setCapmod(true);
-        ETTestHelper.setEnchantCap("sharpness", -1);
-        helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5, "Sharpness -1 should passthrough to vanilla 5");
-        helper.complete();
-    }
-
     // ─── Capmod GenericEnchant ───────────────────────────────────────
 
     @GameTest(templateName = EMPTY_STRUCTURE)
@@ -289,6 +281,35 @@ public class CapmodGameTest implements FabricGameTest {
             ETTestHelper.setEnchantCap("channeling",      -1);
             ETTestHelper.setEnchantCap("multishot",       -1);
             ETTestHelper.setEnchantCap("vanishing_curse", -1);
+        }
+        helper.complete();
+    }
+
+    // ─── Capmod: negative values other than -1 ────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void capmodNegativeClamp(TestContext helper) {
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("sharpness", -5);
+        try {
+            // Any negative value should pass through to vanilla (getCapmodLevel returns vanilla for cap < 0)
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
+                "Sharpness -5 should passthrough to vanilla 5 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
+        } finally {
+            ETTestHelper.setEnchantCap("sharpness", -1);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void capmodValueOf1(TestContext helper) {
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("sharpness", 1);
+        try {
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 1,
+                "Sharpness 1 should give max level 1 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
+        } finally {
+            ETTestHelper.setEnchantCap("sharpness", -1);
         }
         helper.complete();
     }

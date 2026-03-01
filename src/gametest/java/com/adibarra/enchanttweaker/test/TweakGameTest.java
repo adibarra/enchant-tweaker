@@ -10,9 +10,12 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.TridentEntity;
+import net.minecraft.item.BowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Hand;
+import net.minecraft.util.TypedActionResult;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
@@ -404,6 +407,189 @@ public class TweakGameTest implements FabricGameTest {
         } finally {
             ETTestHelper.setFeature("better_mending", true);
         }
+        helper.complete();
+    }
+
+    // ─── BetterMending: mainhand priority ─────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void betterMendingMainHandPriority(TestContext helper) {
+        ETTestHelper.setFeature("better_mending", true);
+        ServerWorld world = helper.getWorld();
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        // Damaged mending sword in mainhand (slot 0)
+        ItemStack mainhandSword = new ItemStack(Items.DIAMOND_SWORD);
+        mainhandSword.addEnchantment(Enchantments.MENDING, 1);
+        mainhandSword.setDamage(100);
+        player.getInventory().setStack(0, mainhandSword);
+        // Damaged mending sword in inventory (slot 20)
+        ItemStack inventorySword = new ItemStack(Items.DIAMOND_SWORD);
+        inventorySword.addEnchantment(Enchantments.MENDING, 1);
+        inventorySword.setDamage(100);
+        player.getInventory().setStack(20, inventorySword);
+
+        BlockPos pos = helper.getAbsolutePos(new BlockPos(0, 2, 0));
+        // Small amount of XP so it only repairs one item
+        ExperienceOrbEntity orb = new ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), 5);
+        ETTestHelper.repairPlayerGears(orb, player, 5);
+
+        helper.assertTrue(player.getInventory().getStack(0).getDamage() < 100,
+            "BetterMending should prioritize mainhand over inventory");
+        helper.assertTrue(player.getInventory().getStack(20).getDamage() == 100,
+            "BetterMending should NOT repair inventory item when mainhand needs repair");
+        helper.complete();
+    }
+
+    // ─── BowInfinityFix ──────────────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void bowInfinityFixEnabled(TestContext helper) {
+        ETTestHelper.setFeature("bow_infinity_fix", true);
+        ServerWorld world = helper.getWorld();
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        ItemStack bow = new ItemStack(Items.BOW);
+        bow.addEnchantment(Enchantments.INFINITY, 1);
+        player.getInventory().setStack(0, bow);
+        // No arrows in inventory — vanilla would block use()
+        TypedActionResult<ItemStack> result = bow.getItem().use(world, player, Hand.MAIN_HAND);
+        try {
+            helper.assertTrue(result.getResult().isAccepted(),
+                "BowInfinityFix should allow Infinity bow to fire without arrows");
+        } finally {
+            ETTestHelper.setFeature("bow_infinity_fix", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void bowInfinityFixDisabled(TestContext helper) {
+        ETTestHelper.setFeature("bow_infinity_fix", false);
+        ServerWorld world = helper.getWorld();
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        ItemStack bow = new ItemStack(Items.BOW);
+        bow.addEnchantment(Enchantments.INFINITY, 1);
+        player.getInventory().setStack(0, bow);
+        try {
+            TypedActionResult<ItemStack> result = bow.getItem().use(world, player, Hand.MAIN_HAND);
+            helper.assertTrue(result.getResult().isAccepted() == false,
+                "Vanilla bow with Infinity should NOT fire without arrows when bow_infinity_fix disabled");
+        } finally {
+            ETTestHelper.setFeature("bow_infinity_fix", true);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void bowInfinityFixNoInfinity(TestContext helper) {
+        ETTestHelper.setFeature("bow_infinity_fix", true);
+        ServerWorld world = helper.getWorld();
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        // Bow WITHOUT Infinity — mixin should not activate
+        ItemStack bow = new ItemStack(Items.BOW);
+        player.getInventory().setStack(0, bow);
+        try {
+            TypedActionResult<ItemStack> result = bow.getItem().use(world, player, Hand.MAIN_HAND);
+            helper.assertTrue(result.getResult().isAccepted() == false,
+                "Bow without Infinity should NOT fire without arrows even with bow_infinity_fix enabled");
+        } finally {
+            ETTestHelper.setFeature("bow_infinity_fix", false);
+        }
+        helper.complete();
+    }
+
+    // ─── GodWeapons: all combinations ─────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void godWeaponsAllCombinations(TestContext helper) {
+        ETTestHelper.setFeature("god_weapons", true);
+        // Test all 3 pairs: Smite↔Bane, Sharpness↔Bane, Sharpness↔Smite
+        helper.assertTrue(ETTestHelper.canAccept(Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS),
+            "Smite should accept Bane of Arthropods");
+        helper.assertTrue(ETTestHelper.canAccept(Enchantments.BANE_OF_ARTHROPODS, Enchantments.SMITE),
+            "Bane of Arthropods should accept Smite");
+        helper.assertTrue(ETTestHelper.canAccept(Enchantments.BANE_OF_ARTHROPODS, Enchantments.SHARPNESS),
+            "Bane of Arthropods should accept Sharpness");
+        helper.assertTrue(ETTestHelper.canAccept(Enchantments.SMITE, Enchantments.SHARPNESS),
+            "Smite should accept Sharpness");
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void godWeaponsSelfReject(TestContext helper) {
+        ETTestHelper.setFeature("god_weapons", true);
+        helper.assertFalse(ETTestHelper.canAccept(Enchantments.SHARPNESS, Enchantments.SHARPNESS),
+            "Sharpness should NOT accept itself");
+        helper.assertFalse(ETTestHelper.canAccept(Enchantments.SMITE, Enchantments.SMITE),
+            "Smite should NOT accept itself");
+        helper.assertFalse(ETTestHelper.canAccept(Enchantments.BANE_OF_ARTHROPODS, Enchantments.BANE_OF_ARTHROPODS),
+            "Bane should NOT accept itself");
+        helper.complete();
+    }
+
+    // ─── LoyalVoidTridents: edge cases ────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void loyalVoidTridentsNoLoyalty(TestContext helper) {
+        // Trident WITHOUT Loyalty should NOT be rescued from void
+        ETTestHelper.setFeature("loyal_void_tridents", true);
+        ServerWorld world = helper.getWorld();
+        ItemStack tridentStack = new ItemStack(Items.TRIDENT);
+        // No Loyalty enchantment
+        ZombieEntity owner = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        TridentEntity trident = new TridentEntity(world, owner, tridentStack);
+        BlockPos abs = helper.getAbsolutePos(new BlockPos(0, 0, 0));
+        trident.setPos(abs.getX(), world.getBottomY() - 5.0, abs.getZ());
+        world.spawnEntity(trident);
+        trident.tick();
+        try {
+            Field dealtDamage = TridentEntity.class.getDeclaredField("dealtDamage");
+            dealtDamage.setAccessible(true);
+            helper.assertFalse((boolean) dealtDamage.get(trident),
+                "Trident WITHOUT Loyalty should NOT have dealtDamage set in void");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void loyalVoidTridentsStopsDescending(TestContext helper) {
+        // When the mixin fires, it sets dealtDamage=true and zeros velocity at the world bottom.
+        // Vanilla's loyalty logic then takes over and begins returning the trident upward.
+        // After a few ticks the trident should move UP (positive Y velocity), not keep falling.
+        ETTestHelper.setFeature("loyal_void_tridents", true);
+        ServerWorld world = helper.getWorld();
+        ItemStack tridentStack = new ItemStack(Items.TRIDENT);
+        tridentStack.addEnchantment(Enchantments.LOYALTY, 3);
+        ZombieEntity owner = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        TridentEntity trident = new TridentEntity(world, owner, tridentStack);
+        BlockPos abs = helper.getAbsolutePos(new BlockPos(0, 0, 0));
+        double startY = world.getBottomY() - 5.0;
+        trident.setPos(abs.getX(), startY, abs.getZ());
+        trident.setVelocity(0, -2.0, 0);
+        world.spawnEntity(trident);
+        // Tick a few times to let loyalty return logic kick in
+        for (int i = 0; i < 5; i++) trident.tick();
+        helper.assertTrue(trident.getY() > startY,
+            "Loyal trident should start returning upward after being rescued from void (Y=" + trident.getY() + ", started at " + startY + ")");
+        helper.complete();
+    }
+
+    // ─── AxesNotTools: multiple hits ──────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void axesNotToolsMultipleHits(TestContext helper) {
+        ETTestHelper.setFeature("axes_not_tools", true);
+        ServerWorld world = helper.getWorld();
+        ItemStack axe = new ItemStack(Items.DIAMOND_AXE);
+        ZombieEntity target   = EntityType.ZOMBIE.create(world);
+        ZombieEntity attacker = EntityType.ZOMBIE.create(world);
+        // 3 hits should cause 3 durability (not 6)
+        axe.getItem().postHit(axe, target, attacker);
+        axe.getItem().postHit(axe, target, attacker);
+        axe.getItem().postHit(axe, target, attacker);
+        helper.assertTrue(axe.getDamage() == 3,
+            "3 axe hits with axes_not_tools should cause 3 durability damage (got " + axe.getDamage() + ")");
         helper.complete();
     }
 }
