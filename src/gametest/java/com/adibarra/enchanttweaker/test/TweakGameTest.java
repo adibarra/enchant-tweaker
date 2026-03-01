@@ -614,4 +614,124 @@ public class TweakGameTest implements FabricGameTest {
             "3 axe hits with axes_not_tools should cause 3 durability damage (got " + axe.getDamage() + ")");
         helper.complete();
     }
+
+    // ─── ProtectionBypass ──────────────────────────────────────────────
+    // When enabled, specific damage types bypass Protection enchantment entirely.
+    // Magic damage (20) with Protection IV x4 (EPF 16):
+    //   Vanilla:  20 * (1 - 16/25) = 7.2  (reduced)
+    //   Bypassed: 20.0                     (full damage)
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void protectionBypassMagicEnabled(TestContext helper) {
+        ETTestHelper.setFeature("protection_bypass_enabled", true);
+        ETTestHelper.setConfigValue("protection_bypass_types", "magic,indirect_magic");
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack armor = new ItemStack(switch (slot) {
+                case HEAD -> Items.DIAMOND_HELMET;
+                case CHEST -> Items.DIAMOND_CHESTPLATE;
+                case LEGS -> Items.DIAMOND_LEGGINGS;
+                case FEET -> Items.DIAMOND_BOOTS;
+                default -> Items.DIAMOND_HELMET;
+            });
+            armor.addEnchantment(Enchantments.PROTECTION, 4);
+            entity.equipStack(slot, armor);
+        }
+        net.minecraft.entity.damage.DamageSource source = helper.getWorld().getDamageSources().magic();
+        float result = ETTestHelper.modifyAppliedDamage(entity, source, 20.0f);
+        try {
+            helper.assertTrue(Math.abs(result - 20.0f) < 0.01f,
+                "Magic damage should bypass protection entirely (got " + result + ", expected 20.0)");
+        } finally {
+            ETTestHelper.setConfigValue("protection_bypass_types", "");
+            ETTestHelper.setFeature("protection_bypass_enabled", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void protectionBypassWitherEnabled(TestContext helper) {
+        ETTestHelper.setFeature("protection_bypass_enabled", true);
+        ETTestHelper.setConfigValue("protection_bypass_types", "wither");
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack armor = new ItemStack(switch (slot) {
+                case HEAD -> Items.DIAMOND_HELMET;
+                case CHEST -> Items.DIAMOND_CHESTPLATE;
+                case LEGS -> Items.DIAMOND_LEGGINGS;
+                case FEET -> Items.DIAMOND_BOOTS;
+                default -> Items.DIAMOND_HELMET;
+            });
+            armor.addEnchantment(Enchantments.PROTECTION, 4);
+            entity.equipStack(slot, armor);
+        }
+        net.minecraft.entity.damage.DamageSource source = helper.getWorld().getDamageSources().wither();
+        float result = ETTestHelper.modifyAppliedDamage(entity, source, 20.0f);
+        try {
+            helper.assertTrue(Math.abs(result - 20.0f) < 0.01f,
+                "Wither damage should bypass protection entirely (got " + result + ", expected 20.0)");
+        } finally {
+            ETTestHelper.setConfigValue("protection_bypass_types", "");
+            ETTestHelper.setFeature("protection_bypass_enabled", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void protectionBypassDisabledStillReduces(TestContext helper) {
+        ETTestHelper.setFeature("protection_bypass_enabled", false);
+        ETTestHelper.setConfigValue("protection_bypass_types", "magic,indirect_magic");
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack armor = new ItemStack(switch (slot) {
+                case HEAD -> Items.DIAMOND_HELMET;
+                case CHEST -> Items.DIAMOND_CHESTPLATE;
+                case LEGS -> Items.DIAMOND_LEGGINGS;
+                case FEET -> Items.DIAMOND_BOOTS;
+                default -> Items.DIAMOND_HELMET;
+            });
+            armor.addEnchantment(Enchantments.PROTECTION, 4);
+            entity.equipStack(slot, armor);
+        }
+        net.minecraft.entity.damage.DamageSource source = helper.getWorld().getDamageSources().magic();
+        float result = ETTestHelper.modifyAppliedDamage(entity, source, 20.0f);
+        float vanillaExpected = net.minecraft.entity.DamageUtil.getInflictedDamage(20.0f, 16.0f);
+        try {
+            helper.assertTrue(Math.abs(result - vanillaExpected) < 0.01f,
+                "Magic damage with bypass disabled should be reduced by protection (got " + result + ", expected ~" + vanillaExpected + ")");
+        } finally {
+            ETTestHelper.setConfigValue("protection_bypass_types", "");
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void protectionBypassGenericNotAffected(TestContext helper) {
+        // Generic damage should never bypass, even with bypass types configured
+        ETTestHelper.setFeature("protection_bypass_enabled", true);
+        ETTestHelper.setConfigValue("protection_bypass_types", "magic,indirect_magic,wither,dragon_breath");
+        ZombieEntity entity = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack armor = new ItemStack(switch (slot) {
+                case HEAD -> Items.DIAMOND_HELMET;
+                case CHEST -> Items.DIAMOND_CHESTPLATE;
+                case LEGS -> Items.DIAMOND_LEGGINGS;
+                case FEET -> Items.DIAMOND_BOOTS;
+                default -> Items.DIAMOND_HELMET;
+            });
+            armor.addEnchantment(Enchantments.PROTECTION, 4);
+            entity.equipStack(slot, armor);
+        }
+        net.minecraft.entity.damage.DamageSource source = helper.getWorld().getDamageSources().generic();
+        float result = ETTestHelper.modifyAppliedDamage(entity, source, 20.0f);
+        float vanillaExpected = net.minecraft.entity.DamageUtil.getInflictedDamage(20.0f, 16.0f);
+        try {
+            helper.assertTrue(Math.abs(result - vanillaExpected) < 0.01f,
+                "Generic damage should still be reduced by protection (got " + result + ", expected ~" + vanillaExpected + ")");
+        } finally {
+            ETTestHelper.setConfigValue("protection_bypass_types", "");
+            ETTestHelper.setFeature("protection_bypass_enabled", false);
+        }
+        helper.complete();
+    }
 }

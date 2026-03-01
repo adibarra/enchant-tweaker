@@ -30,6 +30,7 @@
     "server.tweak.MultishotPiercingMixin",
     "server.tweak.NoMendingUnbreakingMixin",
     "server.tweak.NoSoulSpeedBacklashMixin",
+    "server.tweak.ProtectionBypassMixin",
     "server.tweak.NoThornsBacklashMixin",
     "server.tweak.TridentWeaponsMixin"
   ],

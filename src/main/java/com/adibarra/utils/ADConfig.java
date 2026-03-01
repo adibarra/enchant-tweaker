@@ -52,6 +52,64 @@ public class ADConfig {
 
         // parse config file
         parseConfig(configLines, configFile.getName());
+
+        // migrate config if keys were added or removed
+        migrateConfig(internalDefaultConfigPath);
+    }
+
+    /**
+     * Checks if the user's config is missing keys (or has stale keys) compared to the
+     * internal defaults. If so, regenerates the config file from defaults and reapplies
+     * the user's existing values on top.
+     *
+     * @param internalDefaultConfigPath the path to the default config file (relative to jar base)
+     */
+    private void migrateConfig(String internalDefaultConfigPath) {
+        List<String> defaultLines = loadInternalFile(internalDefaultConfigPath);
+        if (defaultLines == null) return;
+
+        // parse internal defaults to get expected keys
+        Map<String, String> defaults = new HashMap<>();
+        for (String line : defaultLines) {
+            line = line.trim().toLowerCase();
+            if (line.isEmpty() || line.startsWith("#")) continue;
+            String[] keyPair = line.split("=", 2);
+            if (keyPair.length == 2) {
+                defaults.put(keyPair[0].trim(), keyPair[1].trim());
+            }
+        }
+
+        // check for missing or stale keys
+        Set<String> missingKeys = new HashSet<>(defaults.keySet());
+        missingKeys.removeAll(config.keySet());
+        Set<String> staleKeys = new HashSet<>(config.keySet());
+        staleKeys.removeAll(defaults.keySet());
+
+        if (missingKeys.isEmpty() && staleKeys.isEmpty()) return;
+
+        if (!missingKeys.isEmpty()) LOGGER.info(PREFIX + "Config migration: adding {} new option(s): {}", missingKeys.size(), missingKeys);
+        if (!staleKeys.isEmpty()) LOGGER.info(PREFIX + "Config migration: removing {} stale option(s): {}", staleKeys.size(), staleKeys);
+
+        // save user's current values
+        Map<String, String> userValues = new HashMap<>(config);
+
+        // regenerate config file from internal defaults
+        deleteFile(configFile);
+        createConfig(configFile, internalDefaultConfigPath);
+
+        // reload fresh config
+        config.clear();
+        List<String> freshLines = loadFile(configFile);
+        parseConfig(freshLines, configFile.getName());
+
+        // reapply user values for keys that still exist
+        for (Map.Entry<String, String> entry : userValues.entrySet()) {
+            if (config.containsKey(entry.getKey())) {
+                set(entry.getKey(), entry.getValue());
+            }
+        }
+
+        LOGGER.info(PREFIX + "Config migration complete!");
     }
 
     /**

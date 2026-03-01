@@ -59,6 +59,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("NoThornsBacklashMixin",     "no_thorns_backlash");
         KEYS.put("ShinyNameMixin",            "shiny_name");
         KEYS.put("TridentWeaponsMixin",       "trident_weapons");
+        KEYS.put("ProtectionBypassMixin",     "protection_bypass_enabled");
 
         KEYS.put("CapmodMixin",               "capmod_enabled");
 
