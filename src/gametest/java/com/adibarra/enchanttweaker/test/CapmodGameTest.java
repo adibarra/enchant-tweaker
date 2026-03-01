@@ -1,7 +1,12 @@
 package com.adibarra.enchanttweaker.test;
 
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
@@ -296,6 +301,32 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
                 "Sharpness -5 should passthrough to vanilla 5 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
         } finally {
+            ETTestHelper.setEnchantCap("sharpness", -1);
+        }
+        helper.complete();
+    }
+
+    // ─── Capmod: /enchant command regression (issue #46) ──────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void capmodEnchantCommandRegression(TestContext helper) {
+        // Issue #46: /enchant command should respect capmod-raised levels
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("sharpness", 10);
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        player.getInventory().setStack(0, sword);
+        player.getInventory().selectedSlot = 0;
+        MinecraftServer server = helper.getWorld().getServer();
+        try {
+            // Dispatch via the command manager (same path as a player typing /enchant)
+            server.getCommandManager().executeWithPrefix(
+                player.getCommandSource().withLevel(4), "enchant @s minecraft:sharpness 10");
+            int level = EnchantmentHelper.getLevel(Enchantments.SHARPNESS, player.getInventory().getStack(0));
+            helper.assertTrue(level == 10,
+                "Sword should have Sharpness 10 after /enchant command (got " + level + ")");
+        } finally {
+            ETTestHelper.setCapmod(false);
             ETTestHelper.setEnchantCap("sharpness", -1);
         }
         helper.complete();
