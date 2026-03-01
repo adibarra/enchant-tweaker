@@ -2,6 +2,7 @@ package com.adibarra.enchanttweaker.test;
 
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.Blocks;
+import net.minecraft.enchantment.EnchantmentLevelEntry;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -11,6 +12,7 @@ import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.item.BowItem;
+import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
@@ -19,6 +21,8 @@ import net.minecraft.util.TypedActionResult;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.village.TradeOffer;
+import net.minecraft.village.TradedItem;
 import net.minecraft.world.GameMode;
 
 import java.lang.reflect.Field;
@@ -753,6 +757,157 @@ public class TweakGameTest implements FabricGameTest {
         } finally {
             ETTestHelper.setConfigValue("protection_bypass_types", "");
             ETTestHelper.setFeature("protection_bypass_enabled", false);
+        }
+        helper.complete();
+    }
+
+    // ─── VillagerTradeLimits ────────────────────────────────────────
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void tradeLimitsMaxUsesEnabled(TestContext helper) {
+        ETTestHelper.setFeature("villager_trade_limits", true);
+        ETTestHelper.setConfigValue("enchant_trade_max_uses", "3");
+        ItemStack book = EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(Enchantments.SHARPNESS, 1));
+        TradeOffer offer = new TradeOffer(new TradedItem(Items.EMERALD, 10), book, 12, 1, 0.2f);
+        offer.use(); offer.use(); offer.use();
+        try {
+            helper.assertTrue(offer.isDisabled(),
+                "Enchantment trade should be disabled after 3 uses (max_uses=3)");
+        } finally {
+            ETTestHelper.setConfigValue("enchant_trade_max_uses", "-1");
+            ETTestHelper.setFeature("villager_trade_limits", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void tradeLimitsMaxUsesDisabled(TestContext helper) {
+        ETTestHelper.setFeature("villager_trade_limits", false);
+        ETTestHelper.setConfigValue("enchant_trade_max_uses", "3");
+        ItemStack book = EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(Enchantments.SHARPNESS, 1));
+        TradeOffer offer = new TradeOffer(new TradedItem(Items.EMERALD, 10), book, 12, 1, 0.2f);
+        offer.use(); offer.use(); offer.use();
+        try {
+            helper.assertFalse(offer.isDisabled(),
+                "Enchantment trade should NOT be disabled when feature is off (uses=3, vanilla maxUses=12)");
+        } finally {
+            ETTestHelper.setConfigValue("enchant_trade_max_uses", "-1");
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void tradeLimitsPerEnchantOverride(TestContext helper) {
+        ETTestHelper.setFeature("villager_trade_limits", true);
+        ETTestHelper.setConfigValue("enchant_trade_max_uses", "-1");
+        ETTestHelper.setConfigValue("trade_sharpness", "2");
+        ItemStack book = EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(Enchantments.SHARPNESS, 1));
+        TradeOffer offer = new TradeOffer(new TradedItem(Items.EMERALD, 10), book, 12, 1, 0.2f);
+        offer.use(); offer.use();
+        try {
+            helper.assertTrue(offer.isDisabled(),
+                "Sharpness trade should be disabled after 2 uses (trade_sharpness=2)");
+        } finally {
+            ETTestHelper.setConfigValue("trade_sharpness", "-1");
+            ETTestHelper.setFeature("villager_trade_limits", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void tradeLimitsDisabledEnchantment(TestContext helper) {
+        ETTestHelper.setFeature("villager_trade_limits", true);
+        ETTestHelper.setConfigValue("trade_mending", "0");
+        ItemStack book = EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(Enchantments.MENDING, 1));
+        TradeOffer offer = new TradeOffer(new TradedItem(Items.EMERALD, 10), book, 12, 1, 0.2f);
+        try {
+            helper.assertTrue(offer.isDisabled(),
+                "Mending trade should be disabled immediately when trade_mending=0");
+        } finally {
+            ETTestHelper.setConfigValue("trade_mending", "-1");
+            ETTestHelper.setFeature("villager_trade_limits", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void tradeLimitsRestockEnabled(TestContext helper) {
+        ETTestHelper.setFeature("villager_trade_limits", true);
+        ETTestHelper.setConfigValue("enchant_trade_restock", "true");
+        ItemStack book = EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(Enchantments.SHARPNESS, 1));
+        TradeOffer offer = new TradeOffer(new TradedItem(Items.EMERALD, 10), book, 12, 1, 0.2f);
+        offer.use(); offer.use();
+        offer.resetUses();
+        try {
+            helper.assertTrue(offer.getUses() == 0,
+                "Enchantment trade should restock when enchant_trade_restock=true (uses=" + offer.getUses() + ")");
+        } finally {
+            ETTestHelper.setFeature("villager_trade_limits", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void tradeLimitsRestockDisabled(TestContext helper) {
+        ETTestHelper.setFeature("villager_trade_limits", true);
+        ETTestHelper.setConfigValue("enchant_trade_restock", "false");
+        ItemStack book = EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(Enchantments.SHARPNESS, 1));
+        TradeOffer offer = new TradeOffer(new TradedItem(Items.EMERALD, 10), book, 12, 1, 0.2f);
+        offer.use(); offer.use();
+        offer.resetUses();
+        try {
+            helper.assertTrue(offer.getUses() == 2,
+                "Enchantment trade should NOT restock when enchant_trade_restock=false (uses=" + offer.getUses() + ")");
+        } finally {
+            ETTestHelper.setConfigValue("enchant_trade_restock", "true");
+            ETTestHelper.setFeature("villager_trade_limits", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void tradeLimitsNoRestockList(TestContext helper) {
+        ETTestHelper.setFeature("villager_trade_limits", true);
+        ETTestHelper.setConfigValue("enchant_trade_restock", "true");
+        ETTestHelper.setConfigValue("enchant_trade_no_restock", "sharpness");
+        ItemStack sharpBook = EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(Enchantments.SHARPNESS, 1));
+        TradeOffer sharpOffer = new TradeOffer(new TradedItem(Items.EMERALD, 10), sharpBook, 12, 1, 0.2f);
+        sharpOffer.use();
+        sharpOffer.resetUses();
+        ItemStack mendingBook = EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(Enchantments.MENDING, 1));
+        TradeOffer mendingOffer = new TradeOffer(new TradedItem(Items.EMERALD, 10), mendingBook, 12, 1, 0.2f);
+        mendingOffer.use();
+        mendingOffer.resetUses();
+        try {
+            helper.assertTrue(sharpOffer.getUses() == 1,
+                "Sharpness trade in no_restock list should NOT restock (uses=" + sharpOffer.getUses() + ")");
+            helper.assertTrue(mendingOffer.getUses() == 0,
+                "Mending trade NOT in no_restock list should restock (uses=" + mendingOffer.getUses() + ")");
+        } finally {
+            ETTestHelper.setConfigValue("enchant_trade_no_restock", "");
+            ETTestHelper.setFeature("villager_trade_limits", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void tradeLimitsNonEnchantedUnaffected(TestContext helper) {
+        ETTestHelper.setFeature("villager_trade_limits", true);
+        ETTestHelper.setConfigValue("enchant_trade_max_uses", "1");
+        ETTestHelper.setConfigValue("enchant_trade_restock", "false");
+        // Non-enchanted trade: emeralds for wheat
+        TradeOffer offer = new TradeOffer(new TradedItem(Items.EMERALD, 1), new ItemStack(Items.WHEAT, 6), 12, 1, 0.2f);
+        offer.use(); offer.use(); offer.use();
+        offer.resetUses();
+        try {
+            helper.assertTrue(offer.getUses() == 0,
+                "Non-enchanted trade should still restock normally (uses=" + offer.getUses() + ")");
+            helper.assertFalse(offer.isDisabled(),
+                "Non-enchanted trade should not be affected by enchant_trade_max_uses");
+        } finally {
+            ETTestHelper.setConfigValue("enchant_trade_max_uses", "-1");
+            ETTestHelper.setConfigValue("enchant_trade_restock", "true");
+            ETTestHelper.setFeature("villager_trade_limits", false);
         }
         helper.complete();
     }

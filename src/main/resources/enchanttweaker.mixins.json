@@ -32,7 +32,8 @@
     "server.tweak.NoSoulSpeedBacklashMixin",
     "server.tweak.ProtectionBypassMixin",
     "server.tweak.NoThornsBacklashMixin",
-    "server.tweak.TridentWeaponsMixin"
+    "server.tweak.TridentWeaponsMixin",
+    "server.tweak.VillagerTradeLimitsMixin"
   ],
   "client": [
     "client.anvil.NotTooExpensiveMixin",
