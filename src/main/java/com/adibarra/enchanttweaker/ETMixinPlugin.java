@@ -1,7 +1,6 @@
 package com.adibarra.enchanttweaker;
 
 import com.adibarra.utils.ADConfig;
-import com.adibarra.utils.ADMath;
 import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
 import org.slf4j.Logger;
@@ -139,7 +138,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         return CAPMOD_CACHE.computeIfAbsent(enchantmentPath, k -> {
             int cap = CONFIG.getOrDefault(k, -1);
             if (cap < 0) return vanillaLevel;
-            return ADMath.clamp(cap, 0, 255);
+            return Math.clamp(cap, 0, 255);
         });
     }
 

@@ -1,7 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.ADMath;
 import net.minecraft.screen.AnvilScreenHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -21,6 +20,6 @@ public abstract class SturdyAnvilsMixin {
     private static float enchanttweaker$sturdyAnvils$modifyDamageChance(float orig) {
         if (!ETMixinPlugin.getMixinConfig("SturdyAnvilsMixin")) return orig;
         float anvilDamageChance = ETMixinPlugin.getConfig().getOrDefault("anvil_damage_chance", orig);
-        return ADMath.clamp(anvilDamageChance, 0f, 1f);
+        return Math.clamp(anvilDamageChance, 0f, 1f);
     }
 }

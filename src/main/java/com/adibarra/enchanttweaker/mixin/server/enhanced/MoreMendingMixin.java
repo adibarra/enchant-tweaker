@@ -1,7 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.ADMath;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -46,6 +45,6 @@ public abstract class MoreMendingMixin {
         cancellable=true)
     private void enchanttweaker$moreMending$modifyRepairCost(int repairAmount, CallbackInfoReturnable<Integer> cir) {
         if (!ETMixinPlugin.getMixinConfig("MoreMendingMixin")) return;
-        cir.setReturnValue((int) Math.round(repairAmount * ADMath.clamp(0.6 - 0.05 * mendingLevel, 0.1, 0.6)));
+        cir.setReturnValue((int) Math.round(repairAmount * Math.clamp(0.6 - 0.05 * mendingLevel, 0.1, 0.6)));
     }
 }
