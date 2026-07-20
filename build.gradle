@@ -1,7 +1,7 @@
 plugins {
     id 'maven-publish'
     id 'fabric-loom' version '1.15.3'
-    id "com.modrinth.minotaur" version "2.+"
+    id "com.modrinth.minotaur" version "2.9.0"
 }
 
 // Name jar with supported MC versions
@@ -63,7 +63,7 @@ loom {
             name "Game Tests"
             source sourceSets.gametest
             property "fabric-api.gametest"
-            property "fabric-api.gametest.report-file", "${project.buildDir}/junit.xml"
+            property "fabric-api.gametest.report-file", "${layout.buildDirectory.get().asFile}/junit.xml"
             runDir "run/gametest"
         }
     }
@@ -89,7 +89,8 @@ def changelogEntry = changelogIdx < 0 ? "" : rawChangelog
     .trim()
 
 modrinth {
-    debugMode = true
+    // Dry-run everywhere except explicit `-Prelease`
+    debugMode = !project.hasProperty("release")
     token = System.getenv("MODRINTH_TOKEN") ?: ""
     projectId = "e4Vpm1dD"
     versionName = "Enchant Tweaker ${project.mod_version}+mc${supportedVersions}"
