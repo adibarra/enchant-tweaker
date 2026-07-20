@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 /**
- * @description Scales the number of the arrows fired by Multishot enchant based on its level.
+ * @description scales the number of the arrows fired by Multishot enchant based on its level
  * @environment Server
  */
 @Mixin(value=RangedWeaponItem.class)
@@ -19,10 +19,12 @@ public abstract class MoreMultishotMixin {
 
     @ModifyConstant(
         method="load(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;)Ljava/util/List;",
-        constant=@Constant(intValue=3))
+        constant=@Constant(intValue=3, ordinal=0))
     private static int enchanttweaker$moreMultishot$modifyNumProjectiles(int orig, ItemStack weaponStack, ItemStack projectileStack, LivingEntity shooter) {
         if (!ETMixinPlugin.getMixinConfig("MoreMultishotMixin")) return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_multishot_per_level", 2);
-        return EnchantmentHelper.getLevel(Enchantments.MULTISHOT, weaponStack) * perLevel + 1;
+        int multishotLevel = EnchantmentHelper.getLevel(Enchantments.MULTISHOT, weaponStack);
+        // long math avoids overflow; clamp keeps the count at a vanilla-sensible minimum of 1
+        return (int)Math.clamp((long)multishotLevel * Math.max(0, perLevel) + 1, 1, Integer.MAX_VALUE);
     }
 }

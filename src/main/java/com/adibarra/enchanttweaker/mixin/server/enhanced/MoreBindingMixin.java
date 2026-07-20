@@ -22,12 +22,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * @description Scales the Binding Curse enchantment to have a chance of not dropping the item on death.
+ * @description scales the Binding Curse enchantment to have a chance of not dropping the item on death
  * @environment Server
  */
 @Mixin(value=PlayerInventory.class)
 public abstract class MoreBindingMixin {
 
+    // kept-armor is stashed here on death and restored on the AFTER_RESPAWN event below
     @Unique
     private static final Map<UUID, Map<Integer, ItemStack>> BOUND_ARMOR = new ConcurrentHashMap<>();
     static {

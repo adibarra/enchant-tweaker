@@ -8,9 +8,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * @description Replace additive EPF protection formula with multiplicative scaling.
- * Vanilla: damage * (1 - clamp(epf, 0, 20) / 25)
- * Modded:  damage * 0.96^epf
+ * @description replace additive EPF protection formula with multiplicative scaling
+ * vanilla: damage * (1 - clamp(epf, 0, 20) / 25)
+ * modded: damage * 0.96^epf
  * @environment Server
  */
 @Mixin(value=LivingEntity.class)
@@ -25,7 +25,7 @@ public abstract class MoreProtectionMixin {
         if (!ETMixinPlugin.getMixinConfig("MoreProtectionMixin")) {
             return original.call(damage, epf);
         }
-        double base = ETMixinPlugin.getConfig().getOrDefault("more_protection_base", 0.96);
+        double base = Math.clamp(ETMixinPlugin.getConfig().getOrDefault("more_protection_base", 0.96), 0.0, 1.0);
         return (float)(damage * Math.pow(base, epf));
     }
 }

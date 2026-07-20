@@ -13,11 +13,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * @description Scales the burn time of the Flame enchant based on its level.
- * Adds 2 seconds of burn time per level above 1.
+ * @description scales the burn time of the Flame enchant based on its level
+ * adds 2 seconds of burn time per level above 1
  * @environment Server
  */
 @Mixin(value=PersistentProjectileEntity.class)
@@ -31,6 +32,8 @@ public abstract class MoreFlameMixin {
         at=@At("HEAD"))
     private void enchanttweaker$moreFlame$captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
         if (!ETMixinPlugin.getMixinConfig("MoreFlameMixin")) return;
+        // reset first so a stale value can't persist when the owner isn't a LivingEntity
+        flameLevel = 0;
         Entity owner = ((PersistentProjectileEntity)(Object)this).getOwner();
         if (owner instanceof LivingEntity) {
             flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) owner);
@@ -39,10 +42,15 @@ public abstract class MoreFlameMixin {
 
     @ModifyConstant(
         method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
-        constant=@Constant(intValue=5))
+        slice=@Slice(
+            from=@At(value="INVOKE", target="Lnet/minecraft/entity/Entity;getFireTicks()I"),
+            to=@At(value="INVOKE", target="Lnet/minecraft/entity/Entity;setOnFireFor(I)V")),
+        constant=@Constant(intValue=5, ordinal=0))
     private int enchanttweaker$moreFlame$modifyBurnTime(int orig) {
         if (!ETMixinPlugin.getMixinConfig("MoreFlameMixin")) return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_flame_per_level", 2);
-        return perLevel * (flameLevel - 1) + orig;
+        long extra = (long) Math.max(0, perLevel) * Math.max(0, flameLevel - 1);
+        long seconds = (long) orig + extra;
+        return (int) Math.clamp(seconds, orig, Integer.MAX_VALUE / 20);
     }
 }

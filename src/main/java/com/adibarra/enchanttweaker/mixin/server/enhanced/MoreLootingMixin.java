@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 /**
- * @description Scales XP drops from mob kills based on the killer's Looting level.
+ * @description scales XP drops from mob kills based on the killer's Looting level
  * @environment Server
  */
 @Mixin(value=LivingEntity.class)
@@ -30,7 +30,7 @@ public abstract class MoreLootingMixin {
         if (attackingPlayer == null) return xp;
         int lootingLevel = EnchantmentHelper.getLooting(attackingPlayer);
         if (lootingLevel <= 0) return xp;
-        double multiplier = ETMixinPlugin.getConfig().getOrDefault("more_looting_multiplier", 0.5);
+        double multiplier = Math.max(0.0, ETMixinPlugin.getConfig().getOrDefault("more_looting_multiplier", 0.5));
         return (int)(xp * (1.0 + lootingLevel * multiplier));
     }
 }
