@@ -4,8 +4,8 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      dry_run:
-        description: Dry run (skip Modrinth and GitHub uploads)
+      publish:
+        description: Publish to Modrinth and GitHub
         required: true
         default: false
         type: boolean
@@ -91,15 +91,15 @@ jobs:
           test -s "build/libs/enchanttweaker-${MOD}+mc${MC}.jar"
           test -s "build/libs/enchanttweaker-${MOD}+mc${MC}-sources.jar"
       - name: Dry-run Modrinth publication
-        if: inputs.dry_run == true
+        if: inputs.publish != true
         run: ./gradlew modrinth --console=plain
       - name: Publish to Modrinth
-        if: inputs.dry_run != true && steps.gate.outputs.modrinth_exists == 'false'
+        if: inputs.publish == true && steps.gate.outputs.modrinth_exists == 'false'
         run: ./gradlew modrinth -Prelease --console=plain
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
       - name: Create GitHub release
-        if: inputs.dry_run != true && steps.gate.outputs.github_exists == 'false'
+        if: inputs.publish == true && steps.gate.outputs.github_exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
           MOD: ${{ steps.version.outputs.mod }}
@@ -112,5 +112,5 @@ jobs:
           build/libs/enchanttweaker-${MOD}+mc${MC}.jar
           build/libs/enchanttweaker-${MOD}+mc${MC}-sources.jar
       - name: Report dry run
-        if: inputs.dry_run == true
+        if: inputs.publish != true
         run: echo "Dry run complete; no files were uploaded to Modrinth or GitHub"
