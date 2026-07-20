@@ -10,6 +10,12 @@ on:
       - .github/labels.yml
   workflow_dispatch:
 
+permissions: {}
+
+concurrency:
+  group: "labels-${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   sync-labels:
     name: ♻️ Sync labels
@@ -19,9 +25,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
       - name: Run sync-labels
-        uses: micnncim/action-label-syncer@v1.3.0
+        uses: micnncim/action-label-syncer@3abd5ab72fda571e69fffd97bd4e0033dd5f495c # v1.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

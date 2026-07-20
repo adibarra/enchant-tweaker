@@ -1,0 +1,106 @@
+---
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  release:
+    name: 🚀 Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    environment: release
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Verify dispatched from main
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "Release must be dispatched from main (got $GITHUB_REF)"
+            exit 1
+          fi
+      - name: Read versions
+        id: version
+        run: |
+          mod=$(sed -n 's/^mod_version=//p' gradle.properties)
+          mc=$(sed -n 's/^minecraft_version=//p' gradle.properties)
+          echo "mod=$mod" >> "$GITHUB_OUTPUT"
+          echo "mc=$mc" >> "$GITHUB_OUTPUT"
+      - name: Check tag and Modrinth for existing version
+        id: gate
+        env:
+          MOD: ${{ steps.version.outputs.mod }}
+          MC: ${{ steps.version.outputs.mc }}
+        run: |
+          # Run both existence checks concurrently, before the build. The default
+          # GH shell runs `bash -e`, so a backgrounded nonzero exit would abort
+          # the step; each subshell exits 0 and reports via a temp file instead
+          ( curl -s -o /dev/null -w '%{http_code}' "https://api.modrinth.com/v2/project/e4Vpm1dD/version/${MOD}%2Bmc${MC}" > "$RUNNER_TEMP/mr_status" || echo 000 > "$RUNNER_TEMP/mr_status" ) &
+          ( git ls-remote --exit-code origin "refs/tags/v${MOD}+mc${MC}" >/dev/null 2>&1; echo $? > "$RUNNER_TEMP/tag_rc" ) &
+          wait
+
+          tag_rc=$(cat "$RUNNER_TEMP/tag_rc")
+          mr_status=$(cat "$RUNNER_TEMP/mr_status")
+
+          if [ "$tag_rc" = "0" ]; then
+            echo "v${MOD}+mc${MC} already tagged, skipping"
+            echo "released=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ "$mr_status" = "200" ]; then
+            echo "v${MOD}+mc${MC} already on Modrinth, will skip upload"
+            echo "modrinth_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "modrinth_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Set up JDK 21
+        if: steps.gate.outputs.released == 'false'
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Set up Gradle
+        if: steps.gate.outputs.released == 'false'
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        with:
+          cache-provider: basic
+      - name: Build
+        if: steps.gate.outputs.released == 'false'
+        run: ./gradlew build --console=plain
+      - name: Run gametest
+        if: steps.gate.outputs.released == 'false'
+        run: ./gradlew runGametest --console=plain
+      - name: Publish to Modrinth
+        if: steps.gate.outputs.released == 'false' && steps.gate.outputs.modrinth_exists == 'false'
+        run: ./gradlew modrinth -Prelease --console=plain
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+      - name: Extract changelog
+        if: steps.gate.outputs.released == 'false'
+        env:
+          MOD: ${{ steps.version.outputs.mod }}
+        run: awk -v ver="$MOD" '$0 == "## " ver {found=1; next} /^## / {found=0} found' CHANGELOG.md > release-notes.md
+      - name: Create GitHub release
+        if: steps.gate.outputs.released == 'false'
+        run: >
+          gh release create "v${MOD}+mc${MC}"
+          --target "$GITHUB_SHA"
+          --title "Enchant Tweaker ${MOD}+mc${MC}"
+          --notes-file release-notes.md
+          build/libs/enchanttweaker-${MOD}+mc${MC}.jar
+          build/libs/enchanttweaker-${MOD}+mc${MC}-sources.jar
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MOD: ${{ steps.version.outputs.mod }}
+          MC: ${{ steps.version.outputs.mc }}
