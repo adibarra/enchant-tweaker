@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 /**
- * @description Remove extra self-damage from axes when used as a weapon.
+ * @description remove extra self-damage from axes when used as a weapon
  * @environment Server
  */
 @Mixin(value=MiningToolItem.class)
@@ -17,7 +17,7 @@ public abstract class AxesNotToolsMixin {
 
     @ModifyConstant(
         method="postHit(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/LivingEntity;)Z",
-        constant=@Constant(intValue=2))
+        constant=@Constant(intValue=2, ordinal=0))
     private int enchanttweaker$axesNotTools$modifySelfDamage(int orig, ItemStack stack) {
         if (!ETMixinPlugin.getMixinConfig("AxesNotToolsMixin")) return orig;
         boolean isAxe = stack.getItem() instanceof AxeItem;

@@ -13,11 +13,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.AbstractMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
- * @description Limit villager enchantment trade uses and restock behavior.
+ * @description limit villager enchantment trade uses and restock behavior
  * @environment Server
  */
 @Mixin(value=TradeOffer.class)
@@ -26,11 +28,10 @@ public abstract class VillagerTradeLimitsMixin {
     @Shadow public abstract ItemStack getSellItem();
     @Shadow public abstract int getUses();
 
+    // single volatile (raw, parsed) holder swapped atomically, avoids the torn reads
+    // possible with two independently-published static fields
     @Unique
-    private static Set<String> enchanttweaker$parsedNoRestock;
-
-    @Unique
-    private static String enchanttweaker$lastNoRestockConfig;
+    private static volatile Map.Entry<String, Set<String>> enchanttweaker$noRestockCache;
 
     @Inject(
         method="isDisabled()Z",
@@ -79,8 +80,9 @@ public abstract class VillagerTradeLimitsMixin {
 
     @Unique
     private static Set<String> enchanttweaker$parseNoRestockList(String config) {
-        if (config.equals(enchanttweaker$lastNoRestockConfig) && enchanttweaker$parsedNoRestock != null) {
-            return enchanttweaker$parsedNoRestock;
+        Map.Entry<String, Set<String>> cached = enchanttweaker$noRestockCache;
+        if (cached != null && cached.getKey().equals(config)) {
+            return cached.getValue();
         }
         Set<String> names = new HashSet<>();
         if (!config.isEmpty()) {
@@ -89,8 +91,7 @@ public abstract class VillagerTradeLimitsMixin {
                 if (!trimmed.isEmpty()) names.add(trimmed);
             }
         }
-        enchanttweaker$lastNoRestockConfig = config;
-        enchanttweaker$parsedNoRestock = names;
+        enchanttweaker$noRestockCache = new AbstractMap.SimpleImmutableEntry<>(config, names);
         return names;
     }
 

@@ -9,41 +9,39 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @description Prevent specific enchantments from appearing in enchanting tables, loot, trades, and anvils.
+ * @description prevent specific enchantments from appearing in enchanting tables, loot, trades, and anvils
  * @environment Server
  */
 @Mixin(value=Enchantment.class)
 public abstract class DisableEnchantmentsMixin {
 
+    // single volatile (raw, parsed) holder swapped atomically, avoids the torn reads
+    // possible with two independently-published static fields
     @Unique
-    private static Set<String> enchanttweaker$parsedDisabledEnchants;
-
-    @Unique
-    private static String enchanttweaker$lastDisableConfig;
+    private static volatile Map.Entry<String, Set<String>> enchanttweaker$disableCache;
 
     @Unique
     private static Set<String> enchanttweaker$parseDisabledEnchants(String config) {
-        if (config.equals(enchanttweaker$lastDisableConfig) && enchanttweaker$parsedDisabledEnchants != null) {
-            return enchanttweaker$parsedDisabledEnchants;
+        Map.Entry<String, Set<String>> cached = enchanttweaker$disableCache;
+        if (cached != null && cached.getKey().equals(config)) {
+            return cached.getValue();
         }
         Set<String> ids = ConcurrentHashMap.newKeySet();
-        if (config.isEmpty()) {
-            enchanttweaker$lastDisableConfig = config;
-            enchanttweaker$parsedDisabledEnchants = ids;
-            return ids;
-        }
-        for (String entry : config.split(",")) {
-            String trimmed = entry.trim();
-            if (!trimmed.isEmpty()) {
-                ids.add(trimmed);
+        if (!config.isEmpty()) {
+            for (String entry : config.split(",")) {
+                String trimmed = entry.trim();
+                if (!trimmed.isEmpty()) {
+                    ids.add(trimmed);
+                }
             }
         }
-        enchanttweaker$lastDisableConfig = config;
-        enchanttweaker$parsedDisabledEnchants = ids;
+        enchanttweaker$disableCache = new AbstractMap.SimpleImmutableEntry<>(config, ids);
         return ids;
     }
 

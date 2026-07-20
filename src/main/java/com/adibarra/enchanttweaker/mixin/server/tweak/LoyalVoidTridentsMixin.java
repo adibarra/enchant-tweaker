@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * @description Lets tridents with Loyalty enchant return when thrown into the void.
+ * @description lets tridents with Loyalty enchant return when thrown into the void
  * @environment Server
  */
 @Mixin(value=TridentEntity.class)
@@ -26,10 +26,6 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
     @Shadow
     private boolean dealtDamage;
 
-    // VERSION CHANGES:
-    // 1.16+: ProjectileEntity
-    // 1.19.4+: PersistentProjectileEntity
-    // 1.20.3+: ProjectileEntity
     @SuppressWarnings("unused")
     protected LoyalVoidTridentsMixin(EntityType<ProjectileEntity> entityType, World world) {
         super(entityType, world);

@@ -14,47 +14,45 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+import java.util.AbstractMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
- * @description Allow specific damage types to bypass Protection enchantment entirely.
- * Configurable via comma-separated list of damage type IDs (e.g. "magic,wither,dragon_breath").
- * Supports both vanilla IDs (e.g. "magic") and modded IDs (e.g. "mymod:custom_damage").
+ * @description allow specific damage types to bypass Protection enchantment entirely
+ * configurable via comma-separated list of damage type IDs (e.g. "magic,wither,dragon_breath")
+ * supports both vanilla IDs (e.g. "magic") and modded IDs (e.g. "mymod:custom_damage")
  * @environment Server
  */
 @Mixin(value=LivingEntity.class)
 public abstract class ProtectionBypassMixin {
 
+    // single volatile (raw, parsed) holder swapped atomically, avoids the torn reads
+    // possible with two independently-published static fields
     @Unique
-    private static Set<RegistryKey<DamageType>> enchanttweaker$parsedBypassTypes;
-
-    @Unique
-    private static String enchanttweaker$lastBypassConfig;
+    private static volatile Map.Entry<String, Set<RegistryKey<DamageType>>> enchanttweaker$bypassCache;
 
     @Unique
     private static Set<RegistryKey<DamageType>> enchanttweaker$parseBypassTypes(String config) {
-        if (config.equals(enchanttweaker$lastBypassConfig) && enchanttweaker$parsedBypassTypes != null) {
-            return enchanttweaker$parsedBypassTypes;
+        Map.Entry<String, Set<RegistryKey<DamageType>>> cached = enchanttweaker$bypassCache;
+        if (cached != null && cached.getKey().equals(config)) {
+            return cached.getValue();
         }
         Set<RegistryKey<DamageType>> keys = new HashSet<>();
-        if (config.isEmpty()) {
-            enchanttweaker$lastBypassConfig = config;
-            enchanttweaker$parsedBypassTypes = keys;
-            return keys;
-        }
-        for (String entry : config.split(",")) {
-            String trimmed = entry.trim();
-            if (trimmed.isEmpty()) continue;
-            Identifier id = trimmed.contains(":")
-                ? Identifier.tryParse(trimmed)
-                : Identifier.of("minecraft", trimmed);
-            if (id != null) {
-                keys.add(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, id));
+        if (!config.isEmpty()) {
+            for (String entry : config.split(",")) {
+                String trimmed = entry.trim();
+                if (trimmed.isEmpty()) continue;
+                Identifier id = trimmed.contains(":")
+                    ? Identifier.tryParse(trimmed)
+                    : Identifier.of("minecraft", trimmed);
+                if (id != null) {
+                    keys.add(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, id));
+                }
             }
         }
-        enchanttweaker$lastBypassConfig = config;
-        enchanttweaker$parsedBypassTypes = keys;
+        enchanttweaker$bypassCache = new AbstractMap.SimpleImmutableEntry<>(config, keys);
         return keys;
     }
 

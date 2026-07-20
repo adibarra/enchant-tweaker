@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.MendingLevelAccess;
 import com.adibarra.utils.ADUtils;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -17,15 +18,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 /**
- * @description Lets Mending effect activate on any item in the inventory.
- * Priority order: Main-Hand -> Off-Hand -> Armor -> Hotbar -> Inventory.
+ * @description lets Mending effect activate on any item in the inventory
+ * priority order: Main-Hand -> Off-Hand -> Armor -> Hotbar -> Inventory
  * @environment Server
  */
 @Mixin(value=ExperienceOrbEntity.class)
 public abstract class BetterMendingMixin {
-
-    @Shadow
-    private int amount;
 
     @Shadow
     protected abstract int getMendingRepairAmount(int i);
@@ -59,8 +57,13 @@ public abstract class BetterMendingMixin {
             return;
         }
 
-        int i = Math.min(this.getMendingRepairAmount(this.amount), repairItem.getDamage());
+        // use the running `amount` (XP still available on THIS call), not the orb's original this.amount
+        int i = Math.min(this.getMendingRepairAmount(amount), repairItem.getDamage());
         repairItem.setDamage(repairItem.getDamage() - i);
+        // pass the repaired item's mending level to MoreMending
+        if ((Object)this instanceof MendingLevelAccess access) {
+            access.enchanttweaker$setMendingLevel(EnchantmentHelper.getLevel(Enchantments.MENDING, repairItem));
+        }
         int experience = amount - this.getMendingRepairCost(i);
         if (experience > 0) {
             cir.setReturnValue(this.repairPlayerGears(player, experience));

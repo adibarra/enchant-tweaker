@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 /**
- * @description Disable Soul Speed enchant armor self-damage backlash.
+ * @description disable Soul Speed enchant armor self-damage backlash
  * @environment Server
  */
 @Mixin(value=LivingEntity.class)
@@ -16,7 +16,7 @@ public abstract class NoSoulSpeedBacklashMixin {
     @SuppressWarnings("SameReturnValue")
     @ModifyConstant(
         method="addSoulSpeedBoostIfNeeded()V",
-        constant=@Constant(intValue=1))
+        constant=@Constant(intValue=1, ordinal=0))
     private int enchanttweaker$noSoulSpeedBacklash$noBacklash(int orig) {
         if (!ETMixinPlugin.getMixinConfig("NoSoulSpeedBacklashMixin")) return orig;
         return 0;

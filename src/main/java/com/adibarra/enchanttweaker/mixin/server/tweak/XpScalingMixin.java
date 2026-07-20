@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * @description Replace vanilla's tiered XP-per-level formula with a configurable linear formula.
+ * @description replace vanilla's tiered XP-per-level formula with a configurable linear formula
  * @environment Server
  */
 @Mixin(value=PlayerEntity.class)
@@ -23,6 +23,7 @@ public abstract class XpScalingMixin {
         if (!ETMixinPlugin.getMixinConfig("XpScalingMixin")) return;
         int base = ETMixinPlugin.getConfig().getOrDefault("xp_scaling_base", 7);
         int step = ETMixinPlugin.getConfig().getOrDefault("xp_scaling_step", 2);
-        cir.setReturnValue(Math.max(1, base + step * experienceLevel));
+        // long math avoids int overflow; clamp keeps the result in a valid [1, MAX_VALUE] range
+        cir.setReturnValue((int)Math.clamp((long)base + (long)step * experienceLevel, 1, Integer.MAX_VALUE));
     }
 }
