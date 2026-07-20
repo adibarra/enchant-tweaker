@@ -31,7 +31,7 @@ public abstract class CheapNamesMixin extends ForgingScreenHandler {
         at=@At("TAIL"))
     private void enchanttweaker$cheapNames$modifyLevelCost(CallbackInfo ci) {
         if (!ETMixinPlugin.getMixinConfig("CheapNamesMixin")) return;
-        if (this.input.getStack(1).isEmpty()) {
+        if (this.input.getStack(1).isEmpty() && !this.output.getStack(0).isEmpty()) {
             levelCost.set(1);
         }
     }

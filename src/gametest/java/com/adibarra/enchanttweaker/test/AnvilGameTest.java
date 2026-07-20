@@ -76,6 +76,27 @@ public class AnvilGameTest implements FabricGameTest {
         helper.complete();
     }
 
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void cheapNamesEmptyOperationStaysEmpty(TestContext helper) {
+        ETTestHelper.setFeature("cheap_names", true);
+        PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        sword.set(DataComponentTypes.REPAIR_COST, 10);
+        AnvilScreenHandler handler = new AnvilScreenHandler(0, player.getInventory());
+        ETTestHelper.setAnvilInputs(handler, sword, ItemStack.EMPTY);
+        handler.updateResult();
+        try {
+            helper.assertTrue(handler.getSlot(AnvilScreenHandler.OUTPUT_ID).getStack().isEmpty(),
+                "CheapNames must not create a result when no rename or second input was supplied");
+            helper.assertTrue(handler.getLevelCost() == 10,
+                "CheapNames must not rewrite the vanilla cost of an empty operation (got "
+                    + handler.getLevelCost() + ")");
+        } finally {
+            ETTestHelper.setFeature("cheap_names", false);
+        }
+        helper.complete();
+    }
+
     // notTooExpensive
     // `NotTooExpensiveMixin` replaces the vanilla 40-level cap with nte_max_cost (default MAX_INT)
     // a sword with REPAIR_COST=50 produces a total cost > 40 -> vanilla blocks it; mixin allows it
@@ -1204,8 +1225,8 @@ public class AnvilGameTest implements FabricGameTest {
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void cheapNamesSlot1EmptyNoRename(TestContext helper) {
-        // with slot 1 empty and no rename there is no anvil operation, so the output is empty, yet
-        // cheapNames still unconditionally forces levelCost to 1
+        // with slot 1 empty and no rename there is no anvil operation. CheapNames must leave both
+        // the empty output and vanilla zero cost unchanged
         ETTestHelper.setFeature("cheap_names", true);
         PlayerEntity player = helper.createMockPlayer(GameMode.SURVIVAL);
         try {
@@ -1215,8 +1236,9 @@ public class AnvilGameTest implements FabricGameTest {
             handler.updateResult();
             helper.assertTrue(handler.getSlot(AnvilScreenHandler.OUTPUT_ID).getStack().isEmpty(),
                 "No rename and no material should produce an empty output");
-            helper.assertTrue(handler.getLevelCost() == 1,
-                "CheapNames should still force levelCost to 1 when slot 1 is empty (got " + handler.getLevelCost() + ")");
+            helper.assertTrue(handler.getLevelCost() == 0,
+                "CheapNames should retain vanilla zero cost when no operation exists (got "
+                    + handler.getLevelCost() + ")");
         } finally {
             ETTestHelper.setFeature("cheap_names", false);
         }

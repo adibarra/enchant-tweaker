@@ -1,6 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.client.anvil;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.AnvilCost;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.ingame.AnvilScreen;
@@ -20,8 +20,6 @@ public abstract class NotTooExpensiveMixin {
         method="drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V",
         constant=@Constant(intValue=40, ordinal=0))
     private int notTooExpensiveClient(int orig) {
-        if (!ETMixinPlugin.getMixinConfig("NotTooExpensiveMixin")) return orig;
-        int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);
-        return Math.clamp(maxCost, 0, Integer.MAX_VALUE);
+        return AnvilCost.tooExpensiveThreshold(orig);
     }
 }
