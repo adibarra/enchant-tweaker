@@ -1,13 +1,14 @@
 package com.adibarra.enchanttweaker.commands;
 
-import com.adibarra.enchanttweaker.ETCommands;
-import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+
+import com.adibarra.enchanttweaker.ETCommands;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 public class ReloadCommand implements Command<ServerCommandSource> {
 
@@ -21,8 +22,7 @@ public class ReloadCommand implements Command<ServerCommandSource> {
             ETCommands.broadcastConfigSync(server);
         }
 
-        CommandFeedback.feedback(context.getSource(),
-            Text.literal("Config Reloaded!").formatted(Formatting.AQUA));
+        CommandFeedback.feedback(context.getSource(), Text.literal("Config Reloaded!").formatted(Formatting.AQUA));
         return Command.SINGLE_SUCCESS;
     }
 }

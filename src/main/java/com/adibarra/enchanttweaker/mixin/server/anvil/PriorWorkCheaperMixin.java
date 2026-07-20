@@ -1,25 +1,29 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.screen.AnvilScreenHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+
 /**
  * @description enchanting/repairing cost is cheaper with prior work
  * @environment Server
  */
-@Mixin(value=AnvilScreenHandler.class)
+@Mixin(
+    value = AnvilScreenHandler.class)
 public abstract class PriorWorkCheaperMixin {
 
     @Inject(
-        method="getNextCost(I)I",
-        at=@At("HEAD"),
-        cancellable=true)
-    private static void enchanttweaker$priorWorkCheaper$modifyRepairCost(int cost, CallbackInfoReturnable<Integer> cir) {
-        if (!ETMixinPlugin.getMixinConfig("PriorWorkCheaperMixin")) return;
+        method = "getNextCost(I)I",
+        at = @At("HEAD"),
+        cancellable = true)
+    private static void enchanttweaker$priorWorkCheaper$modifyRepairCost(int cost,
+        CallbackInfoReturnable<Integer> cir) {
+        if (!ETMixinPlugin.getMixinConfig("PriorWorkCheaperMixin"))
+            return;
         double coefficient = ETMixinPlugin.getConfig().getOrDefault("pw_cost_multiplier", 2.0);
         double newCost = Math.clamp(coefficient, 0, Double.MAX_VALUE) * cost + 1;
         // clamp the scaled cost to vanilla's integer range

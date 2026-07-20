@@ -1,7 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.ADUtils;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.MultishotEnchantment;
 import net.minecraft.enchantment.PiercingEnchantment;
@@ -10,24 +8,30 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.utils.ADUtils;
+
 /**
  * @description Allow Multishot and Piercing enchantments to co-exist.
  * @environment Server
  */
-@Mixin(value={MultishotEnchantment.class, PiercingEnchantment.class})
+@Mixin(
+    value = {MultishotEnchantment.class, PiercingEnchantment.class})
 public abstract class MultishotPiercingMixin {
 
     @Inject(
-        method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
-        at=@At("HEAD"),
-        cancellable=true)
+        method = "canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
+        at = @At("HEAD"),
+        cancellable = true)
     private void enchanttweaker$multishotPiercing$allowCoexist(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
-        if (!ETMixinPlugin.getMixinConfig("MultishotPiercingMixin")) return;
-        String selfP = ADUtils.getEnchantmentPath((Enchantment)(Object)this);
+        if (!ETMixinPlugin.getMixinConfig("MultishotPiercingMixin"))
+            return;
+        String selfP = ADUtils.getEnchantmentPath((Enchantment) (Object) this);
         String otherP = ADUtils.getEnchantmentPath(other);
-        if (selfP == null || otherP == null) return;
-        if ((selfP.equals("multishot") && otherP.equals("piercing")) ||
-            (selfP.equals("piercing") && otherP.equals("multishot"))) {
+        if (selfP == null || otherP == null)
+            return;
+        if ((selfP.equals("multishot") && otherP.equals("piercing"))
+            || (selfP.equals("piercing") && otherP.equals("multishot"))) {
             cir.setReturnValue(true);
         }
     }

@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.DamageEnchantment;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
@@ -11,27 +10,32 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+
 /**
- * @description Allow tridents to be enchanted with fire aspect, knockback, and looting.
+ * @description Allow tridents to be enchanted with fire aspect, knockback, and
+ *              looting.
  * @environment Server
  */
-@Mixin(value=Enchantment.class)
+@Mixin(
+    value = Enchantment.class)
 public abstract class TridentWeaponsMixin {
 
     @Inject(
-        method="isAcceptableItem(Lnet/minecraft/item/ItemStack;)Z",
-        at=@At("HEAD"),
-        cancellable=true)
-    private void enchanttweaker$tridentWeapons$allowFireAspectKnockbackLooting(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        if (!ETMixinPlugin.getMixinConfig("TridentWeaponsMixin")) return;
+        method = "isAcceptableItem(Lnet/minecraft/item/ItemStack;)Z",
+        at = @At("HEAD"),
+        cancellable = true)
+    private void enchanttweaker$tridentWeapons$allowFireAspectKnockbackLooting(ItemStack stack,
+        CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("TridentWeaponsMixin"))
+            return;
         boolean isTrident = stack.getItem() instanceof TridentItem;
-        if (!isTrident) return;
+        if (!isTrident)
+            return;
 
         Enchantment enchantment = (Enchantment) (Object) this;
-        if (enchantment instanceof DamageEnchantment ||
-            enchantment == Enchantments.FIRE_ASPECT ||
-            enchantment == Enchantments.KNOCKBACK ||
-            enchantment == Enchantments.LOOTING) {
+        if (enchantment instanceof DamageEnchantment || enchantment == Enchantments.FIRE_ASPECT
+            || enchantment == Enchantments.KNOCKBACK || enchantment == Enchantments.LOOTING) {
             cir.setReturnValue(true);
         }
     }

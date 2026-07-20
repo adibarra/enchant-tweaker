@@ -1,6 +1,9 @@
 package com.adibarra.enchanttweaker.test;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.List;
+
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -13,9 +16,7 @@ import net.minecraft.test.TestContext;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.List;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 class ETTestHelper {
 
@@ -67,8 +68,8 @@ class ETTestHelper {
 
     /**
      * sets the two input slots of an AnvilScreenHandler by directly writing to the
-     * underlying SimpleInventory stacks list, bypassing the markDirty callback chain
-     * that would otherwise NPE in sendContentUpdates during tests
+     * underlying SimpleInventory stacks list, bypassing the markDirty callback
+     * chain that would otherwise NPE in sendContentUpdates during tests
      */
     static void setAnvilInputs(AnvilScreenHandler handler, ItemStack first, ItemStack second) {
         try {
@@ -97,7 +98,9 @@ class ETTestHelper {
         }
     }
 
-    /** calls ExperienceOrbEntity.repairPlayerGears(PlayerEntity, int) via reflection */
+    /**
+     * calls ExperienceOrbEntity.repairPlayerGears(PlayerEntity, int) via reflection
+     */
     static int repairPlayerGears(ExperienceOrbEntity orb, PlayerEntity player, int amount) {
         try {
             Method m = ExperienceOrbEntity.class.getDeclaredMethod("repairPlayerGears", PlayerEntity.class, int.class);
@@ -108,7 +111,10 @@ class ETTestHelper {
         }
     }
 
-    /** sets the newItemName field on AnvilScreenHandler via reflection (field is private) */
+    /**
+     * sets the newItemName field on AnvilScreenHandler via reflection (field is
+     * private)
+     */
     static void setAnvilNewName(AnvilScreenHandler handler, String name) {
         try {
             Field f = AnvilScreenHandler.class.getDeclaredField("newItemName");
@@ -131,7 +137,8 @@ class ETTestHelper {
     }
 
     /** sets the two input slots of a GrindstoneScreenHandler via reflection */
-    static void setGrindstoneInputs(net.minecraft.screen.GrindstoneScreenHandler handler, ItemStack first, ItemStack second) {
+    static void setGrindstoneInputs(net.minecraft.screen.GrindstoneScreenHandler handler, ItemStack first,
+        ItemStack second) {
         try {
             Field inputField = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredField("input");
             inputField.setAccessible(true);
@@ -166,10 +173,15 @@ class ETTestHelper {
         }
     }
 
-    /** calls protected LivingEntity.modifyAppliedDamage(DamageSource, float) via reflection */
-    static float modifyAppliedDamage(net.minecraft.entity.LivingEntity entity, net.minecraft.entity.damage.DamageSource source, float damage) {
+    /**
+     * calls protected LivingEntity.modifyAppliedDamage(DamageSource, float) via
+     * reflection
+     */
+    static float modifyAppliedDamage(net.minecraft.entity.LivingEntity entity,
+        net.minecraft.entity.damage.DamageSource source, float damage) {
         try {
-            Method m = net.minecraft.entity.LivingEntity.class.getDeclaredMethod("modifyAppliedDamage", net.minecraft.entity.damage.DamageSource.class, float.class);
+            Method m = net.minecraft.entity.LivingEntity.class.getDeclaredMethod("modifyAppliedDamage",
+                net.minecraft.entity.damage.DamageSource.class, float.class);
             m.setAccessible(true);
             return (float) m.invoke(entity, source, damage);
         } catch (Exception e) {
@@ -178,8 +190,9 @@ class ETTestHelper {
     }
 
     /**
-     * forces World.rainGradient so World.isRaining() immediately reflects the desired state
-     * `World.setWeather()` sets the rain flag but the gradient updates lazily one tick at a time
+     * forces World.rainGradient so World.isRaining() immediately reflects the
+     * desired state `World.setWeather()` sets the rain flag but the gradient
+     * updates lazily one tick at a time
      */
     static void forceRainGradient(ServerWorld world, float gradient) {
         try {

@@ -1,7 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.grindstone;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
@@ -19,27 +17,35 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
+
 /**
- * @description Handle grindstone output slot behavior for disenchanting to books.
+ * @description Handle grindstone output slot behavior for disenchanting to
+ *              books.
  * @environment Server
  */
-@Mixin(targets="net.minecraft.screen.GrindstoneScreenHandler$4")
+@Mixin(
+    targets = "net.minecraft.screen.GrindstoneScreenHandler$4")
 public abstract class GrindstoneOutputSlotMixin {
 
-    @Shadow @Final
+    @Shadow
+    @Final
     GrindstoneScreenHandler field_16780; // parent handler reference
 
     @Inject(
-        method="onTakeItem(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)V",
-        at=@At("HEAD"),
-        cancellable=true)
+        method = "onTakeItem(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)V",
+        at = @At("HEAD"),
+        cancellable = true)
     private void enchanttweaker$grindstoneDisenchant$onTakeItem(PlayerEntity player, ItemStack stack, CallbackInfo ci) {
-        if (!ETMixinPlugin.getMixinConfig("GrindstoneDisenchantMixin")) return;
+        if (!ETMixinPlugin.getMixinConfig("GrindstoneDisenchantMixin"))
+            return;
 
-        int bookSlot = ((GrindstoneDisenchantAccess)field_16780).enchanttweaker$getBookSlot();
-        if (bookSlot < 0) return; // Not a disenchant operation, let vanilla handle
+        int bookSlot = ((GrindstoneDisenchantAccess) field_16780).enchanttweaker$getBookSlot();
+        if (bookSlot < 0)
+            return; // Not a disenchant operation, let vanilla handle
 
-        Inventory input = ((GrindstoneDisenchantAccess)field_16780).enchanttweaker$getInput();
+        Inventory input = ((GrindstoneDisenchantAccess) field_16780).enchanttweaker$getInput();
         int enchantedSlot = bookSlot == 0 ? 1 : 0;
         ItemStack enchantedItem = input.getStack(enchantedSlot);
         boolean keepItem = ETMixinPlugin.getConfig().getOrDefault("grindstone_disenchant_keep_item", true);
@@ -50,7 +56,8 @@ public abstract class GrindstoneOutputSlotMixin {
             if (enchantedItem.isOf(Items.ENCHANTED_BOOK)) {
                 // For book splitting: remove the extracted enchantment, keep the rest
                 ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(enchantedItem);
-                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
+                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(
+                    ItemEnchantmentsComponent.DEFAULT);
                 boolean skippedFirst = false;
                 for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchants.getEnchantmentsMap()) {
                     if (!entry.getKey().value().isCursed() && !skippedFirst) {
@@ -70,7 +77,8 @@ public abstract class GrindstoneOutputSlotMixin {
                 // Regular item: strip all non-curse enchantments
                 cleanItem = enchantedItem.copy();
                 ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(cleanItem);
-                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
+                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(
+                    ItemEnchantmentsComponent.DEFAULT);
                 for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchants.getEnchantmentsMap()) {
                     if (entry.getKey().value().isCursed()) {
                         builder.add(entry.getKey().value(), entry.getIntValue());

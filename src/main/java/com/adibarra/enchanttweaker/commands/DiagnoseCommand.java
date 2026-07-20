@@ -1,20 +1,21 @@
 package com.adibarra.enchanttweaker.commands;
 
-import com.adibarra.enchanttweaker.AnvilRepairHandler;
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.ADConfig;
-import com.adibarra.utils.ADText;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.adibarra.enchanttweaker.AnvilRepairHandler;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.utils.ADConfig;
+import com.adibarra.utils.ADText;
 
 /** reports active settings, conflicts, and config details */
 public class DiagnoseCommand implements Command<ServerCommandSource> {
@@ -29,7 +30,8 @@ public class DiagnoseCommand implements Command<ServerCommandSource> {
 
         header(msg, "Mod Status");
         row(msg, "mod enabled", ADText.colorValue(String.valueOf(modEnabledNow)));
-        row(msg, "applied mixins", Text.literal(String.valueOf(ETMixinPlugin.getNumMixins())).formatted(Formatting.AQUA));
+        row(msg, "applied mixins",
+            Text.literal(String.valueOf(ETMixinPlugin.getNumMixins())).formatted(Formatting.AQUA));
 
         header(msg, "Desynced Features");
         Set<String> seen = new HashSet<>();
@@ -37,21 +39,26 @@ public class DiagnoseCommand implements Command<ServerCommandSource> {
         for (Map.Entry<String, String> entry : ETMixinPlugin.getMixinKeys().entrySet()) {
             String mixinName = entry.getKey();
             String configKey = entry.getValue();
-            if (!seen.add(configKey)) continue; // shared keys (e.g. grindstone) reported once
+            if (!seen.add(configKey))
+                continue; // shared keys (e.g. grindstone) reported once
             boolean want = config.getOrDefault(configKey, false);
             boolean applied = ETMixinPlugin.getMixinConfig(mixinName);
             if (want && !applied) {
                 anyDesynced = true;
                 String reason;
-                if (!modEnabledNow) reason = "mod_enabled is currently false";
-                else if (activeCompat.containsKey(configKey)) reason = "COMPAT override: " + activeCompat.get(configKey);
-                else reason = "unknown";
+                if (!modEnabledNow)
+                    reason = "mod_enabled is currently false";
+                else if (activeCompat.containsKey(configKey))
+                    reason = "COMPAT override: " + activeCompat.get(configKey);
+                else
+                    reason = "unknown";
                 msg.add(Text.literal("\n  "));
                 msg.add(Text.literal(configKey).formatted(Formatting.RED));
                 msg.add(Text.literal(" - " + reason).formatted(Formatting.GRAY));
             }
         }
-        if (!anyDesynced) msg.add(Text.literal("\n  (none)").formatted(Formatting.DARK_GRAY));
+        if (!anyDesynced)
+            msg.add(Text.literal("\n  (none)").formatted(Formatting.DARK_GRAY));
 
         header(msg, "Active COMPAT Overrides");
         if (activeCompat.isEmpty()) {
@@ -89,7 +96,8 @@ public class DiagnoseCommand implements Command<ServerCommandSource> {
     }
 
     private static void header(List<Text> msg, String title) {
-        msg.add(Text.literal("\n").append(Text.literal("== " + title + " ==").formatted(Formatting.AQUA, Formatting.BOLD)));
+        msg.add(
+            Text.literal("\n").append(Text.literal("== " + title + " ==").formatted(Formatting.AQUA, Formatting.BOLD)));
     }
 
     private static void row(List<Text> msg, String label, Text value) {

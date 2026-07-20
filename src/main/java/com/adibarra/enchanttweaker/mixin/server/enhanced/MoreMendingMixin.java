@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.MendingLevelAccess;
+import java.util.Map;
+
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -15,32 +15,39 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Map;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.MendingLevelAccess;
 
 /**
  * @description scales the efficiency of the Mending enchant based on its level
  * @environment Server
  */
-@Mixin(value=ExperienceOrbEntity.class)
+@Mixin(
+    value = ExperienceOrbEntity.class)
 public abstract class MoreMendingMixin implements MendingLevelAccess {
 
     @Unique
     private int mendingLevel = 0;
 
-    /** lets BetterMendingMixin supply the Mending level when it takes over repairPlayerGears */
+    /**
+     * lets BetterMendingMixin supply the Mending level when it takes over
+     * repairPlayerGears
+     */
     @Unique
     public void enchanttweaker$setMendingLevel(int level) {
         this.mendingLevel = level;
     }
 
     @Inject(
-        method="repairPlayerGears(Lnet/minecraft/entity/player/PlayerEntity;I)I",
-        at=@At(
-            ordinal=0,
-            value="INVOKE_ASSIGN",
-            target="Lnet/minecraft/enchantment/EnchantmentHelper;chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;"))
-    private void enchanttweaker$moreMending$captureMendingLevel(PlayerEntity player, int amount, CallbackInfoReturnable<Integer> cir, @Local Map.Entry<EquipmentSlot, ItemStack> entry) {
-        if (!ETMixinPlugin.getMixinConfig("MoreMendingMixin")) return;
+        method = "repairPlayerGears(Lnet/minecraft/entity/player/PlayerEntity;I)I",
+        at = @At(
+            ordinal = 0,
+            value = "INVOKE_ASSIGN",
+            target = "Lnet/minecraft/enchantment/EnchantmentHelper;chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;"))
+    private void enchanttweaker$moreMending$captureMendingLevel(PlayerEntity player, int amount,
+        CallbackInfoReturnable<Integer> cir, @Local Map.Entry<EquipmentSlot, ItemStack> entry) {
+        if (!ETMixinPlugin.getMixinConfig("MoreMendingMixin"))
+            return;
         if (entry != null) {
             mendingLevel = EnchantmentHelper.getLevel(Enchantments.MENDING, entry.getValue());
         } else {
@@ -49,13 +56,15 @@ public abstract class MoreMendingMixin implements MendingLevelAccess {
     }
 
     @Inject(
-        method="getMendingRepairCost(I)I",
-        at=@At("HEAD"),
-        cancellable=true)
+        method = "getMendingRepairCost(I)I",
+        at = @At("HEAD"),
+        cancellable = true)
     private void enchanttweaker$moreMending$modifyRepairCost(int repairAmount, CallbackInfoReturnable<Integer> cir) {
-        if (!ETMixinPlugin.getMixinConfig("MoreMendingMixin")) return;
+        if (!ETMixinPlugin.getMixinConfig("MoreMendingMixin"))
+            return;
         double step = ETMixinPlugin.getConfig().getOrDefault("more_mending_step", 0.05);
-        // clamp the configured floor into [0.0, 0.6] first: a user-set floor above 0.6 would make
+        // clamp the configured floor into [0.0, 0.6] first: a user-set floor above 0.6
+        // would make
         // the Math.clamp below see min > max and throw IllegalArgumentException
         double floor = Math.clamp(ETMixinPlugin.getConfig().getOrDefault("more_mending_floor", 0.1), 0.0, 0.6);
         cir.setReturnValue((int) Math.round(repairAmount * Math.clamp(0.6 - step * mendingLevel, floor, 0.6)));

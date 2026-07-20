@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.AxeItem;
@@ -10,26 +9,32 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+
 /**
- * @description Allow axes to be enchanted with fire aspect, knockback, and looting.
+ * @description Allow axes to be enchanted with fire aspect, knockback, and
+ *              looting.
  * @environment Server
  */
-@Mixin(value=Enchantment.class)
+@Mixin(
+    value = Enchantment.class)
 public abstract class AxeWeaponsMixin {
 
     @Inject(
-        method="isAcceptableItem(Lnet/minecraft/item/ItemStack;)Z",
-        at=@At("HEAD"),
-        cancellable=true)
-    private void enchanttweaker$axeWeapons$allowFireAspectKnockbackLooting(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        if (!ETMixinPlugin.getMixinConfig("AxeWeaponsMixin")) return;
+        method = "isAcceptableItem(Lnet/minecraft/item/ItemStack;)Z",
+        at = @At("HEAD"),
+        cancellable = true)
+    private void enchanttweaker$axeWeapons$allowFireAspectKnockbackLooting(ItemStack stack,
+        CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("AxeWeaponsMixin"))
+            return;
         boolean isAxe = stack.getItem() instanceof AxeItem;
-        if (!isAxe) return;
+        if (!isAxe)
+            return;
 
         Enchantment enchantment = (Enchantment) (Object) this;
-        if (enchantment == Enchantments.FIRE_ASPECT ||
-            enchantment == Enchantments.KNOCKBACK ||
-            enchantment == Enchantments.LOOTING) {
+        if (enchantment == Enchantments.FIRE_ASPECT || enchantment == Enchantments.KNOCKBACK
+            || enchantment == Enchantments.LOOTING) {
             cir.setReturnValue(true);
         }
     }

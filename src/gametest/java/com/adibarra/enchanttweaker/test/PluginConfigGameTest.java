@@ -1,14 +1,5 @@
 package com.adibarra.enchanttweaker.test;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.EnchantTweaker;
-import com.adibarra.utils.ADConfig;
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.test.GameTest;
-import net.minecraft.test.TestContext;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,10 +7,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.test.GameTest;
+import net.minecraft.test.TestContext;
+
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.EnchantTweaker;
+import com.adibarra.utils.ADConfig;
+
 public class PluginConfigGameTest implements FabricGameTest {
 
-
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void modDisabledGatesFeatureMixins(TestContext helper) {
         ETTestHelper.setFeature("cheap_names", true);
         ETTestHelper.setFeature("more_protection", true);
@@ -44,8 +45,10 @@ public class PluginConfigGameTest implements FabricGameTest {
                 "mod_enabled=false must gate the capmod mixin: Sharpness getMaxLevel should fall back "
                     + "to vanilla 5 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
 
-            // paired with the real getMaxLevel==5 above: getCapmodLevel ignores mod_enabled and still
-            // returns the configured cap 10. The pair documents that the gate lives in getMixinConfig,
+            // paired with the real getMaxLevel==5 above: getCapmodLevel ignores mod_enabled
+            // and still
+            // returns the configured cap 10. The pair documents that the gate lives in
+            // getMixinConfig,
             // not in getCapmodLevel
             helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 5) == 10,
                 "getCapmodLevel should ignore mod_enabled and return the configured cap 10 (got "
@@ -57,8 +60,10 @@ public class PluginConfigGameTest implements FabricGameTest {
             ETTestHelper.setCapmod(false);
             ETTestHelper.setEnchantCap("sharpness", -1);
         }
-        // with mod_enabled restored and capmod reset off, the gate lifts and getMaxLevel is
-        // back to vanilla 5 - confirms the finally cleaned up the raised cap that would otherwise
+        // with mod_enabled restored and capmod reset off, the gate lifts and
+        // getMaxLevel is
+        // back to vanilla 5 - confirms the finally cleaned up the raised cap that would
+        // otherwise
         // leak into CapmodGameTest
         helper.assertTrue(ETMixinPlugin.getConfig().getOrDefault("mod_enabled", false),
             "mod_enabled must be restored to true after the test");
@@ -68,8 +73,8 @@ public class PluginConfigGameTest implements FabricGameTest {
         helper.complete();
     }
 
-
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setAllAndPersistWritesToDisk(TestContext helper) {
         String path = ETMixinPlugin.getConfig().getConfigPath();
         helper.assertTrue(path != null, "config path should be resolvable");
@@ -92,8 +97,8 @@ public class PluginConfigGameTest implements FabricGameTest {
         helper.complete();
     }
 
-
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setAllAndPersistAppendsUnwrittenKey(TestContext helper) {
         String path = ETMixinPlugin.getConfig().getConfigPath();
         helper.assertTrue(path != null, "config path should be resolvable");
@@ -106,31 +111,30 @@ public class PluginConfigGameTest implements FabricGameTest {
         } catch (java.io.IOException e) {
             throw new RuntimeException("failed to read config file", e);
         }
-        // precondition: the run-dir config must actually contain the key we're about to remove,
+        // precondition: the run-dir config must actually contain the key we're about to
+        // remove,
         // otherwise the append branch wouldn't be the thing under test
-        helper.assertTrue(
-            original.lines().anyMatch(l -> l.trim().toLowerCase().startsWith("sturdy_anvils=")),
+        helper.assertTrue(original.lines().anyMatch(l -> l.trim().toLowerCase().startsWith("sturdy_anvils=")),
             "precondition: run-dir config should contain a sturdy_anvils= line");
 
         try {
             // hand-remove the sturdy_anvils line (simulating a user-truncated config file)
-            List<String> keptLines = original.lines()
-                .filter(l -> !l.trim().toLowerCase().startsWith("sturdy_anvils="))
+            List<String> keptLines = original.lines().filter(l -> !l.trim().toLowerCase().startsWith("sturdy_anvils="))
                 .toList();
             Files.writeString(configPath, String.join("\n", keptLines));
             helper.assertFalse(
-                Files.readString(configPath).lines()
-                    .anyMatch(l -> l.trim().toLowerCase().startsWith("sturdy_anvils=")),
+                Files.readString(configPath).lines().anyMatch(l -> l.trim().toLowerCase().startsWith("sturdy_anvils=")),
                 "the sturdy_anvils line should be gone before setAllAndPersist");
 
-            // `setAllAndPersist` loads the file fresh, finds no matching line, and hits the append branch
+            // `setAllAndPersist` loads the file fresh, finds no matching line, and hits the
+            // append branch
             ETMixinPlugin.getConfig().setAllAndPersist(Map.of("sturdy_anvils", "false"));
             ETMixinPlugin.clearCaches();
 
             String rewritten = Files.readString(configPath);
-            // the append branch writes an un-indented "sturdy_anvils=false" line at the end of the file
-            helper.assertTrue(
-                rewritten.lines().anyMatch(l -> l.trim().equals("sturdy_anvils=false")),
+            // the append branch writes an un-indented "sturdy_anvils=false" line at the end
+            // of the file
+            helper.assertTrue(rewritten.lines().anyMatch(l -> l.trim().equals("sturdy_anvils=false")),
                 "setAllAndPersist should append a fresh sturdy_anvils=false line when none exists");
             // in-memory state must agree with what was written
             helper.assertFalse(ETMixinPlugin.getConfig().getOrDefault("sturdy_anvils", true),
@@ -150,21 +154,23 @@ public class PluginConfigGameTest implements FabricGameTest {
         helper.complete();
     }
 
-
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void reloadClearsCaches(TestContext helper) {
         try {
-            ETTestHelper.setEnchantCap("sharpness", 5);   // setAll + clearCaches
+            ETTestHelper.setEnchantCap("sharpness", 5); // setAll + clearCaches
             helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 10) == 5,
                 "primed capmod level should be 5 (got " + ETMixinPlugin.getCapmodLevel("sharpness", 10) + ")");
 
-            // mutate the live config in-memory but do NOT clear the cache: the cached 5 must survive
+            // mutate the live config in-memory but do NOT clear the cache: the cached 5
+            // must survive
             ETMixinPlugin.getConfig().setAll(Map.of("sharpness", "7"));
             helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 10) == 5,
                 "CAPMOD_CACHE is sticky: level should still read the cached 5 until a cache-clearing reload (got "
                     + ETMixinPlugin.getCapmodLevel("sharpness", 10) + ")");
 
-            // `reloadConfig` must clear the cache AND swap in the on-disk config (sharpness=-1 default),
+            // `reloadConfig` must clear the cache AND swap in the on-disk config
+            // (sharpness=-1 default),
             // so cap<0 falls through to the vanilla passthrough level 10
             ETMixinPlugin.reloadConfig();
             helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 10) == 10,
@@ -178,8 +184,8 @@ public class PluginConfigGameTest implements FabricGameTest {
         helper.complete();
     }
 
-
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setAllAndPersistEdgeCases(TestContext helper) {
         Path tmp = configDir().resolve("et-persist-edge-test.properties");
         try {
@@ -187,8 +193,8 @@ public class PluginConfigGameTest implements FabricGameTest {
             ADConfig cfg = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(), BOGUS_BUNDLED);
 
             String before = Files.readString(tmp);
-            cfg.setAllAndPersist(Map.of());   // empty map -> no-op
-            cfg.setAllAndPersist(null);       // null -> no-op
+            cfg.setAllAndPersist(Map.of()); // empty map -> no-op
+            cfg.setAllAndPersist(null); // null -> no-op
             helper.assertTrue(before.equals(Files.readString(tmp)),
                 "empty-map and null setAllAndPersist must be no-ops (file unchanged)");
 
@@ -203,10 +209,8 @@ public class PluginConfigGameTest implements FabricGameTest {
             cfg.setAllAndPersist(Map.of("MixedKey", "v"));
             helper.assertTrue(Files.readString(tmp).lines().anyMatch(l -> l.trim().equals("mixedkey=v")),
                 "mixed-case key should be lowercased and appended as mixedkey=v");
-            helper.assertTrue(cfg.getKeys().contains("mixedkey"),
-                "in-memory key should be the lowercased 'mixedkey'");
-            helper.assertFalse(cfg.getKeys().contains("MixedKey"),
-                "the raw mixed-case key must not be stored");
+            helper.assertTrue(cfg.getKeys().contains("mixedkey"), "in-memory key should be the lowercased 'mixedkey'");
+            helper.assertFalse(cfg.getKeys().contains("MixedKey"), "the raw mixed-case key must not be stored");
 
             // unicode value written verbatim (UTF-8) and round-tripped
             cfg.setAllAndPersist(Map.of("uni_key", "café🗡️"));

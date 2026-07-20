@@ -2,6 +2,7 @@ plugins {
     id 'maven-publish'
     id 'fabric-loom' version '1.15.3'
     id "com.modrinth.minotaur" version "2.9.0"
+    id 'com.diffplug.spotless' version '8.8.0'
 }
 
 // Name jar with supported MC versions
@@ -41,6 +42,14 @@ java {
     withSourcesJar()
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+}
+
+spotless {
+    java {
+        target 'src/**/*.java'
+        eclipse('4.35').configFile('config/eclipse-formatter.xml')
+        importOrder('java|javax', '', 'com.adibarra')
+    }
 }
 
 jar {

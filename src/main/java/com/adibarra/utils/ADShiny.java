@@ -13,14 +13,15 @@ public class ADShiny {
 
     /** checks whether an enchantment is at its non-curse maximum */
     public static boolean shouldColorGold(int level, int maxLevel, boolean cursed) {
-        if (level < maxLevel) return false;
+        if (level < maxLevel)
+            return false;
         return !cursed;
     }
 
     /** Applies the complete shiny-name style decision for an enchantment name. */
-    public static void applyNameStyle(
-            MutableText text, int level, int maxLevel, boolean cursed, float chargedRoll) {
-        if (!shouldColorGold(level, maxLevel, cursed)) return;
+    public static void applyNameStyle(MutableText text, int level, int maxLevel, boolean cursed, float chargedRoll) {
+        if (!shouldColorGold(level, maxLevel, cursed))
+            return;
         text.formatted(Formatting.YELLOW);
         if (chargedRoll < 0.005f) {
             text.formatted(Formatting.OBFUSCATED);

@@ -1,15 +1,16 @@
 package com.adibarra.enchanttweaker.commands;
 
-import com.adibarra.enchanttweaker.ETCommands;
-import com.adibarra.utils.ADBrigadier;
-import com.adibarra.utils.ADText;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.adibarra.enchanttweaker.ETCommands;
+import com.adibarra.utils.ADBrigadier;
+import com.adibarra.utils.ADText;
 
 public class HelpCommand implements Command<ServerCommandSource> {
 

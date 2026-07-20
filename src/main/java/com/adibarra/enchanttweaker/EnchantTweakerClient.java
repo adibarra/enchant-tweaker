@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker;
 
-import com.adibarra.enchanttweaker.network.ConfigSyncPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -8,6 +7,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.adibarra.enchanttweaker.network.ConfigSyncPayload;
 
 @Environment(EnvType.CLIENT)
 public class EnchantTweakerClient implements ClientModInitializer {
@@ -18,7 +19,8 @@ public class EnchantTweakerClient implements ClientModInitializer {
     public void onInitializeClient() {
         ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPayload.ID, (payload, context) -> {
             if (payload.version() != ConfigSyncPayload.PROTOCOL_VERSION) {
-                LOGGER.warn(EnchantTweaker.PREFIX + "Server sent config sync protocol v{} but this client speaks v{}, ignoring sync and keeping local config",
+                LOGGER.warn(EnchantTweaker.PREFIX
+                    + "Server sent config sync protocol v{} but this client speaks v{}, ignoring sync and keeping local config",
                     payload.version(), ConfigSyncPayload.PROTOCOL_VERSION);
                 return;
             }

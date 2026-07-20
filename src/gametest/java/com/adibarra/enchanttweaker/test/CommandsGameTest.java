@@ -1,8 +1,12 @@
 package com.adibarra.enchanttweaker.test;
 
-import com.adibarra.enchanttweaker.AnvilRepairHandler;
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.commands.suggestions.ValueSuggestion;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
@@ -18,18 +22,16 @@ import net.minecraft.test.TestContext;
 import net.minecraft.text.Text;
 import net.minecraft.world.GameMode;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import com.adibarra.enchanttweaker.AnvilRepairHandler;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.commands.suggestions.ValueSuggestion;
 
 public class CommandsGameTest implements FabricGameTest {
 
     // /et config list
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void listOverviewExecutes(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         int result = dispatch(server, "et config list");
@@ -37,7 +39,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void listCategoryExecutes(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         int result = dispatch(server, "et config list all");
@@ -45,7 +48,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void listInvalidCategoryFails(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         int result = dispatch(server, "et config list notacategory");
@@ -54,19 +58,21 @@ public class CommandsGameTest implements FabricGameTest {
     }
 
     // a named category plus the page node both route through ListCommand
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void listNamedCategoryAndPage(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         helper.assertTrue(dispatch(server, "et config list anvil_tweaks") >= 1,
             "listing a named category should succeed");
-        // there are well over PAGE_SIZE (15) keys across all categories, so page 2 exists
-        helper.assertTrue(dispatch(server, "et config list all 2") >= 1,
-            "listing page 2 of all keys should succeed");
+        // there are well over PAGE_SIZE (15) keys across all categories, so page 2
+        // exists
+        helper.assertTrue(dispatch(server, "et config list all 2") >= 1, "listing page 2 of all keys should succeed");
         helper.complete();
     }
 
     // page beyond totalPages -> out-of-range error path
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void listOutOfRangePageFails(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         helper.assertTrue(dispatch(server, "et config list all 9999") == 0,
@@ -74,8 +80,10 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // the (empty) rendering branch: disable_enchantments ships empty and is on page 1 of other_tweaks
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // the (empty) rendering branch: disable_enchantments ships empty and is on page
+    // 1 of other_tweaks
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void listRendersEmptyValues(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         CapturingOutput out = new CapturingOutput();
@@ -88,18 +96,19 @@ public class CommandsGameTest implements FabricGameTest {
 
     // /et config <key> (GetCommand)
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void getCommandThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
-        helper.assertTrue(dispatch(server, "et config cheap_names") >= 1,
-            "GET of an existing key should succeed");
+        helper.assertTrue(dispatch(server, "et config cheap_names") >= 1, "GET of an existing key should succeed");
         helper.assertTrue(dispatch(server, "et config does_not_exist") == 0,
             "GET of a nonexistent key should fail (return 0)");
         helper.complete();
     }
 
     // reserved keys are read-only for SET/RESET but a GET is still permitted
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void reservedKeyGetAllowed(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         helper.assertTrue(dispatch(server, "et config config_version") >= 1,
@@ -108,12 +117,15 @@ public class CommandsGameTest implements FabricGameTest {
     }
 
     // /et reload
-    // reloadCommand rebuilds ADConfig from disk; an in-memory-only change must be discarded
+    // reloadCommand rebuilds ADConfig from disk; an in-memory-only change must be
+    // discarded
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void reloadRereadsDisk(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
-        // `setConfigValue` mutates memory only (never persists), so reload should overwrite it
+        // `setConfigValue` mutates memory only (never persists), so reload should
+        // overwrite it
         ETTestHelper.setConfigValue("cheap_names", "true");
         try {
             helper.assertTrue(ETMixinPlugin.getConfig().getOrDefault("cheap_names", false),
@@ -131,7 +143,8 @@ public class CommandsGameTest implements FabricGameTest {
 
     // /et config reset
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void resetSingleKeyRestoresDefault(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         ETTestHelper.setFeature("cheap_names", true);
@@ -146,7 +159,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void resetAllRestoresDefaults(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         ETTestHelper.setFeature("cheap_names", true);
@@ -171,8 +185,10 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // bare `/et config reset` prints usage (SINGLE_SUCCESS); a nonexistent key fails
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // bare `/et config reset` prints usage (SINGLE_SUCCESS); a nonexistent key
+    // fails
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void resetBareAndNonexistent(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         helper.assertTrue(dispatch(server, "et config reset") == 1,
@@ -182,8 +198,10 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // reset all persists the FULL default set in one batched write; assert on the file text
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // reset all persists the FULL default set in one batched write; assert on the
+    // file text
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void resetAllPersistsDefaultsToDisk(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         String path = ETMixinPlugin.getConfig().getConfigPath();
@@ -191,8 +209,7 @@ public class CommandsGameTest implements FabricGameTest {
         try {
             helper.assertTrue(dispatch(server, "et config nte_max_cost 500") >= 1,
                 "set nte_max_cost 500 should succeed");
-            helper.assertTrue(dispatch(server, "et config reset all") >= 1,
-                "reset all should succeed");
+            helper.assertTrue(dispatch(server, "et config reset all") >= 1, "reset all should succeed");
             String fileText = Files.readString(Path.of(path));
             helper.assertTrue(fileText.contains("nte_max_cost=2147483647"),
                 "reset all should persist the bundled default nte_max_cost=2147483647 to disk");
@@ -212,18 +229,20 @@ public class CommandsGameTest implements FabricGameTest {
 
     // permission gate (base "et" requires level 2)
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void permissionLevelTwoGate(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
         ServerCommandSource playerSource = player.getCommandSource();
 
         // a mock (non-op) player resolves to permission level 0, below the level-2 gate
-        helper.assertTrue(!playerSource.hasPermissionLevel(2),
-            "mock player should be below permission level 2");
+        helper.assertTrue(!playerSource.hasPermissionLevel(2), "mock player should be below permission level 2");
 
-        // the base "et" node is filtered out for a source that fails its requirement, so the
-        // dispatcher cannot find the command and execute throws (rather than running anything)
+        // the base "et" node is filtered out for a source that fails its requirement,
+        // so the
+        // dispatcher cannot find the command and execute throws (rather than running
+        // anything)
         boolean denied = false;
         try {
             server.getCommandManager().getDispatcher().execute("et config list", playerSource);
@@ -233,27 +252,27 @@ public class CommandsGameTest implements FabricGameTest {
         helper.assertTrue(denied, "a source below level 2 should be denied (dispatch throws)");
 
         // contrast: the level-4 server source succeeds on the same command
-        helper.assertTrue(dispatch(server, "et config list") >= 1,
-            "the level-4 server source should be allowed");
+        helper.assertTrue(dispatch(server, "et config list") >= 1, "the level-4 server source should be allowed");
         helper.complete();
     }
 
     // /et config <key> <value> boolString normalization
 
     // `greedyString` value + boolString: yes/off aliases normalize to true/false
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setBoolAliasesThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
             helper.assertTrue(dispatch(server, "et config cheap_names yes") >= 1, "'yes' should be accepted");
             helper.assertTrue("true".equals(ETMixinPlugin.getConfig().getOrDefault("cheap_names", null)),
-                "'yes' should normalize to 'true' (got "
-                    + ETMixinPlugin.getConfig().getOrDefault("cheap_names", null) + ")");
+                "'yes' should normalize to 'true' (got " + ETMixinPlugin.getConfig().getOrDefault("cheap_names", null)
+                    + ")");
 
             helper.assertTrue(dispatch(server, "et config cheap_names off") >= 1, "'off' should be accepted");
             helper.assertTrue("false".equals(ETMixinPlugin.getConfig().getOrDefault("cheap_names", null)),
-                "'off' should normalize to 'false' (got "
-                    + ETMixinPlugin.getConfig().getOrDefault("cheap_names", null) + ")");
+                "'off' should normalize to 'false' (got " + ETMixinPlugin.getConfig().getOrDefault("cheap_names", null)
+                    + ")");
         } finally {
             // setCommand persists; restore memory + disk to the bundled default
             ETMixinPlugin.getConfig().set("cheap_names", "false");
@@ -262,10 +281,12 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setInvalidValueRejected(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
-        // `nte_max_cost` is an INTEGER key; "banana" fails schema validation -> SetCommand returns 0
+        // `nte_max_cost` is an INTEGER key; "banana" fails schema validation ->
+        // SetCommand returns 0
         String before = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", null);
         int result = dispatch(server, "et config nte_max_cost banana");
         String after = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", null);
@@ -275,7 +296,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setValidValueThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
@@ -292,7 +314,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setBooleanThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
@@ -308,7 +331,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setCommaListThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
@@ -327,18 +351,23 @@ public class CommandsGameTest implements FabricGameTest {
 
     // schema rejection via real dispatch (SetCommand -> ETConfigSchema)
 
-    // integer key: overflow and a decimal literal both fail Integer.parseInt -> return 0, unchanged
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // integer key: overflow and a decimal literal both fail Integer.parseInt ->
+    // return 0, unchanged
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void integerSchemaRejectionsThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         assertRejectedUnchanged(helper, server, "nte_max_cost", "2147483648"); // > `Integer.MAX_VALUE`
-        assertRejectedUnchanged(helper, server, "nte_max_cost", "1.5");        // decimal for an int key
+        assertRejectedUnchanged(helper, server, "nte_max_cost", "1.5"); // decimal for an int key
         helper.complete();
     }
 
-    // decimal key: SetCommand lowercases the value, and lowercase "nan"/"infinity" are NOT accepted
-    // by Double.parseDouble (only "NaN"/"Infinity" are), so both are rejected -> return 0, unchanged
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // decimal key: SetCommand lowercases the value, and lowercase "nan"/"infinity"
+    // are NOT accepted
+    // by Double.parseDouble (only "NaN"/"Infinity" are), so both are rejected ->
+    // return 0, unchanged
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void decimalSchemaRejectionsThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         assertRejectedUnchanged(helper, server, "anvil_damage_chance", "nan");
@@ -347,7 +376,8 @@ public class CommandsGameTest implements FabricGameTest {
     }
 
     // boolean key: a non-boolean word is rejected -> return 0, unchanged
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void booleanSchemaRejectionThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         assertRejectedUnchanged(helper, server, "cheap_names", "banana");
@@ -356,7 +386,8 @@ public class CommandsGameTest implements FabricGameTest {
 
     // reserved keys are read-only for SET/RESET
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void resetReservedRejected(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         String before = ETMixinPlugin.getConfig().getOrDefault("config_version", null);
@@ -367,7 +398,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setReservedRejected(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         String before = ETMixinPlugin.getConfig().getOrDefault("config_version", null);
@@ -378,8 +410,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void modEnabledToggleThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         // capmod's own key is satisfied, so only mod_enabled can gate CapmodMixin off
@@ -415,7 +447,8 @@ public class CommandsGameTest implements FabricGameTest {
 
     // value suggestions
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void valueSuggestionCandidates(TestContext helper) {
         DynamicRegistryManager rm = helper.getWorld().getRegistryManager();
 
@@ -445,14 +478,14 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void valueSuggestionSegmentCompletionThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
 
         // a bare prefix completes the (only) segment: "sharp" -> "sharpness"
         List<String> first = completions(server, "et config disable_enchantments sharp");
-        helper.assertTrue(first.contains("sharpness"),
-            "'sharp' should suggest 'sharpness' (got " + first + ")");
+        helper.assertTrue(first.contains("sharpness"), "'sharp' should suggest 'sharpness' (got " + first + ")");
 
         List<String> segment = completions(server, "et config disable_enchantments sharpness,mend");
         helper.assertTrue(segment.contains("sharpness,mending"),
@@ -461,9 +494,12 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // drive the ValueSuggestion.PROVIDER itself (not the pure candidatesFor helper) through the
-    // dispatcher's completion machinery for every value type plus the reserved/unknown empty cases
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // drive the ValueSuggestion.PROVIDER itself (not the pure candidatesFor helper)
+    // through the
+    // dispatcher's completion machinery for every value type plus the
+    // reserved/unknown empty cases
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void valueSuggestionProviderThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
 
@@ -489,15 +525,15 @@ public class CommandsGameTest implements FabricGameTest {
 
         // unknown key -> no candidates
         List<String> unknown = completions(server, "et config not_a_real_key ");
-        helper.assertTrue(unknown.isEmpty(),
-            "an unknown key should offer no value completions (got " + unknown + ")");
+        helper.assertTrue(unknown.isEmpty(), "an unknown key should offer no value completions (got " + unknown + ")");
 
         helper.complete();
     }
 
     // the enchanttweaker alias node
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void enchanttweakerAliasDispatches(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         helper.assertTrue(dispatch(server, "enchanttweaker config list") >= 1,
@@ -507,7 +543,8 @@ public class CommandsGameTest implements FabricGameTest {
 
     // trivial no-arg executors
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void trivialExecutorsSucceed(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         helper.assertTrue(dispatch(server, "et") == 1, "'et' base command should return SINGLE_SUCCESS");
@@ -518,7 +555,8 @@ public class CommandsGameTest implements FabricGameTest {
 
     // /et diagnose + accessors
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void diagnoseAccessorsAndCommand(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
 
@@ -533,12 +571,15 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // desynced-feature branch: config says on but the mixin is gated off by mod_enabled=false
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // desynced-feature branch: config says on but the mixin is gated off by
+    // mod_enabled=false
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void diagnoseReportsModDisabledDesync(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         ETTestHelper.setFeature("cheap_names", true);
-        // memory-only mod_enabled=false (not persisted); clears caches so getMixinConfig recomputes
+        // memory-only mod_enabled=false (not persisted); clears caches so
+        // getMixinConfig recomputes
         ETTestHelper.setConfigValue("mod_enabled", "false");
         CapturingOutput out = new CapturingOutput();
         try {
@@ -553,8 +594,10 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // anvil-repair cost note branches: 0 = disabled, non-multiple-of-9 = not block-payable
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // anvil-repair cost note branches: 0 = disabled, non-multiple-of-9 = not
+    // block-payable
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void diagnoseAnvilCostBranches(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
@@ -575,7 +618,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void setUnknownKeyRejected(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         CapturingOutput out = new CapturingOutput();
@@ -590,8 +634,10 @@ public class CommandsGameTest implements FabricGameTest {
     }
 
     // keys are case-insensitive (GetCommand/SetCommand both lowercase)
-    // word() accepts uppercase, and both commands call toLowerCase() before the map lookup
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // word() accepts uppercase, and both commands call toLowerCase() before the map
+    // lookup
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void keyIsCaseInsensitiveThroughDispatch(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         helper.assertTrue(dispatch(server, "et config CHEAP_NAMES") >= 1,
@@ -609,7 +655,8 @@ public class CommandsGameTest implements FabricGameTest {
     }
 
     // /et help lists every registered subcommand
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void helpListsAllSubcommands(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         CapturingOutput out = new CapturingOutput();
@@ -617,14 +664,15 @@ public class CommandsGameTest implements FabricGameTest {
         helper.assertTrue(result == 1, "help should return SINGLE_SUCCESS");
         String text = out.text();
         // commands registers reload/config/diagnose; help is appended after them
-        for (String sub : new String[] {"config", "reload", "diagnose", "help"}) {
+        for (String sub : new String[]{"config", "reload", "diagnose", "help"}) {
             helper.assertTrue(text.contains("/et " + sub),
                 "help should list the '" + sub + "' subcommand (got: " + text + ")");
         }
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void diagnoseOmitsRestartCruft(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         CapturingOutput out = new CapturingOutput();
@@ -639,8 +687,10 @@ public class CommandsGameTest implements FabricGameTest {
     }
 
     // feedback wording for GET / SET / RESET
-    // checks the human-facing phrasing (and that a normal-key SET emits no restart note)
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    // checks the human-facing phrasing (and that a normal-key SET emits no restart
+    // note)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void feedbackWordingGetSetReset(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
 
@@ -664,14 +714,16 @@ public class CommandsGameTest implements FabricGameTest {
             helper.assertTrue(resetOut.text().contains("reset to"),
                 "reset feedback should read \"... reset to ...\" (got: " + resetOut.text() + ")");
         } finally {
-            // `better_mending` default is false; the reset above already restored it, this is a safety net
+            // `better_mending` default is false; the reset above already restored it, this
+            // is a safety net
             ETMixinPlugin.getConfig().set("better_mending", "false");
             ETMixinPlugin.clearCaches();
         }
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void resetAllCountPluralization(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
@@ -694,7 +746,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void outOfRangeValuesAccepted(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
@@ -720,7 +773,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void commaListStoredVerbatim(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
@@ -736,13 +790,15 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void listKeyClearedViaReset(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
             helper.assertTrue(dispatch(server, "et config disable_enchantments sharpness,mending") >= 1,
                 "setting an enchantment comma list should succeed");
-            helper.assertTrue("sharpness,mending".equals(ETMixinPlugin.getConfig().getOrDefault("disable_enchantments", null)),
+            helper.assertTrue(
+                "sharpness,mending".equals(ETMixinPlugin.getConfig().getOrDefault("disable_enchantments", null)),
                 "disable_enchantments should hold the comma list");
 
             helper.assertTrue(dispatch(server, "et config reset disable_enchantments") >= 1,
@@ -756,7 +812,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void clientLocalKeySetFromServer(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         try {
@@ -772,7 +829,8 @@ public class CommandsGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void overviewOmitsReservedOnlyCategory(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         CapturingOutput out = new CapturingOutput();
@@ -789,16 +847,19 @@ public class CommandsGameTest implements FabricGameTest {
     }
 
     // per-category out-of-range page (distinct from the "all 9999" path)
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void perCategoryPageOutOfRange(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
-        // `anvil_tweaks` (10 keys) fits on one page (PAGE_SIZE=15), so page 2 is out of range
+        // `anvil_tweaks` (10 keys) fits on one page (PAGE_SIZE=15), so page 2 is out of
+        // range
         helper.assertTrue(dispatch(server, "et config list anvil_tweaks 2") == 0,
             "an out-of-range page for a single category should fail (return 0)");
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void modEnabledNoOpStillEmitsRestartNote(TestContext helper) {
         MinecraftServer server = helper.getWorld().getServer();
         // force the pre-state to true so the measured set below is a genuine no-op
@@ -826,7 +887,10 @@ public class CommandsGameTest implements FabricGameTest {
         }
     }
 
-    /** dispatches with a level-4 source whose output records every emitted feedback/error Text */
+    /**
+     * dispatches with a level-4 source whose output records every emitted
+     * feedback/error Text
+     */
     private static int dispatchCapturing(MinecraftServer server, String command, CapturingOutput out) {
         ServerCommandSource source = server.getCommandSource().withOutput(out);
         try {
@@ -836,7 +900,10 @@ public class CommandsGameTest implements FabricGameTest {
         }
     }
 
-    /** dispatches a set that must be rejected by the schema, asserting the value is untouched */
+    /**
+     * dispatches a set that must be rejected by the schema, asserting the value is
+     * untouched
+     */
     private static void assertRejectedUnchanged(TestContext helper, MinecraftServer server, String key, String value) {
         String before = ETMixinPlugin.getConfig().getOrDefault(key, null);
         int result = dispatch(server, "et config " + key + " " + value);
@@ -848,10 +915,9 @@ public class CommandsGameTest implements FabricGameTest {
     }
 
     private static List<String> completions(MinecraftServer server, String command) {
-        ParseResults<ServerCommandSource> parse =
-            server.getCommandManager().getDispatcher().parse(command, server.getCommandSource());
-        Suggestions suggestions =
-            server.getCommandManager().getDispatcher().getCompletionSuggestions(parse).join();
+        ParseResults<ServerCommandSource> parse = server.getCommandManager().getDispatcher().parse(command,
+            server.getCommandSource());
+        Suggestions suggestions = server.getCommandManager().getDispatcher().getCompletionSuggestions(parse).join();
         return suggestions.getList().stream().map(Suggestion::getText).toList();
     }
 

@@ -1,8 +1,5 @@
 package com.adibarra.enchanttweaker;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,15 +12,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** static schema describing the value type of every config key, inferred from the bundled default properties file */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * static schema describing the value type of every config key, inferred from
+ * the bundled default properties file
+ */
 public final class ETConfigSchema {
 
-    public enum ValueType { BOOLEAN, INTEGER, DECIMAL, LIST }
+    public enum ValueType {
+        BOOLEAN, INTEGER, DECIMAL, LIST
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EnchantTweaker.MOD_NAME);
     private static final String DEFAULT_CONFIG_PATH = "assets/enchanttweaker/enchant-tweaker.properties";
 
-    // linkedHashMap/LinkedHashSet everywhere so category and key iteration order matches file order
+    // linkedHashMap/LinkedHashSet everywhere so category and key iteration order
+    // matches file order
     private static final Map<String, ValueType> SCHEMA = new LinkedHashMap<>();
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
     private static final Map<String, String> CATEGORY_OF = new LinkedHashMap<>();
@@ -42,7 +48,8 @@ public final class ETConfigSchema {
             String currentCategory = null;
             for (String raw : loadDefaults()) {
                 String trimmed = raw.trim();
-                if (trimmed.isEmpty()) continue;
+                if (trimmed.isEmpty())
+                    continue;
 
                 // category header detection must run before the generic comment skip below,
                 // because section headers also begin with '#'
@@ -54,11 +61,13 @@ public final class ETConfigSchema {
                     continue;
                 }
 
-                if (trimmed.startsWith("#")) continue;
+                if (trimmed.startsWith("#"))
+                    continue;
 
                 String line = trimmed.toLowerCase();
                 String[] keyPair = line.split("=", 2);
-                if (keyPair.length != 2) continue;
+                if (keyPair.length != 2)
+                    continue;
 
                 String key = keyPair[0].trim();
                 String value = keyPair[1].trim();
@@ -84,30 +93,36 @@ public final class ETConfigSchema {
 
     /** detects a top-level category header */
     private static String parseCategoryHeader(String trimmed) {
-        if (!trimmed.startsWith("###") || trimmed.startsWith("####")) return null;
+        if (!trimmed.startsWith("###") || trimmed.startsWith("####"))
+            return null;
         String rest = trimmed.substring(3).trim();
-        if (rest.isEmpty() || rest.startsWith("#") || !rest.endsWith(":")) return null;
+        if (rest.isEmpty() || rest.startsWith("#") || !rest.endsWith(":"))
+            return null;
         return rest.substring(0, rest.length() - 1).trim().toLowerCase().replace(' ', '_');
     }
 
     /** loads the bundled default config lines from the classpath */
     private static List<String> loadDefaults() {
         InputStream is = ETConfigSchema.class.getClassLoader().getResourceAsStream(DEFAULT_CONFIG_PATH);
-        if (is == null) return Collections.emptyList();
+        if (is == null)
+            return Collections.emptyList();
         return new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8)).lines().toList();
     }
 
     /** infers the config value type */
     private static ValueType inferType(String value) {
-        if (value.equals("true") || value.equals("false")) return ValueType.BOOLEAN;
+        if (value.equals("true") || value.equals("false"))
+            return ValueType.BOOLEAN;
         try {
             Integer.parseInt(value);
             return ValueType.INTEGER;
-        } catch (NumberFormatException ignored) { }
+        } catch (NumberFormatException ignored) {
+        }
         try {
             Double.parseDouble(value);
             return ValueType.DECIMAL;
-        } catch (NumberFormatException ignored) { }
+        } catch (NumberFormatException ignored) {
+        }
         return ValueType.LIST;
     }
 
@@ -130,7 +145,8 @@ public final class ETConfigSchema {
     public static Map<String, String> defaults() {
         Map<String, String> out = new LinkedHashMap<>();
         for (Map.Entry<String, String> entry : DEFAULTS.entrySet()) {
-            if (!RESERVED.contains(entry.getKey())) out.put(entry.getKey(), entry.getValue());
+            if (!RESERVED.contains(entry.getKey()))
+                out.put(entry.getKey(), entry.getValue());
         }
         return Collections.unmodifiableMap(out);
     }
@@ -140,12 +156,16 @@ public final class ETConfigSchema {
         return CATEGORY_OF.get(key);
     }
 
-    /** gets the category slugs in file order, excluding categories that contain no non-reserved keys */
+    /**
+     * gets the category slugs in file order, excluding categories that contain no
+     * non-reserved keys
+     */
     public static List<String> categories() {
         List<String> out = new ArrayList<>();
         for (String slug : CATEGORY_ORDER) {
             List<String> keys = CATEGORY_KEYS.get(slug);
-            if (keys != null && !keys.isEmpty()) out.add(slug);
+            if (keys != null && !keys.isEmpty())
+                out.add(slug);
         }
         return out;
     }
@@ -159,7 +179,8 @@ public final class ETConfigSchema {
     /** validates a value against its key's inferred type */
     public static boolean isValid(String key, String value) {
         ValueType type = SCHEMA.get(key);
-        if (type == null) return true;
+        if (type == null)
+            return true;
         return switch (type) {
             case BOOLEAN -> value.equals("true") || value.equals("false");
             case INTEGER -> {
@@ -184,7 +205,8 @@ public final class ETConfigSchema {
     /** gets a human-readable hint describing the values accepted for a key */
     public static String expected(String key) {
         ValueType type = SCHEMA.get(key);
-        if (type == null) return "";
+        if (type == null)
+            return "";
         return switch (type) {
             case BOOLEAN -> "true/false";
             case INTEGER -> "an integer";

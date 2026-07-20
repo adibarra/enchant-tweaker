@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.ProtectionEnchantment;
 import org.spongepowered.asm.mixin.Final;
@@ -10,22 +9,29 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+
 /**
- * @description Allow armor to be enchanted with multiple protection enchantments.
+ * @description Allow armor to be enchanted with multiple protection
+ *              enchantments.
  * @environment Server
  */
-@Mixin(value=ProtectionEnchantment.class)
+@Mixin(
+    value = ProtectionEnchantment.class)
 public abstract class GodArmorMixin {
 
-    @Shadow @Final
+    @Shadow
+    @Final
     public ProtectionEnchantment.Type protectionType;
 
     @Inject(
-        method="canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
-        at=@At("HEAD"),
-        cancellable=true)
-    private void enchanttweaker$godArmor$allowAllProtectionEnchants(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
-        if (!ETMixinPlugin.getMixinConfig("GodArmorMixin")) return;
+        method = "canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
+        at = @At("HEAD"),
+        cancellable = true)
+    private void enchanttweaker$godArmor$allowAllProtectionEnchants(Enchantment other,
+        CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("GodArmorMixin"))
+            return;
         if (other instanceof ProtectionEnchantment protectionEnchantment) {
             cir.setReturnValue(this.protectionType != protectionEnchantment.protectionType);
         }

@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -12,26 +11,31 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+
 /**
  * @description lets Channeling enchant work in rain at level 2
  * @environment Server
  */
-@Mixin(value=TridentEntity.class)
+@Mixin(
+    value = TridentEntity.class)
 public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
 
     @SuppressWarnings("unused")
-    protected MoreChannelingMixin(EntityType<? extends PersistentProjectileEntity> entityType, World world, ItemStack stack) {
+    protected MoreChannelingMixin(EntityType<? extends PersistentProjectileEntity> entityType, World world,
+        ItemStack stack) {
         super(entityType, world, stack);
     }
 
     @ModifyExpressionValue(
-        method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
-        at=@At(
-            ordinal=0,
-            value="INVOKE",
-            target="Lnet/minecraft/world/World;isThundering()Z"))
+        method = "onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
+        at = @At(
+            ordinal = 0,
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/World;isThundering()Z"))
     private boolean enchanttweaker$moreChanneling$modifyOnHit(boolean orig) {
-        if (!ETMixinPlugin.getMixinConfig("MoreChannelingMixin")) return orig;
+        if (!ETMixinPlugin.getMixinConfig("MoreChannelingMixin"))
+            return orig;
         boolean isChannelingII = EnchantmentHelper.getLevel(Enchantments.CHANNELING, this.getItemStack()) > 1;
         return orig || (isChannelingII && this.getWorld().isRaining());
     }

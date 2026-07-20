@@ -1,8 +1,14 @@
 package com.adibarra.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
+
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.player.PlayerEntity;
-import org.jetbrains.annotations.Nullable;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -10,13 +16,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.util.collection.DefaultedList;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Predicate;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ADUtils {
@@ -39,22 +39,27 @@ public class ADUtils {
     /**
      * Gets the registry path of an enchantment (e.g. "sharpness", "mending").
      *
-     * @param ench the enchantment
+     * @param ench
+     *            the enchantment
      * @return the path, or empty if not registered
      */
     public static @Nullable String getEnchantmentPath(Enchantment enchantment) {
         String cached = ENCHANTMENT_PATH_CACHE.get(enchantment);
-        if (cached != null) return cached;
+        if (cached != null)
+            return cached;
         String path = Registries.ENCHANTMENT.getKey(enchantment).map(key -> key.getValue().getPath()).orElse(null);
-        if (path != null) ENCHANTMENT_PATH_CACHE.put(enchantment, path);
+        if (path != null)
+            ENCHANTMENT_PATH_CACHE.put(enchantment, path);
         return path;
     }
 
     /**
      * Broadcasts a message to all ops on the server.
      *
-     * @param server the server to broadcast to
-     * @param msg    the message to broadcast
+     * @param server
+     *            the server to broadcast to
+     * @param msg
+     *            the message to broadcast
      */
     public static void broadcastOps(MinecraftServer server, MutableText msg) {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
@@ -67,7 +72,8 @@ public class ADUtils {
     /**
      * Gets a player's hotbar.
      *
-     * @param player the player
+     * @param player
+     *            the player
      * @return the hotbar inventory
      */
     public static Inventory getPlayerHotbar(PlayerEntity player) {
@@ -80,11 +86,14 @@ public class ADUtils {
     }
 
     /**
-     * Gets an item that matches the condition from the given inventories.
-     * Checks inventories in order, returning a random matching item from the first inventory that has one.
+     * Gets an item that matches the condition from the given inventories. Checks
+     * inventories in order, returning a random matching item from the first
+     * inventory that has one.
      *
-     * @param inventories the inventories to search
-     * @param condition the condition
+     * @param inventories
+     *            the inventories to search
+     * @param condition
+     *            the condition
      * @return the matching item, or null if none was found
      */
     public static ItemStack getMatchingItem(List<Inventory> inventories, Predicate<ItemStack> condition) {
@@ -95,13 +104,16 @@ public class ADUtils {
                     list.add(stack);
                 }
             }
-            if (list.isEmpty()) continue;
+            if (list.isEmpty())
+                continue;
             return list.get(ThreadLocalRandom.current().nextInt(list.size()));
         }
         return null;
     }
 
-    /** Returns whether a Binding Curse roll keeps the item instead of dropping it. */
+    /**
+     * Returns whether a Binding Curse roll keeps the item instead of dropping it.
+     */
     public static boolean bindingKeepsItem(int level, double step, float roll) {
         double dropChance = Math.clamp(1.0 + step - step * level, 0.0, 1.0);
         return roll >= dropChance;

@@ -1,12 +1,13 @@
 package com.adibarra.enchanttweaker;
 
-import com.adibarra.enchanttweaker.network.ConfigSyncPayload;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.adibarra.enchanttweaker.network.ConfigSyncPayload;
 
 public class EnchantTweaker implements ModInitializer {
 

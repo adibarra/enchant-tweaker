@@ -1,15 +1,16 @@
 package com.adibarra.enchanttweaker.commands;
 
-import com.adibarra.enchanttweaker.EnchantTweaker;
-import com.adibarra.utils.ADText;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.adibarra.enchanttweaker.EnchantTweaker;
+import com.adibarra.utils.ADText;
 
 /** small helpers for command output */
 public final class CommandFeedback {

@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -13,14 +12,19 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+
 /**
- * @description lets tridents with Loyalty enchant return when thrown into the void
+ * @description lets tridents with Loyalty enchant return when thrown into the
+ *              void
  * @environment Server
  */
-@Mixin(value=TridentEntity.class)
+@Mixin(
+    value = TridentEntity.class)
 public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
 
-    @Shadow @Final
+    @Shadow
+    @Final
     private static TrackedData<Byte> LOYALTY;
 
     @Shadow
@@ -32,11 +36,13 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
     }
 
     @Inject(
-        method="tick()V",
-        at=@At("HEAD"))
+        method = "tick()V",
+        at = @At("HEAD"))
     private void enchanttweaker$loyalVoidTridents$returnFromVoid(CallbackInfo ci) {
-        if (!ETMixinPlugin.getMixinConfig("LoyalVoidTridentsMixin")) return;
-        if (dataTracker.get(LOYALTY) == 0 || this.dealtDamage) return;
+        if (!ETMixinPlugin.getMixinConfig("LoyalVoidTridentsMixin"))
+            return;
+        if (dataTracker.get(LOYALTY) == 0 || this.dealtDamage)
+            return;
 
         if (this.getY() <= this.getWorld().getBottomY()) {
             this.dealtDamage = true;

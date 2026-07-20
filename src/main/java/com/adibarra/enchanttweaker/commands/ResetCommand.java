@@ -1,10 +1,9 @@
 package com.adibarra.enchanttweaker.commands;
 
-import com.adibarra.enchanttweaker.ETCommands;
-import com.adibarra.enchanttweaker.ETConfigSchema;
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.commands.suggestions.ListSuggestion;
-import com.adibarra.utils.ADText;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -13,9 +12,11 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.adibarra.enchanttweaker.ETCommands;
+import com.adibarra.enchanttweaker.ETConfigSchema;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.commands.suggestions.ListSuggestion;
+import com.adibarra.utils.ADText;
 
 /** `/et config reset <key|all>` */
 public class ResetCommand implements Command<ServerCommandSource> {
@@ -25,7 +26,8 @@ public class ResetCommand implements Command<ServerCommandSource> {
         List<String> options = new ArrayList<>();
         options.add("all");
         for (String key : ETMixinPlugin.getConfig().getKeys()) {
-            if (!ETConfigSchema.isReserved(key)) options.add(key);
+            if (!ETConfigSchema.isReserved(key))
+                options.add(key);
         }
         return options;
     });
@@ -36,8 +38,7 @@ public class ResetCommand implements Command<ServerCommandSource> {
         String key = getOptionalString(context, "key");
 
         if (key == null) {
-            CommandFeedback.feedback(source,
-                Text.literal("Usage: "),
+            CommandFeedback.feedback(source, Text.literal("Usage: "),
                 Text.literal("/et config reset ").formatted(Formatting.AQUA),
                 Text.literal("<key|all>").formatted(Formatting.RED));
             return Command.SINGLE_SUCCESS;
@@ -49,16 +50,14 @@ public class ResetCommand implements Command<ServerCommandSource> {
 
     private int resetKey(ServerCommandSource source, String key) {
         if (ETMixinPlugin.getConfig().getOrDefault(key, null) == null) {
-            CommandFeedback.error(source,
-                Text.literal("Key '").formatted(Formatting.GRAY),
+            CommandFeedback.error(source, Text.literal("Key '").formatted(Formatting.GRAY),
                 Text.literal(key).formatted(Formatting.RED),
                 Text.literal("' does not exist.").formatted(Formatting.GRAY));
             return 0;
         }
 
         if (ETConfigSchema.isReserved(key)) {
-            CommandFeedback.error(source,
-                Text.literal("Key '").formatted(Formatting.GRAY),
+            CommandFeedback.error(source, Text.literal("Key '").formatted(Formatting.GRAY),
                 Text.literal(key).formatted(Formatting.RED),
                 Text.literal("' is reserved and cannot be reset.").formatted(Formatting.GRAY));
             return 0;
@@ -78,7 +77,8 @@ public class ResetCommand implements Command<ServerCommandSource> {
         msg.add(Text.literal("'.").formatted(Formatting.GRAY));
         if (key.equals("mod_enabled") && !value.equals(previous)) {
             String isServer = source.getServer().isDedicated() ? "server " : "";
-            msg.add(Text.literal("\nThis change requires a " + isServer + "restart to take effect.").formatted(Formatting.LIGHT_PURPLE));
+            msg.add(Text.literal("\nThis change requires a " + isServer + "restart to take effect.")
+                .formatted(Formatting.LIGHT_PURPLE));
         }
         CommandFeedback.feedback(source, msg);
         return Command.SINGLE_SUCCESS;
@@ -91,7 +91,8 @@ public class ResetCommand implements Command<ServerCommandSource> {
         int restored = 0;
         for (Map.Entry<String, String> entry : defaults.entrySet()) {
             String current = ETMixinPlugin.getConfig().getOrDefault(entry.getKey(), null);
-            if (!entry.getValue().equals(current)) restored++;
+            if (!entry.getValue().equals(current))
+                restored++;
         }
 
         ETMixinPlugin.getConfig().setAllAndPersist(defaults);
@@ -105,7 +106,8 @@ public class ResetCommand implements Command<ServerCommandSource> {
         String defModEnabled = defaults.get("mod_enabled");
         if (defModEnabled != null && !defModEnabled.equals(prevModEnabled)) {
             String isServer = source.getServer().isDedicated() ? "server " : "";
-            msg.add(Text.literal("\nThis change requires a " + isServer + "restart to take effect.").formatted(Formatting.LIGHT_PURPLE));
+            msg.add(Text.literal("\nThis change requires a " + isServer + "restart to take effect.")
+                .formatted(Formatting.LIGHT_PURPLE));
         }
         CommandFeedback.feedback(source, msg);
         return Command.SINGLE_SUCCESS;

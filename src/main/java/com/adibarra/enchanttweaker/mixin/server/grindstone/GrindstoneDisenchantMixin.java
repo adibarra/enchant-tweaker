@@ -1,9 +1,9 @@
 package com.adibarra.enchanttweaker.mixin.server.grindstone;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
+import java.util.ArrayList;
+import java.util.List;
+
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -20,26 +20,38 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
 
 /**
- * @description allow extracting enchantments from items into books via grindstone
- * place an enchanted item + regular book in the grindstone to extract enchantments
- * also supports splitting multi-enchantment books
+ * @description allow extracting enchantments from items into books via
+ *              grindstone place an enchanted item + regular book in the
+ *              grindstone to extract enchantments also supports splitting
+ *              multi-enchantment books
  * @environment Server
  */
-@Mixin(value=GrindstoneScreenHandler.class)
+@Mixin(
+    value = GrindstoneScreenHandler.class)
 public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantAccess {
 
-    @Shadow @Final private Inventory result;
-    @Shadow @Final Inventory input;
+    @Shadow
+    @Final
+    private Inventory result;
 
-    /** which input slot holds the book (0 or 1), or -1 if not a disenchant operation */
+    @Shadow
+    @Final
+    Inventory input;
+
+    /**
+     * which input slot holds the book (0 or 1), or -1 if not a disenchant operation
+     */
     @Unique
     private int enchanttweaker$bookSlot = -1;
 
-    @Inject(method="updateResult()V", at=@At("HEAD"), cancellable=true)
+    @Inject(
+        method = "updateResult()V",
+        at = @At("HEAD"),
+        cancellable = true)
     private void enchanttweaker$grindstoneDisenchant$updateResult(CallbackInfo ci) {
         if (!ETMixinPlugin.getMixinConfig("GrindstoneDisenchantMixin")) {
             enchanttweaker$bookSlot = -1;
@@ -98,11 +110,14 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
         }
 
         result.setStack(0, outputBook);
-        ((GrindstoneScreenHandler)(Object)this).sendContentUpdates();
+        ((GrindstoneScreenHandler) (Object) this).sendContentUpdates();
         ci.cancel();
     }
 
-    /** gets which input slot holds the book (0 or 1), or -1 if not a disenchant operation */
+    /**
+     * gets which input slot holds the book (0 or 1), or -1 if not a disenchant
+     * operation
+     */
     @Unique
     public int enchanttweaker$getBookSlot() {
         return enchanttweaker$bookSlot;

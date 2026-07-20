@@ -1,7 +1,10 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.ADUtils;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
+
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -18,55 +21,63 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.utils.ADUtils;
 
 /**
- * @description scales the Binding Curse enchantment to have a chance of not dropping the item on death
+ * @description scales the Binding Curse enchantment to have a chance of not
+ *              dropping the item on death
  * @environment Server
  */
-@Mixin(value=PlayerInventory.class)
+@Mixin(
+    value = PlayerInventory.class)
 public abstract class MoreBindingMixin {
 
-    // kept-armor is stashed here on death and restored on the AFTER_RESPAWN event below
+    // kept-armor is stashed here on death and restored on the AFTER_RESPAWN event
+    // below
     @Unique
     private static final Map<UUID, Map<Integer, ItemStack>> BOUND_ARMOR = new ConcurrentHashMap<>();
+
     static {
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
             Map<Integer, ItemStack> armorMap = BOUND_ARMOR.remove(oldPlayer.getUuid());
-            if (armorMap == null) return;
+            if (armorMap == null)
+                return;
             for (Map.Entry<Integer, ItemStack> entry : armorMap.entrySet()) {
                 newPlayer.getInventory().armor.set(entry.getKey(), entry.getValue());
             }
         });
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
-            BOUND_ARMOR.remove(handler.getPlayer().getUuid()));
+        ServerPlayConnectionEvents.DISCONNECT
+            .register((handler, server) -> BOUND_ARMOR.remove(handler.getPlayer().getUuid()));
     }
 
-    @Shadow @Final
+    @Shadow
+    @Final
     public DefaultedList<ItemStack> armor;
 
-    @Shadow @Final
+    @Shadow
+    @Final
     public PlayerEntity player;
 
     @ModifyExpressionValue(
-        method="dropAll()V",
-        at=@At(
-            ordinal=0,
-            value="INVOKE",
-            target="Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-        private boolean enchanttweaker$moreBinding$modifyDropAll(boolean orig, @Local ItemStack stack) {
-        if (!ETMixinPlugin.getMixinConfig("MoreBindingMixin")) return orig;
-        if (orig) return true;
-        if (!armor.contains(stack)) return false;
+        method = "dropAll()V",
+        at = @At(
+            ordinal = 0,
+            value = "INVOKE",
+            target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
+    private boolean enchanttweaker$moreBinding$modifyDropAll(boolean orig, @Local ItemStack stack) {
+        if (!ETMixinPlugin.getMixinConfig("MoreBindingMixin"))
+            return orig;
+        if (orig)
+            return true;
+        if (!armor.contains(stack))
+            return false;
 
         int bindingLevel = EnchantmentHelper.getLevel(Enchantments.BINDING_CURSE, stack);
         double step = ETMixinPlugin.getConfig().getOrDefault("more_binding_step", 0.1);
         if (ADUtils.bindingKeepsItem(bindingLevel, step, ThreadLocalRandom.current().nextFloat())) {
-            BOUND_ARMOR.computeIfAbsent(player.getUuid(), k -> new ConcurrentHashMap<>())
-                       .put(armor.indexOf(stack), stack.copy());
+            BOUND_ARMOR.computeIfAbsent(player.getUuid(), k -> new ConcurrentHashMap<>()).put(armor.indexOf(stack),
+                stack.copy());
             return true;
         }
         return false;

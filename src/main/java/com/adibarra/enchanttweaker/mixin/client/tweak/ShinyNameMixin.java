@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.client.tweak;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.ADShiny;
+import java.util.concurrent.ThreadLocalRandom;
+
 import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -14,16 +14,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.concurrent.ThreadLocalRandom;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.utils.ADShiny;
 
 /**
- * @description makes the enchantment name yellow when at max level
- * also adds a 'charged' effect. Ignores curse enchantments
+ * @description makes the enchantment name yellow when at max level also adds a
+ *              'charged' effect. Ignores curse enchantments
  * @note uses the client's mod config for max enchantment levels
  * @environment Client
  */
 @Environment(EnvType.CLIENT)
-@Mixin(value=Enchantment.class)
+@Mixin(
+    value = Enchantment.class)
 public abstract class ShinyNameMixin {
 
     @Shadow
@@ -33,15 +35,12 @@ public abstract class ShinyNameMixin {
     public abstract boolean isCursed();
 
     @Inject(
-        method="getName(I)Lnet/minecraft/text/Text;",
-        at=@At("TAIL"))
+        method = "getName(I)Lnet/minecraft/text/Text;",
+        at = @At("TAIL"))
     private void getName(int level, CallbackInfoReturnable<Text> cir, @Local MutableText mutableText) {
-        if (!ETMixinPlugin.getMixinConfig("ShinyNameMixin")) return;
-        ADShiny.applyNameStyle(
-            mutableText,
-            level,
-            this.getMaxLevel(),
-            this.isCursed(),
+        if (!ETMixinPlugin.getMixinConfig("ShinyNameMixin"))
+            return;
+        ADShiny.applyNameStyle(mutableText, level, this.getMaxLevel(), this.isCursed(),
             ThreadLocalRandom.current().nextFloat());
     }
 }

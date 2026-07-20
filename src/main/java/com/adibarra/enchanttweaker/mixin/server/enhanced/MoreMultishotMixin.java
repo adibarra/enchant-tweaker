@@ -1,6 +1,5 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
@@ -10,19 +9,27 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+
 /**
- * @description scales the number of the arrows fired by Multishot enchant based on its level
+ * @description scales the number of the arrows fired by Multishot enchant based
+ *              on its level
  * @environment Server
  */
-@Mixin(value=RangedWeaponItem.class)
+@Mixin(
+    value = RangedWeaponItem.class)
 public abstract class MoreMultishotMixin {
     @ModifyConstant(
-        method="load(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;)Ljava/util/List;",
-        constant=@Constant(intValue=3, ordinal=0))
-    private static int enchanttweaker$moreMultishot$modifyNumProjectiles(int orig, ItemStack weaponStack, ItemStack projectileStack, LivingEntity shooter) {
-        if (!ETMixinPlugin.getMixinConfig("MoreMultishotMixin")) return orig;
+        method = "load(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;)Ljava/util/List;",
+        constant = @Constant(
+            intValue = 3,
+            ordinal = 0))
+    private static int enchanttweaker$moreMultishot$modifyNumProjectiles(int orig, ItemStack weaponStack,
+        ItemStack projectileStack, LivingEntity shooter) {
+        if (!ETMixinPlugin.getMixinConfig("MoreMultishotMixin"))
+            return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_multishot_per_level", 2);
         int multishotLevel = EnchantmentHelper.getLevel(Enchantments.MULTISHOT, weaponStack);
-        return Math.toIntExact((long)multishotLevel * Math.max(0, perLevel) + 1);
+        return Math.toIntExact((long) multishotLevel * Math.max(0, perLevel) + 1);
     }
 }

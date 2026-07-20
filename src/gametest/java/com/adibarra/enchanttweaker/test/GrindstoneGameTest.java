@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker.test;
 
-import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
+import java.util.List;
+
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -21,13 +22,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.GameMode;
 
-import java.util.List;
+import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
 
 public class GrindstoneGameTest implements FabricGameTest {
 
     // gameplay helpers (private to this test; ETTestHelper is read-only)
 
-    /** the handler's shared input inventory, exposed by GrindstoneDisenchantMixin's duck interface */
+    /**
+     * the handler's shared input inventory, exposed by GrindstoneDisenchantMixin's
+     * duck interface
+     */
     private static Inventory grindstoneInput(GrindstoneScreenHandler handler) {
         return ((GrindstoneDisenchantAccess) handler).enchanttweaker$getInput();
     }
@@ -53,14 +57,16 @@ public class GrindstoneGameTest implements FabricGameTest {
     private static ItemStack findInInventory(ServerPlayerEntity player, Item item) {
         for (int i = 0; i < player.getInventory().size(); i++) {
             ItemStack s = player.getInventory().getStack(i);
-            if (s.isOf(item)) return s;
+            if (s.isOf(item))
+                return s;
         }
         return ItemStack.EMPTY;
     }
 
     // grindstoneDisenchant: updateResult (real onContentChanged path)
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantToBook(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -85,7 +91,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantCursesStay(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -102,8 +109,7 @@ public class GrindstoneGameTest implements FabricGameTest {
 
             helper.assertFalse(result.isEmpty(), "Grindstone should produce output");
             ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(result);
-            helper.assertTrue(enchants.getLevel(Enchantments.SHARPNESS) == 3,
-                "Output book should have Sharpness 3");
+            helper.assertTrue(enchants.getLevel(Enchantments.SHARPNESS) == 3, "Output book should have Sharpness 3");
             helper.assertTrue(enchants.getLevel(Enchantments.VANISHING_CURSE) == 0,
                 "Output book should NOT have Vanishing Curse");
         } finally {
@@ -112,13 +118,15 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantSplitBook(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
 
-        // a book with 2 enchantments: splitting extracts exactly one onto the output book
+        // a book with 2 enchantments: splitting extracts exactly one onto the output
+        // book
         ItemStack enchantedBook = new ItemStack(Items.ENCHANTED_BOOK);
         enchantedBook.addEnchantment(Enchantments.SHARPNESS, 3);
         enchantedBook.addEnchantment(Enchantments.UNBREAKING, 2);
@@ -138,7 +146,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantSingleEnchantBook(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -155,15 +164,15 @@ public class GrindstoneGameTest implements FabricGameTest {
 
             helper.assertFalse(result.isEmpty(), "Single-enchant book should still produce output");
             ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(result);
-            helper.assertTrue(enchants.getLevel(Enchantments.SHARPNESS) == 5,
-                "Output should have Sharpness 5");
+            helper.assertTrue(enchants.getLevel(Enchantments.SHARPNESS) == 5, "Output should have Sharpness 5");
         } finally {
             ETTestHelper.setFeature("grindstone_disenchant", false);
         }
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantDisabled(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", false);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -176,19 +185,21 @@ public class GrindstoneGameTest implements FabricGameTest {
         placeAndUpdate(handler, book, sword);
         ItemStack result = resultStack(handler);
 
-        // with the feature off, vanilla grindstone can't combine a book with a sword: empty output
-        helper.assertTrue(result.isEmpty(),
-            "Grindstone disenchant disabled should not produce enchanted book output");
+        // with the feature off, vanilla grindstone can't combine a book with a sword:
+        // empty output
+        helper.assertTrue(result.isEmpty(), "Grindstone disenchant disabled should not produce enchanted book output");
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantCursesOnly(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
 
-        // item with only curses: no non-curse enchant to extract, so it falls through to vanilla
+        // item with only curses: no non-curse enchant to extract, so it falls through
+        // to vanilla
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
         sword.addEnchantment(Enchantments.VANISHING_CURSE, 1);
         ItemStack book = new ItemStack(Items.BOOK);
@@ -197,18 +208,20 @@ public class GrindstoneGameTest implements FabricGameTest {
             placeAndUpdate(handler, book, sword);
             ItemStack result = resultStack(handler);
 
-            helper.assertTrue(result.isEmpty(),
-                "Curse-only item should not produce enchanted book output");
+            helper.assertTrue(result.isEmpty(), "Curse-only item should not produce enchanted book output");
         } finally {
             ETTestHelper.setFeature("grindstone_disenchant", false);
         }
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantNotADisenchantSetup(TestContext helper) {
-        // `updateResult` bookSlot==-1 fall-through: feature ON, but neither slot qualifies
-        // (plain book + UNENCHANTED sword => no enchantments to extract => vanilla => empty)
+        // `updateResult` bookSlot==-1 fall-through: feature ON, but neither slot
+        // qualifies
+        // (plain book + UNENCHANTED sword => no enchantments to extract => vanilla =>
+        // empty)
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
@@ -226,8 +239,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneInputAcceptsPlainBookWhenEnabled(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -244,13 +257,15 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(handler.getSlot(1).canInsert(book),
                 "Input slot 1 should accept a plain book when grindstone_disenchant is on");
 
-            // regression: a damageable item is still accepted (vanilla predicate untouched) on BOTH slots
+            // regression: a damageable item is still accepted (vanilla predicate untouched)
+            // on BOTH slots
             helper.assertTrue(handler.getSlot(0).canInsert(sword),
                 "Input slot 0 should still accept a damageable item");
             helper.assertTrue(handler.getSlot(1).canInsert(sword),
                 "Input slot 1 ($3) should still accept a damageable item");
 
-            // not broadened to junk: a non-book, non-damageable, unenchanted item is still rejected on BOTH slots
+            // not broadened to junk: a non-book, non-damageable, unenchanted item is still
+            // rejected on BOTH slots
             helper.assertFalse(handler.getSlot(0).canInsert(dirt),
                 "Input slot 0 should still reject a non-book, non-damageable item");
             helper.assertFalse(handler.getSlot(1).canInsert(dirt),
@@ -261,14 +276,16 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneInputRejectsPlainBookWhenDisabled(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", false);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
 
         ItemStack book = new ItemStack(Items.BOOK);
-        // feature off: vanilla predicate applies, so a plain book is rejected by both input slots
+        // feature off: vanilla predicate applies, so a plain book is rejected by both
+        // input slots
         helper.assertFalse(handler.getSlot(0).canInsert(book),
             "Input slot 0 should reject a plain book when grindstone_disenchant is off");
         helper.assertFalse(handler.getSlot(1).canInsert(book),
@@ -276,8 +293,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantKeepItem(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -299,8 +316,7 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(handler.getSlot(1).getStack().isEmpty(), "Input slot 1 should be emptied after takeout");
 
             ItemStack returned = findInInventory(player, Items.DIAMOND_SWORD);
-            helper.assertFalse(returned.isEmpty(),
-                "keep_item=true should return the disenchanted sword to the player");
+            helper.assertFalse(returned.isEmpty(), "keep_item=true should return the disenchanted sword to the player");
             helper.assertTrue(EnchantmentHelper.getEnchantments(returned).getLevel(Enchantments.SHARPNESS) == 0,
                 "Returned sword should have Sharpness stripped (got "
                     + EnchantmentHelper.getEnchantments(returned).getLevel(Enchantments.SHARPNESS) + ")");
@@ -311,7 +327,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantConsumeItem(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "false");
@@ -343,7 +360,8 @@ public class GrindstoneGameTest implements FabricGameTest {
 
     // grindstoneOutputSlot: keep-branch variants additional cases
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantSplitBookKeepBranch(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -368,8 +386,8 @@ public class GrindstoneGameTest implements FabricGameTest {
             boolean extractedSharp = outSharp == 3 && outUnbreak == 0;
             boolean extractedUnbreak = outSharp == 0 && outUnbreak == 2;
             helper.assertTrue(extractedSharp || extractedUnbreak,
-                "Output book must be exactly one of the source enchants at full level (Sharp=" + outSharp
-                    + ", Unbreak=" + outUnbreak + ")");
+                "Output book must be exactly one of the source enchants at full level (Sharp=" + outSharp + ", Unbreak="
+                    + outUnbreak + ")");
 
             handler.getSlot(2).onTakeItem(player, result);
 
@@ -377,7 +395,8 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(handler.getSlot(0).getStack().isEmpty(), "Input slot 0 should be emptied after takeout");
             helper.assertTrue(handler.getSlot(1).getStack().isEmpty(), "Input slot 1 should be emptied after takeout");
 
-            // `keep_item=true:` the source book returns with the extracted enchant removed, the other kept
+            // `keep_item=true:` the source book returns with the extracted enchant removed,
+            // the other kept
             ItemStack kept = findInInventory(player, Items.ENCHANTED_BOOK);
             helper.assertFalse(kept.isEmpty(), "keep_item=true should return the leftover enchanted book");
             helper.assertTrue(enchantCount(kept) == 1,
@@ -386,12 +405,12 @@ public class GrindstoneGameTest implements FabricGameTest {
             int keptUnbreak = EnchantmentHelper.getEnchantments(kept).getLevel(Enchantments.UNBREAKING);
             if (extractedSharp) {
                 helper.assertTrue(keptSharp == 0 && keptUnbreak == 2,
-                    "Extracted Sharpness => leftover keeps Unbreaking 2 only (Sharp=" + keptSharp
-                        + ", Unbreak=" + keptUnbreak + ")");
+                    "Extracted Sharpness => leftover keeps Unbreaking 2 only (Sharp=" + keptSharp + ", Unbreak="
+                        + keptUnbreak + ")");
             } else {
                 helper.assertTrue(keptSharp == 3 && keptUnbreak == 0,
-                    "Extracted Unbreaking => leftover keeps Sharpness 3 only (Sharp=" + keptSharp
-                        + ", Unbreak=" + keptUnbreak + ")");
+                    "Extracted Unbreaking => leftover keeps Sharpness 3 only (Sharp=" + keptSharp + ", Unbreak="
+                        + keptUnbreak + ")");
             }
         } finally {
             ETTestHelper.setFeature("grindstone_disenchant", false);
@@ -400,10 +419,12 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantKeepBranchRemainingEmpty(TestContext helper) {
         // book keep branch, remaining EMPTY => plain Items.BOOK returned
-        // book(Sharpness5, single enchant) + plain book: all extracted, source has nothing left
+        // book(Sharpness5, single enchant) + plain book: all extracted, source has
+        // nothing left
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -423,7 +444,8 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(handler.getSlot(0).getStack().isEmpty(), "Input slot 0 should be emptied after takeout");
             helper.assertTrue(handler.getSlot(1).getStack().isEmpty(), "Input slot 1 should be emptied after takeout");
 
-            // remaining empty => the returned item degrades to a PLAIN book, not an enchanted book
+            // remaining empty => the returned item degrades to a PLAIN book, not an
+            // enchanted book
             ItemStack returnedPlain = findInInventory(player, Items.BOOK);
             helper.assertFalse(returnedPlain.isEmpty(),
                 "keep_item=true with nothing remaining should return a plain Items.BOOK");
@@ -438,10 +460,12 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantKeepBranchPreservesCurse(TestContext helper) {
         // regular-item keep branch preserves curses
-        // sword(Sharpness3 + VanishingCurse1) + book: Sharpness goes to the output book; taking it
+        // sword(Sharpness3 + VanishingCurse1) + book: Sharpness goes to the output
+        // book; taking it
         // returns the sword with Sharpness stripped but the curse retained
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -468,8 +492,8 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(kept.getLevel(Enchantments.SHARPNESS) == 0,
                 "Returned sword should have Sharpness stripped (got " + kept.getLevel(Enchantments.SHARPNESS) + ")");
             helper.assertTrue(kept.getLevel(Enchantments.VANISHING_CURSE) == 1,
-                "Returned sword should still carry Vanishing Curse (got "
-                    + kept.getLevel(Enchantments.VANISHING_CURSE) + ")");
+                "Returned sword should still carry Vanishing Curse (got " + kept.getLevel(Enchantments.VANISHING_CURSE)
+                    + ")");
         } finally {
             ETTestHelper.setFeature("grindstone_disenchant", false);
             ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -477,7 +501,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantSplitBookWithCurse(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -498,15 +523,14 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(enchantCount(result) == 1,
                 "Output book should carry exactly 1 (non-curse) enchant (got " + enchantCount(result) + ")");
             ItemEnchantmentsComponent out = EnchantmentHelper.getEnchantments(result);
-            helper.assertTrue(out.getLevel(Enchantments.VANISHING_CURSE) == 0,
-                "Output book must not carry the curse");
+            helper.assertTrue(out.getLevel(Enchantments.VANISHING_CURSE) == 0, "Output book must not carry the curse");
             int outSharp = out.getLevel(Enchantments.SHARPNESS);
             int outUnbreak = out.getLevel(Enchantments.UNBREAKING);
             boolean extractedSharp = outSharp == 3 && outUnbreak == 0;
             boolean extractedUnbreak = outSharp == 0 && outUnbreak == 2;
             helper.assertTrue(extractedSharp || extractedUnbreak,
-                "Output book must be exactly one source enchant at full level (Sharp=" + outSharp
-                    + ", Unbreak=" + outUnbreak + ")");
+                "Output book must be exactly one source enchant at full level (Sharp=" + outSharp + ", Unbreak="
+                    + outUnbreak + ")");
 
             handler.getSlot(2).onTakeItem(player, result);
 
@@ -518,12 +542,12 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(enchantCount(kept) == 2,
                 "Leftover book should keep the other enchant + the curse = 2 (got " + enchantCount(kept) + ")");
             if (extractedSharp) {
-                helper.assertTrue(keptE.getLevel(Enchantments.UNBREAKING) == 2
-                        && keptE.getLevel(Enchantments.SHARPNESS) == 0,
+                helper.assertTrue(
+                    keptE.getLevel(Enchantments.UNBREAKING) == 2 && keptE.getLevel(Enchantments.SHARPNESS) == 0,
                     "Extracted Sharpness => leftover keeps Unbreaking 2 + curse");
             } else {
-                helper.assertTrue(keptE.getLevel(Enchantments.SHARPNESS) == 3
-                        && keptE.getLevel(Enchantments.UNBREAKING) == 0,
+                helper.assertTrue(
+                    keptE.getLevel(Enchantments.SHARPNESS) == 3 && keptE.getLevel(Enchantments.UNBREAKING) == 0,
                     "Extracted Unbreaking => leftover keeps Sharpness 3 + curse");
             }
         } finally {
@@ -533,7 +557,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantInsertFullDropsItem(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -578,7 +603,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantTakeGatedWhenFeatureOff(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -594,7 +620,8 @@ public class GrindstoneGameTest implements FabricGameTest {
             ItemStack result = resultStack(handler);
             helper.assertFalse(result.isEmpty(), "Grindstone should produce output book before takeout");
 
-            // disable the feature: the take path must fall through to vanilla (no keep-item logic)
+            // disable the feature: the take path must fall through to vanilla (no keep-item
+            // logic)
             ETTestHelper.setFeature("grindstone_disenchant", false);
             handler.getSlot(2).onTakeItem(player, result); // must not throw
 
@@ -609,7 +636,8 @@ public class GrindstoneGameTest implements FabricGameTest {
 
     // edge sweep: extra updateResult / onTakeItem branches
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantMultiEnchantItemExtractsAll(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -649,7 +677,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantSingleItemNoBookIsVanillaGrind(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -676,7 +705,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantBookStackDoesNotEngage(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -691,7 +721,8 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(resultStack(handler).isEmpty(),
                 "A multi-count book stack must not engage disenchant (vanilla bails on count>1): result must be empty");
 
-            // control: a single book still engages, proving the guard is specifically about count>1
+            // control: a single book still engages, proving the guard is specifically about
+            // count>1
             ItemStack swordSingle = new ItemStack(Items.DIAMOND_SWORD);
             swordSingle.addEnchantment(Enchantments.SHARPNESS, 3);
             placeAndUpdate(handler, new ItemStack(Items.BOOK, 1), swordSingle);
@@ -703,14 +734,16 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantSuppressesXpOnTakeout(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
 
         ServerWorld world = helper.getWorld();
-        // a real context tied to a loaded position inside the test structure; XP orbs would spawn at
+        // a real context tied to a loaded position inside the test structure; XP orbs
+        // would spawn at
         // this block's center if vanilla onTakeItem ran
         BlockPos absPos = helper.getAbsolutePos(new BlockPos(1, 2, 1));
         ScreenHandlerContext ctx = ScreenHandlerContext.create(world, absPos);
@@ -727,7 +760,8 @@ public class GrindstoneGameTest implements FabricGameTest {
 
             Box search = new Box(absPos).expand(8.0);
             // clear any stale orbs so the post-takeout count reflects only this operation
-            world.getEntitiesByClass(ExperienceOrbEntity.class, search, e -> true).forEach(ExperienceOrbEntity::discard);
+            world.getEntitiesByClass(ExperienceOrbEntity.class, search, e -> true)
+                .forEach(ExperienceOrbEntity::discard);
 
             handler.getSlot(2).onTakeItem(player, result);
 
@@ -744,7 +778,8 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    @GameTest(templateName = EMPTY_STRUCTURE)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantSplitThreeEnchantLeavesTwo(TestContext helper) {
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -777,7 +812,8 @@ public class GrindstoneGameTest implements FabricGameTest {
                 "Leftover book should keep exactly 2 enchants (got " + enchantCount(kept) + ")");
             ItemEnchantmentsComponent keptE = EnchantmentHelper.getEnchantments(kept);
 
-            // complement invariant: each enchant lives entirely on exactly one of output/kept
+            // complement invariant: each enchant lives entirely on exactly one of
+            // output/kept
             helper.assertTrue(outSharp + keptE.getLevel(Enchantments.SHARPNESS) == 3,
                 "Sharpness must total 3 across output+kept");
             helper.assertTrue(outUnbreak + keptE.getLevel(Enchantments.UNBREAKING) == 2,

@@ -1,7 +1,9 @@
 package com.adibarra.enchanttweaker.commands.suggestions;
 
-import com.adibarra.enchanttweaker.ETConfigSchema;
-import com.adibarra.enchanttweaker.ETMixinPlugin;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
@@ -15,9 +17,8 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Identifier;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import com.adibarra.enchanttweaker.ETConfigSchema;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /** tab-completion for the `/et config ` value argument */
 public final class ValueSuggestion {
@@ -26,21 +27,27 @@ public final class ValueSuggestion {
         throw new IllegalStateException("Utility class. Do not instantiate.");
     }
 
-    public static final SuggestionProvider<ServerCommandSource> PROVIDER =
-        (CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) -> {
-            String key = StringArgumentType.getString(context, "key").toLowerCase();
-            DynamicRegistryManager registryManager = context.getSource().getRegistryManager();
-            return buildSuggestions(builder, key, candidatesFor(key, registryManager));
-        };
+    public static final SuggestionProvider<ServerCommandSource> PROVIDER = (CommandContext<ServerCommandSource> context,
+        SuggestionsBuilder builder) -> {
+        String key = StringArgumentType.getString(context, "key").toLowerCase();
+        DynamicRegistryManager registryManager = context.getSource().getRegistryManager();
+        return buildSuggestions(builder, key, candidatesFor(key, registryManager));
+    };
 
-    /** the raw candidate values for a key's value argument, independent of any typed prefix */
+    /**
+     * the raw candidate values for a key's value argument, independent of any typed
+     * prefix
+     */
     public static List<String> candidatesFor(String key, DynamicRegistryManager registryManager) {
-        if (key == null) return List.of();
+        if (key == null)
+            return List.of();
         key = key.toLowerCase();
-        if (ETConfigSchema.isReserved(key)) return List.of();
+        if (ETConfigSchema.isReserved(key))
+            return List.of();
 
         ETConfigSchema.ValueType type = ETConfigSchema.typeOf(key);
-        if (type == null) return List.of();
+        if (type == null)
+            return List.of();
 
         return switch (type) {
             case BOOLEAN -> List.of("true", "false");
@@ -56,37 +63,38 @@ public final class ValueSuggestion {
     private static List<String> currentAndDefault(String key) {
         List<String> out = new ArrayList<>();
         String current = ETMixinPlugin.getConfig().getOrDefault(key, null);
-        if (current != null && !current.isEmpty()) out.add(current);
+        if (current != null && !current.isEmpty())
+            out.add(current);
         String def = ETConfigSchema.defaultOf(key);
-        if (def != null && !def.isEmpty() && !out.contains(def)) out.add(def);
+        if (def != null && !def.isEmpty() && !out.contains(def))
+            out.add(def);
         return out;
     }
 
     private static List<String> enchantmentPaths() {
-        return Registries.ENCHANTMENT.getIds().stream()
-            .map(Identifier::getPath)
-            .sorted()
-            .toList();
+        return Registries.ENCHANTMENT.getIds().stream().map(Identifier::getPath).sorted().toList();
     }
 
     private static List<String> damageTypePaths(DynamicRegistryManager registryManager) {
-        if (registryManager == null) return List.of();
+        if (registryManager == null)
+            return List.of();
         Registry<DamageType> registry = registryManager.get(RegistryKeys.DAMAGE_TYPE);
-        return registry.getIds().stream()
-            .map(Identifier::getPath)
-            .sorted()
-            .toList();
+        return registry.getIds().stream().map(Identifier::getPath).sorted().toList();
     }
 
-    private static CompletableFuture<Suggestions> buildSuggestions(SuggestionsBuilder builder, String key, List<String> candidates) {
-        if (candidates.isEmpty()) return Suggestions.empty();
+    private static CompletableFuture<Suggestions> buildSuggestions(SuggestionsBuilder builder, String key,
+        List<String> candidates) {
+        if (candidates.isEmpty())
+            return Suggestions.empty();
 
         String remaining = builder.getRemaining();
         String prefix = "";
         String query = remaining;
 
-        // list keys complete one comma-separated segment at a time: keep everything up to and
-        // including the last comma as a fixed prefix and complete only the trailing segment
+        // list keys complete one comma-separated segment at a time: keep everything up
+        // to and
+        // including the last comma as a fixed prefix and complete only the trailing
+        // segment
         if (ETConfigSchema.typeOf(key) == ETConfigSchema.ValueType.LIST) {
             int comma = remaining.lastIndexOf(',');
             if (comma >= 0) {

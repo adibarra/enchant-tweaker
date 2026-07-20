@@ -1,10 +1,8 @@
 package com.adibarra.enchanttweaker.commands;
 
-import com.adibarra.enchanttweaker.ETCommands;
-import com.adibarra.enchanttweaker.ETConfigSchema;
-import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.commands.suggestions.ListSuggestion;
-import com.adibarra.utils.ADText;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -14,8 +12,11 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.adibarra.enchanttweaker.ETCommands;
+import com.adibarra.enchanttweaker.ETConfigSchema;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.commands.suggestions.ListSuggestion;
+import com.adibarra.utils.ADText;
 
 /** `/et config list [category] [page]` */
 public class ListCommand implements Command<ServerCommandSource> {
@@ -61,17 +62,14 @@ public class ListCommand implements Command<ServerCommandSource> {
         } else if (ETConfigSchema.categories().contains(category)) {
             keys.addAll(ETConfigSchema.keysIn(category));
         } else {
-            CommandFeedback.error(context.getSource(),
-                Text.literal("Unknown category '").formatted(Formatting.GRAY),
-                Text.literal(category).formatted(Formatting.RED),
-                Text.literal("'.").formatted(Formatting.GRAY));
+            CommandFeedback.error(context.getSource(), Text.literal("Unknown category '").formatted(Formatting.GRAY),
+                Text.literal(category).formatted(Formatting.RED), Text.literal("'.").formatted(Formatting.GRAY));
             return 0;
         }
 
         int totalPages = Math.max(1, (keys.size() + PAGE_SIZE - 1) / PAGE_SIZE);
         if (page < 1 || page > totalPages) {
-            CommandFeedback.error(context.getSource(),
-                Text.literal("Page ").formatted(Formatting.GRAY),
+            CommandFeedback.error(context.getSource(), Text.literal("Page ").formatted(Formatting.GRAY),
                 Text.literal(String.valueOf(page)).formatted(Formatting.RED),
                 Text.literal(" is out of range (1-" + totalPages + ").").formatted(Formatting.GRAY));
             return 0;

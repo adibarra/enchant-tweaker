@@ -1,14 +1,14 @@
 package com.adibarra.enchanttweaker.commands.suggestions;
 
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.server.command.ServerCommandSource;
-
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 public class ListSuggestion {
 
@@ -16,7 +16,8 @@ public class ListSuggestion {
         throw new IllegalStateException("Utility class. Do not instantiate.");
     }
 
-    private static CompletableFuture<Suggestions> buildSuggestions(SuggestionsBuilder builder, Collection<String> options) {
+    private static CompletableFuture<Suggestions> buildSuggestions(SuggestionsBuilder builder,
+        Collection<String> options) {
         String query = builder.getRemaining().toLowerCase();
 
         if (options.isEmpty()) {
@@ -32,7 +33,7 @@ public class ListSuggestion {
     }
 
     public static SuggestionProvider<ServerCommandSource> of(Supplier<Collection<String>> options) {
-        return (CommandContext<ServerCommandSource> context, SuggestionsBuilder builder)
-            -> buildSuggestions(builder, options.get());
+        return (CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) -> buildSuggestions(builder,
+            options.get());
     }
 }

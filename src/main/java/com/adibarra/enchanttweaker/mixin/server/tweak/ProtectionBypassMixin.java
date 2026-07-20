@@ -1,6 +1,10 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import com.adibarra.enchanttweaker.ETMixinPlugin;
+import java.util.AbstractMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -14,21 +18,21 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
-import java.util.AbstractMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description allow specific damage types to bypass Protection enchantment entirely
- * configurable via comma-separated list of damage type IDs (e.g. "magic,wither,dragon_breath")
- * supports both vanilla IDs (e.g. "magic") and modded IDs (e.g. "mymod:custom_damage")
+ * @description allow specific damage types to bypass Protection enchantment
+ *              entirely configurable via comma-separated list of damage type
+ *              IDs (e.g. "magic,wither,dragon_breath") supports both vanilla
+ *              IDs (e.g. "magic") and modded IDs (e.g. "mymod:custom_damage")
  * @environment Server
  */
-@Mixin(value=LivingEntity.class)
+@Mixin(
+    value = LivingEntity.class)
 public abstract class ProtectionBypassMixin {
 
-    // single volatile (raw, parsed) holder swapped atomically, avoids the torn reads
+    // single volatile (raw, parsed) holder swapped atomically, avoids the torn
+    // reads
     // possible with two independently-published static fields
     @Unique
     private static volatile Map.Entry<String, Set<RegistryKey<DamageType>>> enchanttweaker$bypassCache;
@@ -43,7 +47,8 @@ public abstract class ProtectionBypassMixin {
         if (!config.isEmpty()) {
             for (String entry : config.split(",")) {
                 String trimmed = entry.trim();
-                if (trimmed.isEmpty()) continue;
+                if (trimmed.isEmpty())
+                    continue;
                 String normalized = trimmed.contains(":") ? trimmed : "minecraft:" + trimmed;
                 Identifier id = Identifier.tryParse(normalized);
                 if (id != null) {
@@ -56,12 +61,12 @@ public abstract class ProtectionBypassMixin {
     }
 
     @WrapOperation(
-        method="modifyAppliedDamage(Lnet/minecraft/entity/damage/DamageSource;F)F",
-        at=@At(
-            value="INVOKE",
-            target="Lnet/minecraft/entity/DamageUtil;getInflictedDamage(FF)F"))
-    private float enchanttweaker$protectionBypass$check(float damage, float epf, Operation<Float> original,
-            @Local(argsOnly=true) DamageSource source) {
+        method = "modifyAppliedDamage(Lnet/minecraft/entity/damage/DamageSource;F)F",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/entity/DamageUtil;getInflictedDamage(FF)F"))
+    private float enchanttweaker$protectionBypass$check(float damage, float epf, Operation<Float> original, @Local(
+        argsOnly = true) DamageSource source) {
         if (!ETMixinPlugin.getMixinConfig("ProtectionBypassMixin")) {
             return original.call(damage, epf);
         }
