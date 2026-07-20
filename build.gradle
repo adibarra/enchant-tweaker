@@ -10,6 +10,7 @@ List<String> supportedVersionsArray = [project.minecraft_version]
 
 version = "${project.mod_version}+mc${supportedVersions}"
 group = project.maven_group
+String artifactVersion = version.toString()
 
 base {
     archivesName = project.archives_base_name
@@ -24,10 +25,10 @@ dependencies {
 }
 
 processResources {
-    inputs.property "version", project.version
+    inputs.property "version", artifactVersion
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand "version": artifactVersion
     }
 }
 
@@ -87,6 +88,14 @@ def changelogEntry = changelogIdx < 0 ? "" : rawChangelog
     .substring(changelogIdx + versionHeader.length())
     .split("(?m)^## ")[0]
     .trim()
+
+def releaseNotes = layout.buildDirectory.file("release-notes.md")
+tasks.register("writeReleaseNotes") {
+    outputs.file(releaseNotes)
+    doLast {
+        releaseNotes.get().asFile.text = changelogEntry
+    }
+}
 
 modrinth {
     // Dry-run everywhere except explicit `-Prelease`

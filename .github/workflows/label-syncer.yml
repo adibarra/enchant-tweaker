@@ -21,7 +21,7 @@ jobs:
     name: ♻️ Sync labels
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: write # create, update, and delete repository labels
     runs-on: ubuntu-latest
     steps:
       - name: Check out code from GitHub
