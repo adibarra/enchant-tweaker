@@ -17,24 +17,27 @@ import java.util.function.BooleanSupplier;
 
 public final class ETMixinPlugin implements IMixinConfigPlugin {
 
-    private static int numMixins = 0;
-    private static boolean MOD_ENABLED = false;
-    private static ADConfig CONFIG;
+    // replaced during config updates; volatile keeps game-thread readers current
+    private static volatile int numMixins = 0;
+    private static volatile boolean MOD_ENABLED = false;
+    private static volatile ADConfig CONFIG;
     private static final Logger LOGGER = LoggerFactory.getLogger(EnchantTweaker.MOD_NAME);
     private static final Map<String, String> KEYS = new HashMap<>();
     private static final Map<String, CompatEntry> COMPAT = new HashMap<>();
     private static final Map<String, Boolean> FEATURE_CACHE = new ConcurrentHashMap<>();
     private static final Map<String, Integer> CAPMOD_CACHE = new ConcurrentHashMap<>();
+    // client-local cosmetic keys are never synced from the server so client preferences survive
+    private static final Set<String> CLIENT_LOCAL_KEYS = Set.of("roman_numerals", "shiny_name");
 
     private record CompatEntry(boolean shouldApply, String reason, BooleanSupplier condition, Runnable callback) { }
 
     static {
+        // map each mixin's simple class name to its config key
         KEYS.put("CheapNamesMixin",           "cheap_names");
         KEYS.put("NotTooExpensiveMixin",      "not_too_expensive");
         KEYS.put("PriorWorkCheaperMixin",     "prior_work_cheaper");
         KEYS.put("PriorWorkFreeMixin",        "prior_work_free");
         KEYS.put("SturdyAnvilsMixin",         "sturdy_anvils");
-        KEYS.put("AnvilRepairMixin",          "anvil_repair");
 
         KEYS.put("MoreBindingMixin",          "more_binding");
         KEYS.put("MoreBlastProtectionMixin",  "more_blast_protection");
@@ -73,13 +76,14 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
 
         KEYS.put("CapmodMixin",               "capmod_enabled");
 
+        // apply compatibility overrides without changing the saved config
         COMPAT.put(
             "AxesNotToolsMixin",
             new CompatEntry(
                 false,
                 "Mod 'AxesAreWeapons' detected",
                 () -> FabricLoader.getInstance().isModLoaded("axesareweapons"),
-                () -> CONFIG.set(getMixinKey("AxesNotToolsMixin"), Boolean.FALSE.toString()))
+                () -> CONFIG.setAll(Map.of(getMixinKey("AxesNotToolsMixin"), Boolean.FALSE.toString())))
         );
 
         COMPAT.put(
@@ -88,7 +92,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
                 false,
                 "Mod 'Fabrication' detected",
                 () -> FabricLoader.getInstance().isModLoaded("fabrication"),
-                () -> CONFIG.set(getMixinKey("NotTooExpensiveMixin"), Boolean.FALSE.toString()))
+                () -> CONFIG.setAll(Map.of(getMixinKey("NotTooExpensiveMixin"), Boolean.FALSE.toString())))
         );
     }
 
@@ -107,7 +111,6 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         String mixinName = mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1);
         CompatEntry compatEntry = COMPAT.get(mixinName);
 
-        // if there is a compat entry, and it activates, override config
         if (compatEntry != null && compatEntry.condition().getAsBoolean()) {
             String state = compatEntry.shouldApply() ? "enabled" : "disabled";
             LOGGER.info(EnchantTweaker.PREFIX + "[COMPAT] {} {}. Reason: {}", mixinName, state, compatEntry.reason());
@@ -115,7 +118,6 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
             return compatEntry.shouldApply();
         }
 
-        // check feature flags at runtime
         return true;
     }
 
@@ -137,7 +139,10 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     public static boolean getMixinConfig(String mixinName) {
         return FEATURE_CACHE.computeIfAbsent(mixinName, k -> {
             if (!CONFIG.getOrDefault("mod_enabled", false)) return false;
-            return CONFIG.getOrDefault(getMixinKey(k), false);
+            // reject unknown mixins instead of looking up a null config key
+            String key = getMixinKey(k);
+            if (key == null) return false;
+            return CONFIG.getOrDefault(key, false);
         });
     }
 
@@ -153,6 +158,29 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         return numMixins;
     }
 
+    /** returns a copy of the mixin name to config key map */
+    public static Map<String, String> getMixinKeys() {
+        return Map.copyOf(KEYS);
+    }
+
+    /** returns client-local config keys excluded from server sync */
+    public static Set<String> getClientLocalKeys() {
+        return Set.copyOf(CLIENT_LOCAL_KEYS);
+    }
+
+    /** returns config keys currently overridden by a conflicting mod */
+    public static Map<String, String> getActiveCompatOverrides() {
+        Map<String, String> active = new HashMap<>();
+        for (Map.Entry<String, CompatEntry> entry : COMPAT.entrySet()) {
+            CompatEntry compat = entry.getValue();
+            if (compat.condition().getAsBoolean()) {
+                String key = KEYS.get(entry.getKey());
+                if (key != null) active.put(key, compat.reason());
+            }
+        }
+        return active;
+    }
+
     public static ADConfig getConfig() {
         return CONFIG;
     }
@@ -165,6 +193,8 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     public static Map<String, String> getConfigMap() {
         Map<String, String> map = new ConcurrentHashMap<>();
         for (Map.Entry<String, String> entry : CONFIG.getEntries()) {
+            // preserve client-only visual settings during server sync
+            if (CLIENT_LOCAL_KEYS.contains(entry.getKey())) continue;
             map.put(entry.getKey(), entry.getValue());
         }
         return map;
