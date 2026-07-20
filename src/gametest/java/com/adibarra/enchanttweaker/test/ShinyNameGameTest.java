@@ -5,6 +5,9 @@ import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 public class ShinyNameGameTest implements FabricGameTest {
 
@@ -84,6 +87,46 @@ public class ShinyNameGameTest implements FabricGameTest {
         helper.assertTrue(ADShiny.shouldColorGold(Integer.MIN_VALUE, Integer.MIN_VALUE, false),  "MIN == MIN (not cursed) SHOULD recolor");
         helper.assertTrue(!ADShiny.shouldColorGold(Integer.MIN_VALUE, Integer.MAX_VALUE, false), "MIN level vs MAX max should NOT recolor (below max, no overflow)");
         helper.assertTrue(ADShiny.shouldColorGold(Integer.MAX_VALUE, Integer.MIN_VALUE, false),  "MAX level vs MIN max SHOULD recolor (above max, no overflow)");
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void fullStyleBelowMaxIsUnchanged(TestContext helper) {
+        MutableText text = Text.literal("Sharpness IV");
+        ADShiny.applyNameStyle(text, 4, 5, false, 0.0f);
+        helper.assertTrue(text.getStyle().getColor() == null,
+            "below-max name should retain its existing color");
+        helper.assertFalse(text.getStyle().isObfuscated(),
+            "below-max name should never become obfuscated");
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void fullStyleGoldBoundaryIsNotCharged(TestContext helper) {
+        MutableText text = Text.literal("Sharpness V");
+        ADShiny.applyNameStyle(text, 5, 5, false, 0.005f);
+        helper.assertTrue(text.getStyle().getColor() != null
+                && text.getStyle().getColor().getRgb() == Formatting.YELLOW.getColorValue(),
+            "max-level name should be yellow");
+        helper.assertFalse(text.getStyle().isObfuscated(),
+            "the exact 0.005 charged boundary should not be obfuscated");
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void fullStyleChargedAndCurseBranches(TestContext helper) {
+        MutableText charged = Text.literal("Sharpness V");
+        ADShiny.applyNameStyle(charged, 5, 5, false, Math.nextDown(0.005f));
+        helper.assertTrue(charged.getStyle().getColor() != null
+                && charged.getStyle().getColor().getRgb() == Formatting.YELLOW.getColorValue(),
+            "charged max-level name should remain yellow");
+        helper.assertTrue(charged.getStyle().isObfuscated(),
+            "roll immediately below 0.005 should be obfuscated");
+
+        MutableText cursed = Text.literal("Binding Curse");
+        ADShiny.applyNameStyle(cursed, 2, 1, true, 0.0f);
+        helper.assertTrue(cursed.getStyle().getColor() == null && !cursed.getStyle().isObfuscated(),
+            "curses must remain unstyled even on a charged roll");
         helper.complete();
     }
 }

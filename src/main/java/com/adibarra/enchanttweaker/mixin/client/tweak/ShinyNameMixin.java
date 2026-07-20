@@ -8,7 +8,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -38,14 +37,11 @@ public abstract class ShinyNameMixin {
         at=@At("TAIL"))
     private void getName(int level, CallbackInfoReturnable<Text> cir, @Local MutableText mutableText) {
         if (!ETMixinPlugin.getMixinConfig("ShinyNameMixin")) return;
-        if (level < this.getMaxLevel()) return;
-
-        if (ADShiny.shouldColorGold(level, this.getMaxLevel(), this.isCursed())) {
-            mutableText.formatted(Formatting.YELLOW);
-        }
-
-        if (ThreadLocalRandom.current().nextFloat() < 0.005f) {
-            mutableText.formatted(Formatting.OBFUSCATED);
-        }
+        ADShiny.applyNameStyle(
+            mutableText,
+            level,
+            this.getMaxLevel(),
+            this.isCursed(),
+            ThreadLocalRandom.current().nextFloat());
     }
 }
