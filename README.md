@@ -12,17 +12,48 @@
 
 
 # Enchant Tweaker
-Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 140 configuration options.
+Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 139 configuration options.
 
 
 
 ## Installation
-Client-side install is recommended but not required. Some non-critical visual QOL tweaks (Not Too Expensive, Shiny Names) need to be installed on the client to work properly.
+Client-side install is recommended but not required. Some visual quality-of-life tweaks (Not Too Expensive, Shiny Names) need to be installed on the client to work properly.
 
 |              | Client-Side  | Server-Side  |
 |:------------:|:------------:|:------------:|
 | Singleplayer | **Required** |     N/A      |
 | Multiplayer  |   Optional   | **Required** |
+
+
+
+## Commands
+All commands use `/et` (or `/enchanttweaker`) and can only be run by server operators.
+
+<details>
+<summary> View Commands </summary>
+
+### /et
+Points you to `/et help`.
+
+### /et help
+Shows every available command.
+
+### /et reload
+Reloads your settings after you edit the config file and updates connected players. Turning the entire mod on or off still requires a restart.
+
+### /et config <key> [value]
+Shows or changes a setting. Run it without a value to see the current value, or add a value to change it. Invalid values show a helpful error, and tab completion suggests available options.
+
+### /et config list [category] [page]
+Shows settings by category. Add a category to view its settings, and a page number if the list is long. Use `all` to browse everything.
+
+### /et config reset <key>|all
+Resets one setting or every setting to its default value.
+
+### /et diagnose
+Helps troubleshoot settings that are not working. It shows disabled features, mod conflicts, anvil-repair status, and basic config file information.
+
+</details>
 
 
 
@@ -48,7 +79,7 @@ Normally when enchanting/repairing an item, each operation will double the cost 
 Normally an anvil has a 12% (0.12) chance to take damage when used. Enabling this tweak will let you customize the damage chance.
 
 ### Anvil Repair
-Allows repairing damaged anvils by sneak+right-clicking with iron ingots or iron blocks. Each repair reverses one degradation step (damaged → chipped → pristine). Iron ingot cost (default 9) and iron block cost (default 1) are configurable independently. Set a cost to 0 to disable that repair type.
+Allows repairing damaged anvils by sneaking and right-clicking with iron. Each repair reverses one degradation step (damaged -> chipped -> pristine) and consumes `anvil_repair_ingot_cost` iron ingots (default 9). Iron blocks are also accepted when the cost is a multiple of 9 (1 block = 9 ingots). Set the cost to 0 to disable.
 
 </details>
 
@@ -116,7 +147,7 @@ Normally even though you have Infinity on a bow, you need to have arrows in your
 Normally Looting can only be applied to swords. Enabling this tweak allows Looting to be applied to bows and crossbows.
 
 ### Disable Enchantments
-Prevent specific enchantments from appearing in enchanting tables, loot, villager trades, and anvils. Provide a comma-separated list of enchantment IDs to disable (e.g. `sharpness,mending,infinity`). Disabled enchantments override villager trade limits — they cannot be traded at all.
+Prevent specific enchantments from appearing in enchanting tables, loot, villager trades, and anvils. Provide a comma-separated list of enchantment IDs to disable (e.g. `sharpness,mending,infinity`). Disabled enchantments override villager trade limits and cannot be traded at all.
 
 ### God Armor
 Allow the combination of damage negation enchantments that normally can not be added together. Enabling this tweak allows you to combine the following enchantments: Protection, Blast Protection, Fire Protection, and Projectile Protection.
@@ -158,7 +189,7 @@ Normally everyone knows what the max level for an enchantment is, but what about
 Allow the addition of some weapon enchantments that normally can not be added to tridents. Enabling this tweak allows you to add the following enchantments to tridents: Sharpness, Smite, Bane of Arthropods, Fire Aspect, Knockback, and Looting.
 
 ### XP Scaling
-Replace vanilla's tiered XP-per-level formula with a configurable linear curve. Vanilla uses three tiers: levels 0-15 (cheap), 16-30 (medium), 31+ (expensive). This replaces all tiers with: `XP per level = base + step * currentLevel`. Both base (default 7) and step (default 2) are configurable — defaults match vanilla's first tier and continue linearly.
+Replace vanilla's tiered XP-per-level formula with a configurable linear curve. Vanilla uses three tiers: levels 0-15 (cheap), 16-30 (medium), 31+ (expensive). This replaces all tiers with: `XP per level = base + step * currentLevel`. Both base (default 7) and step (default 2) are configurable. The defaults match vanilla's first tier and continue linearly.
 
 </details>
 

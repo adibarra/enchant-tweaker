@@ -2,27 +2,54 @@
 
 ## 1.6.0
 
-- Server config now syncs to clients on join, reload, and config change
+### Added
+
+- Sync server config to clients on join, reload, and config change
   - ShinyNames and capmod levels update automatically without reconnecting
-- Consolidate capmod system into a single unified mixin
-- Add caching for feature flags and capmod levels (performance improvement)
-- Fix race conditions in MoreBinding, MoreMultishot, and MoreFlame mixins
-- Fix flame level being read from the wrong source in MoreFlame
-- Fix dead channeling entry in capmod config
-- Add configurable free-arrow rate for MoreInfinity (`more_infinity_pct`)
-- Add Mending/Unbreaking incompatibility toggle (`no_mending_unbreaking`)
+- Update `/et reload` to also re-sync connected clients
+- Add `/et config list [category] [page]` to browse config values by category, paginated
+- Add `/et config reset <key>` and `/et config reset all` to restore bundled defaults
+- Add `/et diagnose` to explain settings that are not working and show config details
+- Add value tab-completion to `/et config`
+- Validate `/et config` values by type and reject invalid input with a hint instead of saving it
+- Add anvil repair: sneak and right-click a damaged anvil with iron to reverse one degradation step at a configurable ingot cost; iron blocks are accepted when the cost is a multiple of 9 (`anvil_repair`, `anvil_repair_ingot_cost`)
+- Add grindstone disenchanting: extract enchantments into books, with book splitting support (`grindstone_disenchant`)
+- Add custom XP scaling to replace vanilla's tiered XP formula with a configurable linear curve (`xp_scaling`)
+- Add configurable villager trade limits for each enchantment (`villager_trade_limits`)
+- Add enchantment disabling to keep specific enchantments from appearing anywhere (`disable_enchantments_enabled`)
 - Add multiplicative Protection damage reduction (`more_protection`)
 - Add multiplicative Fire Protection duration reduction (`more_fire_protection`)
 - Add multiplicative Blast Protection knockback reduction (`more_blast_protection`)
 - Add per-damage-type Protection bypass toggle (`protection_bypass_enabled`)
-- Add data-driven villager trade limits with per-enchantment overrides (`villager_trade_limits`)
-- Make enhanced enchantment formula constants configurable (protection bases, mending step/floor, multishot/flame per-level, binding step)
+- Add configurable free-arrow rate for MoreInfinity (`more_infinity_pct`)
+- Add Looting XP boost for mob kills with a configurable multiplier (`more_looting`)
+- Add Mending/Unbreaking incompatibility toggle (`no_mending_unbreaking`)
 - Allow Looting on bows and crossbows (`bow_looting`)
-- Add Looting XP boost for mob kills with configurable multiplier (`more_looting`)
-- Add grindstone disenchanting: extract enchantments into books, with book splitting support (`grindstone_disenchant`)
-- Add custom XP scaling: replace vanilla's tiered XP formula with a configurable linear curve (`xp_scaling`)
-- Add enchantment disabling: prevent specific enchantments from appearing anywhere (`disable_enchantments_enabled`)
+- Generate Roman numerals for enchantment levels above X (`roman_numerals`)
+- Make enhanced enchantment formula constants configurable (protection bases, mending step/floor, multishot/flame per-level, binding step)
+
+### Fixed
+
+- Fix More Mending computing worst-case cost when Better Mending is also enabled
+- Fix non-Flame fire arrows getting a shortened burn time
+- Fix flame level being read from the wrong source in MoreFlame
+- Fix renaming costing more than one level with `cheap_names` and `prior_work_free` combined
+- Fix race conditions in the MoreBinding, MoreMultishot, and MoreFlame mixins
+- Fix dead channeling entry in capmod config
+- Regenerate a blank or unreadable config from defaults instead of deleting it
+- Clamp out-of-range config values (protection bases, looting multiplier, multishot per-level, xp scaling overflow, mending floor)
+
+### Internal
+
+- Consolidate the capmod system into a single unified mixin
+- Cache feature flags and capmod levels (performance improvement)
+- Add a config migration framework and internal `config_version` key for future upgrades
+- Make config storage thread-safe for concurrent sync and gameplay reads
+- Version the client sync payload and exclude client-only cosmetic prefs (`roman_numerals`, `shiny_name`) from sync
+- Declare `fabric-api` and `minecraft` dependencies in fabric.mod.json
+- Add a GitHub Actions CI workflow that builds the mod and runs the gametests
 - Upgrade to Java 21, Gradle 9, and Fabric Loom 1.15
+- Expand the test suite to 190 gametests
 
 ## 1.5.0
 
@@ -136,7 +163,7 @@
 > **Note:** If previously installed, delete the old config file (or add `capmod_enabled=true` to re-enable custom enchantment levels).
 
 - Fix Fabrication incompatibility
-- Config system overhaul — only apply enabled mixins
+- Config system overhaul to only apply enabled mixins
 - Large codebase refactor
 - More optimization
 - Remove bloat from jar
