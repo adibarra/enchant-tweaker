@@ -1,18 +1,22 @@
 package com.adibarra.enchanttweaker.test;
 
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.EnchantmentLevelEntry;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
+import net.minecraft.world.GameMode;
 
 public class CapmodGameTest implements FabricGameTest {
 
-    // ─── Capmod master switch ────────────────────────────────────────
+    // capmod master switch
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void capmodDisabled(TestContext helper) {
@@ -22,7 +26,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
                 "Sharpness should be vanilla 5 when capmod disabled (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
         } finally {
-            ETTestHelper.setCapmod(true);
+            ETTestHelper.setCapmod(false);
             ETTestHelper.setEnchantCap("sharpness", -1);
         }
         helper.complete();
@@ -40,7 +44,7 @@ public class CapmodGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // ─── Capmod DamageEnchant ────────────────────────────────────────
+    // capmod DamageEnchant
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void capmodDamageCustom(TestContext helper) {
@@ -84,7 +88,7 @@ public class CapmodGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // ─── Capmod GenericEnchant ───────────────────────────────────────
+    // capmod GenericEnchant
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void capmodGenericCustom(TestContext helper) {
@@ -173,7 +177,7 @@ public class CapmodGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // ─── Capmod LuckEnchant ──────────────────────────────────────────
+    // capmod LuckEnchant
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void capmodLuckCustom(TestContext helper) {
@@ -193,7 +197,7 @@ public class CapmodGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // ─── Capmod ProtectionEnchant ────────────────────────────────────
+    // capmod ProtectionEnchant
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void capmodProtectionCustom(TestContext helper) {
@@ -234,7 +238,7 @@ public class CapmodGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // ─── Capmod SpecialEnchant ───────────────────────────────────────
+    // capmod SpecialEnchant
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void capmodSpecialCustom(TestContext helper) {
@@ -290,14 +294,14 @@ public class CapmodGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // ─── Capmod: negative values other than -1 ────────────────────────
+    // capmod: negative values other than -1
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void capmodNegativeClamp(TestContext helper) {
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", -5);
         try {
-            // Any negative value should pass through to vanilla (getCapmodLevel returns vanilla for cap < 0)
+            // any negative value should pass through to vanilla (getCapmodLevel returns vanilla for cap < 0)
             helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
                 "Sharpness -5 should passthrough to vanilla 5 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
         } finally {
@@ -306,20 +310,20 @@ public class CapmodGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // ─── Capmod: /enchant command regression (issue #46) ──────────────
+    // capmod: /enchant command regression (issue #46)
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void capmodEnchantCommandRegression(TestContext helper) {
-        // Issue #46: /enchant command should respect capmod-raised levels
+        // issue #46: /enchant command should respect capmod-raised levels
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 10);
-        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
         player.getInventory().setStack(0, sword);
         player.getInventory().selectedSlot = 0;
         MinecraftServer server = helper.getWorld().getServer();
         try {
-            // Dispatch via the command manager (same path as a player typing /enchant)
+            // dispatch via the command manager (same path as a player typing /enchant)
             server.getCommandManager().executeWithPrefix(
                 player.getCommandSource().withLevel(4), "enchant @s minecraft:sharpness 10");
             int level = EnchantmentHelper.getLevel(Enchantments.SHARPNESS, player.getInventory().getStack(0));
@@ -343,5 +347,139 @@ public class CapmodGameTest implements FabricGameTest {
             ETTestHelper.setEnchantCap("sharpness", -1);
         }
         helper.complete();
+    }
+
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void capmodDisableEnchantmentsHeadCancelWins(TestContext helper) {
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("sharpness", 10);
+        ETTestHelper.setEnchantCap("smite", 7);
+        ETTestHelper.setFeature("disable_enchantments_enabled", true);
+        ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
+        try {
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 0,
+                "Disabled Sharpness should report max level 0 even with capmod cap 10 (HEAD cancel wins, got "
+                    + Enchantments.SHARPNESS.getMaxLevel() + ")");
+            helper.assertTrue(Enchantments.SMITE.getMaxLevel() == 7,
+                "Non-disabled Smite should still honor capmod cap 7 (got " + Enchantments.SMITE.getMaxLevel() + ")");
+        } finally {
+            ETTestHelper.setConfigValue("disable_enchantments", "");
+            ETTestHelper.setFeature("disable_enchantments_enabled", false);
+            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.setEnchantCap("smite", -1);
+            ETTestHelper.setCapmod(false);
+        }
+        helper.complete();
+    }
+
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void capmodOverflowNonNumericCap(TestContext helper) {
+        ETTestHelper.setCapmod(true);
+        try {
+            ETTestHelper.setConfigValue("sharpness", "9999999999");
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
+                "Overflowing cap '9999999999' should fall back to vanilla 5 (got "
+                    + Enchantments.SHARPNESS.getMaxLevel() + ")");
+
+            ETTestHelper.setConfigValue("sharpness", "abc");
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
+                "Non-numeric cap 'abc' should fall back to vanilla 5 (got "
+                    + Enchantments.SHARPNESS.getMaxLevel() + ")");
+
+            ETTestHelper.setConfigValue("sharpness", "2147483647");
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 255,
+                "Cap Integer.MAX_VALUE should clamp to 255 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
+        } finally {
+            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.setCapmod(false);
+        }
+        helper.complete();
+    }
+
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void capmodEnchantTableAboveVanilla(TestContext helper) {
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("sharpness", 10);
+        try {
+            int raised = maxOfferedLevel(helper, Enchantments.SHARPNESS, new ItemStack(Items.BOOK));
+            helper.assertTrue(raised > 5,
+                "With capmod cap 10, an enchant-table Sharpness entry above vanilla 5 should be offered (got max " + raised + ")");
+
+            // cap back to passthrough: the same gameplay must never exceed vanilla 5
+            ETTestHelper.setEnchantCap("sharpness", -1);
+            int vanilla = maxOfferedLevel(helper, Enchantments.SHARPNESS, new ItemStack(Items.BOOK));
+            helper.assertTrue(vanilla > 0 && vanilla <= 5,
+                "With capmod off, Sharpness enchant-table entries must stay within vanilla 1..5 (got max " + vanilla + ")");
+        } finally {
+            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.setCapmod(false);
+        }
+        helper.complete();
+    }
+
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void capmodModDisabledPassthrough(TestContext helper) {
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("sharpness", 10);
+        try {
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 10,
+                "Baseline: capmod cap 10 should apply while mod_enabled (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
+
+            ETTestHelper.setConfigValue("mod_enabled", "false");
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
+                "With mod_enabled=false the capmod inject must passthrough to vanilla 5 (got "
+                    + Enchantments.SHARPNESS.getMaxLevel() + ")");
+        } finally {
+            ETTestHelper.setConfigValue("mod_enabled", "true");
+            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.setCapmod(false);
+        }
+        helper.complete();
+    }
+
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void capmodEnchantCommandRejectsAboveRaisedCap(TestContext helper) {
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("sharpness", 10);
+        ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        player.getInventory().setStack(0, sword);
+        player.getInventory().selectedSlot = 0;
+        MinecraftServer server = helper.getWorld().getServer();
+        try {
+            // one above the raised cap: rejected by the command's level<=getMaxLevel() check
+            server.getCommandManager().executeWithPrefix(
+                player.getCommandSource().withLevel(4), "enchant @s minecraft:sharpness 11");
+            int overCap = EnchantmentHelper.getLevel(Enchantments.SHARPNESS, player.getInventory().getStack(0));
+            helper.assertTrue(overCap == 0,
+                "Sharpness 11 exceeds the raised cap of 10 and must be rejected (got " + overCap + ")");
+
+            // exactly at the raised cap: applies on the same path
+            server.getCommandManager().executeWithPrefix(
+                player.getCommandSource().withLevel(4), "enchant @s minecraft:sharpness 10");
+            int atCap = EnchantmentHelper.getLevel(Enchantments.SHARPNESS, player.getInventory().getStack(0));
+            helper.assertTrue(atCap == 10,
+                "Sharpness 10 is exactly at the raised cap and must apply (got " + atCap + ")");
+        } finally {
+            ETTestHelper.setCapmod(false);
+            ETTestHelper.setEnchantCap("sharpness", -1);
+        }
+        helper.complete();
+    }
+
+    private static int maxOfferedLevel(TestContext helper, Enchantment target, ItemStack stack) {
+        FeatureSet features = helper.getWorld().getEnabledFeatures();
+        int best = 0;
+        for (int power = 1; power <= 300; power++) {
+            for (EnchantmentLevelEntry entry : EnchantmentHelper.getPossibleEntries(features, power, stack, false)) {
+                if (entry.enchantment == target && entry.level > best) best = entry.level;
+            }
+        }
+        return best;
     }
 }

@@ -7,7 +7,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.screen.ForgingScreenHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.test.TestContext;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 
 import java.lang.reflect.Field;
@@ -17,18 +20,15 @@ import java.util.List;
 class ETTestHelper {
 
     static void setCapmod(boolean enabled) {
-        ETMixinPlugin.getConfig().setAll(java.util.Map.of("capmod_enabled", String.valueOf(enabled)));
-        ETMixinPlugin.clearCaches();
+        setConfigValue("capmod_enabled", String.valueOf(enabled));
     }
 
     static void setEnchantCap(String key, int level) {
-        ETMixinPlugin.getConfig().setAll(java.util.Map.of(key, String.valueOf(level)));
-        ETMixinPlugin.clearCaches();
+        setConfigValue(key, String.valueOf(level));
     }
 
     static void setFeature(String key, boolean on) {
-        ETMixinPlugin.getConfig().setAll(java.util.Map.of(key, String.valueOf(on)));
-        ETMixinPlugin.clearCaches();
+        setConfigValue(key, String.valueOf(on));
     }
 
     static void setConfigValue(String key, String value) {
@@ -36,7 +36,14 @@ class ETTestHelper {
         ETMixinPlugin.clearCaches();
     }
 
-    /** Calls the protected Enchantment.canAccept via reflection. */
+    @SuppressWarnings("removal")
+    static ServerPlayerEntity createServerPlayer(TestContext helper, GameMode mode) {
+        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        player.changeGameMode(mode);
+        return player;
+    }
+
+    /** calls the protected Enchantment.canAccept via reflection */
     static boolean canAccept(Enchantment enchantment, Enchantment other) {
         try {
             Method m = Enchantment.class.getDeclaredMethod("canAccept", Enchantment.class);
@@ -47,7 +54,7 @@ class ETTestHelper {
         }
     }
 
-    /** Calls the protected Enchantment.isAcceptableItem via reflection. */
+    /** calls the protected Enchantment.isAcceptableItem via reflection */
     static boolean isAcceptableItem(Enchantment enchantment, ItemStack stack) {
         try {
             Method m = Enchantment.class.getDeclaredMethod("isAcceptableItem", ItemStack.class);
@@ -59,9 +66,9 @@ class ETTestHelper {
     }
 
     /**
-     * Sets the two input slots of an AnvilScreenHandler by directly writing to the
+     * sets the two input slots of an AnvilScreenHandler by directly writing to the
      * underlying SimpleInventory stacks list, bypassing the markDirty callback chain
-     * that would otherwise NPE in sendContentUpdates during tests.
+     * that would otherwise NPE in sendContentUpdates during tests
      */
     static void setAnvilInputs(AnvilScreenHandler handler, ItemStack first, ItemStack second) {
         try {
@@ -79,7 +86,7 @@ class ETTestHelper {
         }
     }
 
-    /** Calls static AnvilScreenHandler.getNextCost via reflection. */
+    /** calls static AnvilScreenHandler.getNextCost via reflection */
     static int getNextAnvilCost(int cost) {
         try {
             Method m = AnvilScreenHandler.class.getDeclaredMethod("getNextCost", int.class);
@@ -90,7 +97,7 @@ class ETTestHelper {
         }
     }
 
-    /** Calls ExperienceOrbEntity.repairPlayerGears(PlayerEntity, int) via reflection. */
+    /** calls ExperienceOrbEntity.repairPlayerGears(PlayerEntity, int) via reflection */
     static int repairPlayerGears(ExperienceOrbEntity orb, PlayerEntity player, int amount) {
         try {
             Method m = ExperienceOrbEntity.class.getDeclaredMethod("repairPlayerGears", PlayerEntity.class, int.class);
@@ -101,7 +108,7 @@ class ETTestHelper {
         }
     }
 
-    /** Sets the newItemName field on AnvilScreenHandler via reflection (field is private). */
+    /** sets the newItemName field on AnvilScreenHandler via reflection (field is private) */
     static void setAnvilNewName(AnvilScreenHandler handler, String name) {
         try {
             Field f = AnvilScreenHandler.class.getDeclaredField("newItemName");
@@ -112,7 +119,7 @@ class ETTestHelper {
         }
     }
 
-    /** Calls the protected AnvilScreenHandler.onTakeOutput via reflection. */
+    /** calls the protected AnvilScreenHandler.onTakeOutput via reflection */
     static void invokeOnTakeOutput(AnvilScreenHandler handler, PlayerEntity player, ItemStack stack) {
         try {
             Method m = AnvilScreenHandler.class.getDeclaredMethod("onTakeOutput", PlayerEntity.class, ItemStack.class);
@@ -123,7 +130,7 @@ class ETTestHelper {
         }
     }
 
-    /** Sets the two input slots of a GrindstoneScreenHandler via reflection. */
+    /** sets the two input slots of a GrindstoneScreenHandler via reflection */
     static void setGrindstoneInputs(net.minecraft.screen.GrindstoneScreenHandler handler, ItemStack first, ItemStack second) {
         try {
             Field inputField = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredField("input");
@@ -136,7 +143,7 @@ class ETTestHelper {
         }
     }
 
-    /** Calls GrindstoneScreenHandler.updateResult() via reflection. */
+    /** calls GrindstoneScreenHandler.updateResult() via reflection */
     static void grindstoneUpdateResult(net.minecraft.screen.GrindstoneScreenHandler handler) {
         try {
             Method m = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredMethod("updateResult");
@@ -147,7 +154,7 @@ class ETTestHelper {
         }
     }
 
-    /** Gets the result inventory from a GrindstoneScreenHandler via reflection. */
+    /** gets the result inventory from a GrindstoneScreenHandler via reflection */
     static ItemStack getGrindstoneResult(net.minecraft.screen.GrindstoneScreenHandler handler) {
         try {
             Field resultField = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredField("result");
@@ -159,7 +166,7 @@ class ETTestHelper {
         }
     }
 
-    /** Calls protected LivingEntity.modifyAppliedDamage(DamageSource, float) via reflection. */
+    /** calls protected LivingEntity.modifyAppliedDamage(DamageSource, float) via reflection */
     static float modifyAppliedDamage(net.minecraft.entity.LivingEntity entity, net.minecraft.entity.damage.DamageSource source, float damage) {
         try {
             Method m = net.minecraft.entity.LivingEntity.class.getDeclaredMethod("modifyAppliedDamage", net.minecraft.entity.damage.DamageSource.class, float.class);
@@ -171,8 +178,8 @@ class ETTestHelper {
     }
 
     /**
-     * Forces World.rainGradient so World.isRaining() immediately reflects the desired state.
-     * World.setWeather() sets the rain flag but the gradient updates lazily one tick at a time.
+     * forces World.rainGradient so World.isRaining() immediately reflects the desired state
+     * `World.setWeather()` sets the rain flag but the gradient updates lazily one tick at a time
      */
     static void forceRainGradient(ServerWorld world, float gradient) {
         try {

@@ -11,7 +11,13 @@
       "com.adibarra.enchanttweaker.test.AnvilGameTest",
       "com.adibarra.enchanttweaker.test.TweakGameTest",
       "com.adibarra.enchanttweaker.test.EnhancedGameTest",
-      "com.adibarra.enchanttweaker.test.GrindstoneGameTest"
+      "com.adibarra.enchanttweaker.test.GrindstoneGameTest",
+      "com.adibarra.enchanttweaker.test.ConfigSchemaGameTest",
+      "com.adibarra.enchanttweaker.test.CommandsGameTest",
+      "com.adibarra.enchanttweaker.test.PluginConfigGameTest",
+      "com.adibarra.enchanttweaker.test.PayloadGameTest",
+      "com.adibarra.enchanttweaker.test.RomanNumeralGameTest",
+      "com.adibarra.enchanttweaker.test.ShinyNameGameTest"
     ]
   }
 }
