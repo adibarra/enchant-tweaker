@@ -8,8 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * @description Enchanting/repairing cost is cheaper with prior work.
- * @note Not ModifyConstant because we want to work with doubles then cast to int.
+ * @description enchanting/repairing cost is cheaper with prior work
  * @environment Server
  */
 @Mixin(value=AnvilScreenHandler.class)
@@ -23,6 +22,7 @@ public abstract class PriorWorkCheaperMixin {
         if (!ETMixinPlugin.getMixinConfig("PriorWorkCheaperMixin")) return;
         double coefficient = ETMixinPlugin.getConfig().getOrDefault("pw_cost_multiplier", 2.0);
         double newCost = Math.clamp(coefficient, 0, Double.MAX_VALUE) * cost + 1;
-        cir.setReturnValue((int) Math.round(newCost));
+        // clamp the scaled cost to vanilla's integer range
+        cir.setReturnValue(Math.clamp(Math.round(newCost), 0, Integer.MAX_VALUE));
     }
 }

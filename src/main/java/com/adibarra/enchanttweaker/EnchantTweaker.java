@@ -22,6 +22,7 @@ public class EnchantTweaker implements ModInitializer {
         if (ETMixinPlugin.getConfig().getOrDefault("mod_enabled", false)) {
             ETCommands.registerCommands();
             ETCommands.registerEventListeners();
+            AnvilRepairHandler.register();
 
             ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
                 if (ServerPlayNetworking.canSend(handler.getPlayer(), ConfigSyncPayload.ID)) {

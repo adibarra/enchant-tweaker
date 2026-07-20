@@ -9,19 +9,16 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 /**
- * @description Anvils no longer say "Too Expensive!"
+ * @description anvils no longer say "Too Expensive!"
  * @environment Client
  */
 @Environment(EnvType.CLIENT)
 @Mixin(value=AnvilScreen.class)
 public abstract class NotTooExpensiveMixin {
 
-    // VERSION CHANGES:
-    // 1.16+: drawForeground(Lnet/minecraft/client/util/math/MatrixStack;II)V
-    // 1.20.1+: drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V
     @ModifyConstant(
         method="drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V",
-        constant=@Constant(intValue=40))
+        constant=@Constant(intValue=40, ordinal=0))
     private int notTooExpensiveClient(int orig) {
         if (!ETMixinPlugin.getMixinConfig("NotTooExpensiveMixin")) return orig;
         int maxCost = ETMixinPlugin.getConfig().getOrDefault("nte_max_cost", orig);

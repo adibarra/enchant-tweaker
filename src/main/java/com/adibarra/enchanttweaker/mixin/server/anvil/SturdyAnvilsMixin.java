@@ -7,8 +7,7 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 /**
- * @description Customize the chance of an anvil breaking when used.
- * @note This modifies a constant in a lambda in onTakeOutput
+ * @description customize the chance of an anvil breaking when used
  * @environment Server
  */
 @Mixin(value=AnvilScreenHandler.class)
@@ -16,7 +15,7 @@ public abstract class SturdyAnvilsMixin {
 
     @ModifyConstant(
         method="method_24922(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V",
-        constant=@Constant(floatValue=0.12f))
+        constant=@Constant(floatValue=0.12f, ordinal=0))
     private static float enchanttweaker$sturdyAnvils$modifyDamageChance(float orig) {
         if (!ETMixinPlugin.getMixinConfig("SturdyAnvilsMixin")) return orig;
         float anvilDamageChance = ETMixinPlugin.getConfig().getOrDefault("anvil_damage_chance", orig);
