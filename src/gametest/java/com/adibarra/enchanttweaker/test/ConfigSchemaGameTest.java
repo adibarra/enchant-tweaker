@@ -54,6 +54,10 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         // decimal must double-parse
         helper.assertTrue(ETConfigSchema.isValid("anvil_damage_chance", "0.5"),     "anvil_damage_chance=0.5 should be valid");
         helper.assertTrue(!ETConfigSchema.isValid("anvil_damage_chance", "banana"), "anvil_damage_chance=banana should be invalid");
+        helper.assertTrue(!ETConfigSchema.isValid("anvil_damage_chance", "Infinity"),
+            "infinite decimal should be invalid");
+        helper.assertTrue(!ETConfigSchema.isValid("anvil_damage_chance", "NaN"),
+            "NaN decimal should be invalid");
 
         // list is always valid
         helper.assertTrue(ETConfigSchema.isValid("disable_enchantments", "sharpness,mending"), "list value should be valid");
@@ -481,8 +485,12 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             junk.put("int_over", "99999999999999");   // out of int range
             junk.put("int_ok", "42");
             junk.put("dbl_bad", "xyz");
-            junk.put("dbl_over", "1e400");             // `Double.parseDouble` -> Infinity (does NOT throw)
+            junk.put("dbl_over", "1e400");             // parses to Infinity and must be rejected
+            junk.put("dbl_nan", "NaN");
             junk.put("dbl_ok", "3.5");
+            junk.put("flt_over", "1e50");
+            junk.put("flt_nan", "NaN");
+            junk.put("flt_ok", "1.25");
             junk.put("bool_junk", "yes");
             junk.put("bool_empty", "");
             junk.put("bool_true", "true");
@@ -494,18 +502,25 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             helper.assertTrue(cfg.getOrDefault("int_over", 7) == 7, "overflowing int value should fall back to default");
             helper.assertTrue(cfg.getOrDefault("int_ok", 7) == 42, "clean int value should parse");
 
-            // double: bad falls back; clean parses; OVERFLOW becomes Infinity (Java quirk, NOT the default)
+            // floating-point getters accept finite values and reject non-numeric or non-finite values
             helper.assertTrue(cfg.getOrDefault("dbl_bad", 1.5) == 1.5, "non-numeric double value should fall back to default");
             helper.assertTrue(cfg.getOrDefault("dbl_ok", 1.5) == 3.5, "clean double value should parse");
-            helper.assertTrue(Double.isInfinite(cfg.getOrDefault("dbl_over", 1.5)),
-                "double overflow yields Infinity (Double.parseDouble does not throw), not the default");
+            helper.assertTrue(cfg.getOrDefault("dbl_over", 1.5) == 1.5,
+                "overflowing double should fall back instead of returning Infinity");
+            helper.assertTrue(cfg.getOrDefault("dbl_nan", 1.5) == 1.5,
+                "NaN double should fall back to the default");
+            helper.assertTrue(cfg.getOrDefault("flt_over", 2.5f) == 2.5f,
+                "overflowing float should fall back instead of returning Infinity");
+            helper.assertTrue(cfg.getOrDefault("flt_nan", 2.5f) == 2.5f,
+                "NaN float should fall back to the default");
+            helper.assertTrue(cfg.getOrDefault("flt_ok", 2.5f) == 1.25f,
+                "clean float value should parse");
 
-            // boolean: Boolean.parseBoolean means ANYTHING but 'true' is false - even the default is
-            // ignored for a present-but-junk value (this is the surprising, load-bearing contract)
-            helper.assertFalse(cfg.getOrDefault("bool_junk", true),
-                "a present non-'true' boolean value yields false, ignoring the true default");
-            helper.assertFalse(cfg.getOrDefault("bool_empty", true),
-                "an empty boolean value yields false, ignoring the true default");
+            // invalid present booleans preserve the supplied default
+            helper.assertTrue(cfg.getOrDefault("bool_junk", true),
+                "a present invalid boolean should fall back to the true default");
+            helper.assertTrue(cfg.getOrDefault("bool_empty", true),
+                "an empty boolean should fall back to the true default");
             helper.assertTrue(cfg.getOrDefault("bool_true", false), "value 'true' parses to boolean true");
 
             // missing key / null key both return the supplied default

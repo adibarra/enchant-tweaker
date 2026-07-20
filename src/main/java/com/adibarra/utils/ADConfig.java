@@ -420,7 +420,9 @@ public class ADConfig {
         if (key == null) return def;
         String val = config.get(key);
         if (val == null) return def;
-        return Boolean.parseBoolean(val);
+        if (val.equalsIgnoreCase("true")) return true;
+        if (val.equalsIgnoreCase("false")) return false;
+        return def;
     }
 
     /**
@@ -449,7 +451,8 @@ public class ADConfig {
         String val = config.get(key);
         if (val == null) return def;
         try {
-            return Double.parseDouble(val);
+            double parsed = Double.parseDouble(val);
+            return Double.isFinite(parsed) ? parsed : def;
         } catch (NumberFormatException e) {
             return def;
         }
@@ -465,7 +468,8 @@ public class ADConfig {
         String val = config.get(key);
         if (val == null) return def;
         try {
-            return Float.parseFloat(val);
+            float parsed = Float.parseFloat(val);
+            return Float.isFinite(parsed) ? parsed : def;
         } catch (NumberFormatException e) {
             return def;
         }

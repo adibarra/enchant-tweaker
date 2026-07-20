@@ -172,8 +172,7 @@ public final class ETConfigSchema {
             }
             case DECIMAL -> {
                 try {
-                    Double.parseDouble(value);
-                    yield true;
+                    yield Double.isFinite(Double.parseDouble(value));
                 } catch (NumberFormatException e) {
                     yield false;
                 }
