@@ -1,9 +1,11 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.utils.ADUtils;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.player.PlayerEntity;
@@ -39,6 +41,8 @@ public abstract class MoreBindingMixin {
                 newPlayer.getInventory().armor.set(entry.getKey(), entry.getValue());
             }
         });
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+            BOUND_ARMOR.remove(handler.getPlayer().getUuid()));
     }
 
     @Shadow @Final
@@ -60,7 +64,7 @@ public abstract class MoreBindingMixin {
 
         int bindingLevel = EnchantmentHelper.getLevel(Enchantments.BINDING_CURSE, stack);
         double step = ETMixinPlugin.getConfig().getOrDefault("more_binding_step", 0.1);
-        if (ThreadLocalRandom.current().nextFloat() > Math.clamp(1.0 + step - step * bindingLevel, 0.0, 1.0)) {
+        if (ADUtils.bindingKeepsItem(bindingLevel, step, ThreadLocalRandom.current().nextFloat())) {
             BOUND_ARMOR.computeIfAbsent(player.getUuid(), k -> new ConcurrentHashMap<>())
                        .put(armor.indexOf(stack), stack.copy());
             return true;

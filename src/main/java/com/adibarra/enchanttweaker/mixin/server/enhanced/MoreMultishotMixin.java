@@ -16,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
  */
 @Mixin(value=RangedWeaponItem.class)
 public abstract class MoreMultishotMixin {
-
     @ModifyConstant(
         method="load(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;)Ljava/util/List;",
         constant=@Constant(intValue=3, ordinal=0))
@@ -24,7 +23,6 @@ public abstract class MoreMultishotMixin {
         if (!ETMixinPlugin.getMixinConfig("MoreMultishotMixin")) return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_multishot_per_level", 2);
         int multishotLevel = EnchantmentHelper.getLevel(Enchantments.MULTISHOT, weaponStack);
-        // long math avoids overflow; clamp keeps the count at a vanilla-sensible minimum of 1
-        return (int)Math.clamp((long)multishotLevel * Math.max(0, perLevel) + 1, 1, Integer.MAX_VALUE);
+        return Math.toIntExact((long)multishotLevel * Math.max(0, perLevel) + 1);
     }
 }

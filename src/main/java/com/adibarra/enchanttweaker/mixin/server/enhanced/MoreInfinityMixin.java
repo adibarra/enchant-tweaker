@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.utils.ADUtils;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -34,10 +35,8 @@ public abstract class MoreInfinityMixin {
         if (shooter != null && shooter.isInCreativeMode()) return true;
         int infinityLevel = EnchantmentHelper.getLevel(Enchantments.INFINITY, weaponStack);
         double pct = ETMixinPlugin.getConfig().getOrDefault("more_infinity_pct", 0.03);
-        if (ThreadLocalRandom.current().nextFloat() > Math.clamp(1.0 - pct * infinityLevel, 0, 1.0)) {
-            return true; // keep infinity: free arrow
-        }
-        return false; // lose infinity: consume arrow
+        return ADUtils.infinityPreservesArrow(
+            infinityLevel, pct, ThreadLocalRandom.current().nextFloat());
     }
 
 }

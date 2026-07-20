@@ -1,11 +1,12 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.FlameLevelAccess;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.hit.EntityHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,22 +23,47 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @environment Server
  */
 @Mixin(value=PersistentProjectileEntity.class)
-public abstract class MoreFlameMixin {
+public abstract class MoreFlameMixin implements FlameLevelAccess {
 
     @Unique
-    private int flameLevel = 0;
+    private static final String FLAME_LEVEL_NBT_KEY = "EnchantTweakerFlameLevel";
+
+    @Unique
+    private int enchanttweaker$flameLevel = 0;
 
     @Inject(
-        method="onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
+        method="applyEnchantmentEffects(Lnet/minecraft/entity/LivingEntity;F)V",
         at=@At("HEAD"))
-    private void enchanttweaker$moreFlame$captureFlameLevel(EntityHitResult entityHitResult, CallbackInfo ci) {
-        if (!ETMixinPlugin.getMixinConfig("MoreFlameMixin")) return;
-        // reset first so a stale value can't persist when the owner isn't a LivingEntity
-        flameLevel = 0;
-        Entity owner = ((PersistentProjectileEntity)(Object)this).getOwner();
-        if (owner instanceof LivingEntity) {
-            flameLevel = EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, (LivingEntity) owner);
+    private void enchanttweaker$moreFlame$captureMobWeaponLevel(
+            LivingEntity shooter, float damageModifier, CallbackInfo ci) {
+        enchanttweaker$setFlameLevel(
+            EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, shooter));
+    }
+
+    @Override
+    @Unique
+    public int enchanttweaker$getFlameLevel() {
+        return enchanttweaker$flameLevel;
+    }
+
+    @Override
+    @Unique
+    public void enchanttweaker$setFlameLevel(int level) {
+        enchanttweaker$flameLevel = Math.max(0, level);
+    }
+
+    @Inject(method="writeCustomDataToNbt(Lnet/minecraft/nbt/NbtCompound;)V", at=@At("TAIL"))
+    private void enchanttweaker$moreFlame$writeLevel(NbtCompound nbt, CallbackInfo ci) {
+        if (enchanttweaker$flameLevel > 0) {
+            nbt.putInt(FLAME_LEVEL_NBT_KEY, enchanttweaker$flameLevel);
+        } else {
+            nbt.remove(FLAME_LEVEL_NBT_KEY);
         }
+    }
+
+    @Inject(method="readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V", at=@At("TAIL"))
+    private void enchanttweaker$moreFlame$readLevel(NbtCompound nbt, CallbackInfo ci) {
+        enchanttweaker$setFlameLevel(nbt.getInt(FLAME_LEVEL_NBT_KEY));
     }
 
     @ModifyConstant(
@@ -49,7 +75,7 @@ public abstract class MoreFlameMixin {
     private int enchanttweaker$moreFlame$modifyBurnTime(int orig) {
         if (!ETMixinPlugin.getMixinConfig("MoreFlameMixin")) return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_flame_per_level", 2);
-        long extra = (long) Math.max(0, perLevel) * Math.max(0, flameLevel - 1);
+        long extra = (long) Math.max(0, perLevel) * Math.max(0L, (long) enchanttweaker$flameLevel - 1);
         long seconds = (long) orig + extra;
         return (int) Math.clamp(seconds, orig, Integer.MAX_VALUE / 20);
     }

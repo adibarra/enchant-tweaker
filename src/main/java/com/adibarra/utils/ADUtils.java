@@ -100,4 +100,16 @@ public class ADUtils {
         }
         return null;
     }
+
+    /** Returns whether a Binding Curse roll keeps the item instead of dropping it. */
+    public static boolean bindingKeepsItem(int level, double step, float roll) {
+        double dropChance = Math.clamp(1.0 + step - step * level, 0.0, 1.0);
+        return roll >= dropChance;
+    }
+
+    /** Returns whether an Infinity roll preserves the arrow. */
+    public static boolean infinityPreservesArrow(int level, double percentPerLevel, float roll) {
+        double consumeChance = Math.clamp(1.0 - percentPerLevel * level, 0.0, 1.0);
+        return roll >= consumeChance;
+    }
 }

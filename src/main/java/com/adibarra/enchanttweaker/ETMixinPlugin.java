@@ -44,6 +44,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("MoreChannelingMixin",       "more_channeling");
         KEYS.put("MoreFireProtectionMixin",   "more_fire_protection");
         KEYS.put("MoreFlameMixin",            "more_flame");
+        KEYS.put("MoreFlameRangedWeaponMixin", "more_flame");
         KEYS.put("MoreInfinityMixin",         "more_infinity");
         KEYS.put("MoreLootingMixin",          "more_looting");
         KEYS.put("MoreMendingMixin",          "more_mending");

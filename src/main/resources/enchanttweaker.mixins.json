@@ -16,6 +16,7 @@
     "server.enhanced.MoreBindingMixin",
     "server.enhanced.MoreChannelingMixin",
     "server.enhanced.MoreFlameMixin",
+    "server.enhanced.MoreFlameRangedWeaponMixin",
     "server.enhanced.MoreInfinityMixin",
     "server.enhanced.MoreMendingMixin",
     "server.enhanced.MoreBlastProtectionMixin",

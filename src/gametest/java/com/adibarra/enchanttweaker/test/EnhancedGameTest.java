@@ -1,8 +1,11 @@
 package com.adibarra.enchanttweaker.test;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.enchanttweaker.FlameLevelAccess;
+import com.adibarra.utils.ADUtils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -14,12 +17,14 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.entity.projectile.TridentEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.CrossbowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.RangedWeaponItem;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.Hand;
@@ -91,6 +96,33 @@ public class EnhancedGameTest implements FabricGameTest {
         helper.complete();
     }
 
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreMultishotHasNoArtificialCap(TestContext helper) {
+        ETTestHelper.setFeature("more_multishot", true);
+        ETTestHelper.setConfigValue("more_multishot_per_level", "300");
+        ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
+        ItemStack crossbow = new ItemStack(Items.CROSSBOW);
+        crossbow.addEnchantment(Enchantments.MULTISHOT, 1);
+        player.getInventory().insertStack(new ItemStack(Items.ARROW, 64));
+        try {
+            Method loadProjectiles = CrossbowItem.class.getDeclaredMethod(
+                "loadProjectiles", LivingEntity.class, ItemStack.class);
+            loadProjectiles.setAccessible(true);
+            loadProjectiles.invoke(null, player, crossbow);
+            var charged = crossbow.get(DataComponentTypes.CHARGED_PROJECTILES);
+            List<ItemStack> projectiles = charged != null ? charged.getProjectiles() : List.of();
+            helper.assertTrue(projectiles.size() == 301,
+                "MoreMultishot should continue beyond 256 projectiles without an artificial cap (got "
+                    + projectiles.size() + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setConfigValue("more_multishot_per_level", "2");
+            ETTestHelper.setFeature("more_multishot", false);
+        }
+        helper.complete();
+    }
+
     // moreFlame
     // flame II: burn time = 2*(2-1)+5 = 7 seconds (140 ticks) vs vanilla 5s (100 ticks)
 
@@ -110,6 +142,7 @@ public class EnhancedGameTest implements FabricGameTest {
         arrow.setOwner(shooter);
         arrow.setOnFireFor(10);
         world.spawnEntity(arrow);
+        arrow.applyEnchantmentEffects(shooter, 0.0f);
 
         ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
         try {
@@ -142,6 +175,7 @@ public class EnhancedGameTest implements FabricGameTest {
         arrow.setOwner(shooter);
         arrow.setOnFireFor(10);
         world.spawnEntity(arrow);
+        arrow.applyEnchantmentEffects(shooter, 0.0f);
 
         ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
         try {
@@ -157,6 +191,64 @@ public class EnhancedGameTest implements FabricGameTest {
             ETTestHelper.setFeature("more_flame", false);
             ETTestHelper.setEnchantCap("flame", -1);
         }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreFlamePlayerShotKeepsWeaponLevel(TestContext helper) {
+        ETTestHelper.setFeature("more_flame", true);
+        ETTestHelper.setConfigValue("more_flame_per_level", "2");
+        ETTestHelper.setEnchantCap("flame", 3);
+        ServerWorld world = helper.getWorld();
+        ServerPlayerEntity shooter = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
+        ItemStack bow = new ItemStack(Items.BOW);
+        bow.addEnchantment(Enchantments.FLAME, 3);
+        try {
+            Method createArrow = RangedWeaponItem.class.getDeclaredMethod(
+                "createArrowEntity", World.class, LivingEntity.class, ItemStack.class, ItemStack.class, boolean.class);
+            createArrow.setAccessible(true);
+            ProjectileEntity projectile = (ProjectileEntity) createArrow.invoke(
+                bow.getItem(), world, shooter, bow, new ItemStack(Items.ARROW), false);
+            helper.assertTrue(projectile instanceof ArrowEntity,
+                "bow projectile should be an ArrowEntity");
+            helper.assertTrue(((FlameLevelAccess) projectile).enchanttweaker$getFlameLevel() == 3,
+                "projectile should capture Flame III from the fired weapon");
+
+            ArrowEntity arrow = (ArrowEntity) projectile;
+            arrow.setOnFireFor(10);
+            world.spawnEntity(arrow);
+            ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
+            Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod(
+                "onEntityHit", EntityHitResult.class);
+            onEntityHit.setAccessible(true);
+            onEntityHit.invoke(arrow, new EntityHitResult(target));
+            helper.assertTrue(target.getFireTicks() == 180,
+                "player-fired Flame III arrow should burn for 180 ticks after weapon state is unavailable (got "
+                    + target.getFireTicks() + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.setEnchantCap("flame", -1);
+            ETTestHelper.setFeature("more_flame", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreFlameLevelSurvivesNbtRoundTrip(TestContext helper) {
+        ServerWorld world = helper.getWorld();
+        BlockPos pos = helper.getAbsolutePos(new BlockPos(0, 3, 0));
+        ArrowEntity original = new ArrowEntity(
+            world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.ARROW));
+        ((FlameLevelAccess) original).enchanttweaker$setFlameLevel(7);
+        NbtCompound nbt = new NbtCompound();
+        original.writeNbt(nbt);
+
+        ArrowEntity restored = new ArrowEntity(
+            world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.ARROW));
+        restored.readNbt(nbt);
+        helper.assertTrue(((FlameLevelAccess) restored).enchanttweaker$getFlameLevel() == 7,
+            "serialized projectile should restore captured Flame level 7");
         helper.complete();
     }
 
@@ -215,7 +307,7 @@ public class EnhancedGameTest implements FabricGameTest {
 
     // moreInfinity
     // at Infinity level 34: threshold = clamp(1 - 0.03*34, 0, 1) = 0
-    // random.nextFloat() is always in [0,1), so random > 0 -> always true -> always free arrow
+    // random.nextFloat() is always in [0,1), so random >= 0 is always true -> always free arrow
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreInfinityEnabled(TestContext helper) {
@@ -232,7 +324,7 @@ public class EnhancedGameTest implements FabricGameTest {
             Method m = RangedWeaponItem.class.getDeclaredMethod("getProjectile", ItemStack.class, ItemStack.class, LivingEntity.class, boolean.class);
             m.setAccessible(true);
             ItemStack proj = (ItemStack) m.invoke(null, bow, arrow, shooter, false);
-            // level 34: threshold = clamp(1 - 0.03*34, 0, 1) = 0 -> random > 0 always -> always intangible
+            // level 34: threshold = clamp(1 - 0.03*34, 0, 1) = 0 -> random >= 0 is always true
             helper.assertTrue(proj.contains(DataComponentTypes.INTANGIBLE_PROJECTILE),
                 "Level-34 Infinity should always give intangible projectile (threshold=0)");
         } catch (ReflectiveOperationException e) {
@@ -264,6 +356,19 @@ public class EnhancedGameTest implements FabricGameTest {
         } finally {
             ETTestHelper.setFeature("more_infinity", false);
         }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void randomChanceThresholdBoundaries(TestContext helper) {
+        helper.assertTrue(ADUtils.bindingKeepsItem(5, 0.125, 0.5f),
+            "Binding roll exactly at the keep threshold should keep the item");
+        helper.assertFalse(ADUtils.bindingKeepsItem(5, 0.125, Math.nextDown(0.5f)),
+            "Binding roll immediately below the keep threshold should drop the item");
+        helper.assertTrue(ADUtils.infinityPreservesArrow(2, 0.25, 0.5f),
+            "Infinity roll exactly at the preserve threshold should preserve the arrow");
+        helper.assertFalse(ADUtils.infinityPreservesArrow(2, 0.25, Math.nextDown(0.5f)),
+            "Infinity roll immediately below the preserve threshold should consume the arrow");
         helper.complete();
     }
 
@@ -519,6 +624,7 @@ public class EnhancedGameTest implements FabricGameTest {
         arrow.setOwner(shooter);
         arrow.setOnFireFor(10);
         world.spawnEntity(arrow);
+        arrow.applyEnchantmentEffects(shooter, 0.0f);
         ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
         try {
             Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod("onEntityHit", EntityHitResult.class);
@@ -867,7 +973,7 @@ public class EnhancedGameTest implements FabricGameTest {
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void moreBindingLevel1AlwaysDrops(TestContext helper) {
-        // level 1: clamp(1.0 + 0.1 - 0.1*1, 0.0, 1.0) = 1.0 -> random > 1.0 is never true -> always drops
+        // level 1: threshold 1.0; nextFloat() is always below 1.0, so the item always drops
         ETTestHelper.setFeature("more_binding", true);
         ETTestHelper.setConfigValue("more_binding_step", "0.1");
         ETTestHelper.setCapmod(true);
@@ -1035,6 +1141,7 @@ public class EnhancedGameTest implements FabricGameTest {
         arrow.setOwner(shooter);
         arrow.setOnFireFor(10);
         world.spawnEntity(arrow);
+        arrow.applyEnchantmentEffects(shooter, 0.0f);
         ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
         try {
             Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod("onEntityHit", EntityHitResult.class);
@@ -1138,6 +1245,7 @@ public class EnhancedGameTest implements FabricGameTest {
         arrow.setOwner(shooter);
         arrow.setOnFireFor(10); // fire arrow, but not from a Flame bow
         world.spawnEntity(arrow);
+        arrow.applyEnchantmentEffects(shooter, 0.0f);
         ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
         try {
             Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod("onEntityHit", EntityHitResult.class);
@@ -1172,6 +1280,7 @@ public class EnhancedGameTest implements FabricGameTest {
         arrow.setOwner(shooter);
         arrow.setOnFireFor(10);
         world.spawnEntity(arrow);
+        arrow.applyEnchantmentEffects(shooter, 0.0f);
         ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
         try {
             Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod("onEntityHit", EntityHitResult.class);
@@ -1385,6 +1494,37 @@ public class EnhancedGameTest implements FabricGameTest {
             ServerPlayerEvents.AFTER_RESPAWN.invoker().afterRespawn(old, respawned, false);
             helper.assertTrue(respawned.getInventory().armor.get(3).isEmpty(),
                 "A second AFTER_RESPAWN should restore nothing (stash entry already consumed)");
+        } finally {
+            ETTestHelper.setFeature("more_binding", false);
+            ETTestHelper.setConfigValue("more_binding_step", "0.1");
+            ETTestHelper.setCapmod(false);
+            ETTestHelper.setEnchantCap("binding_curse", -1);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void moreBindingDisconnectClearsPendingArmor(TestContext helper) {
+        ETTestHelper.setFeature("more_binding", true);
+        ETTestHelper.setConfigValue("more_binding_step", "1.0");
+        ETTestHelper.setCapmod(true);
+        ETTestHelper.setEnchantCap("binding_curse", 5);
+        try {
+            ServerPlayerEntity old = ETTestHelper.createServerPlayer(helper, GameMode.SURVIVAL);
+            ItemStack helmet = new ItemStack(Items.DIAMOND_HELMET);
+            helmet.addEnchantment(Enchantments.BINDING_CURSE, 5);
+            old.getInventory().armor.set(3, helmet);
+            old.getInventory().dropAll();
+            helper.assertFalse(old.getInventory().armor.get(3).isEmpty(),
+                "death path should stage the bound helmet before disconnect cleanup");
+
+            ServerPlayConnectionEvents.DISCONNECT.invoker().onPlayDisconnect(
+                old.networkHandler, helper.getWorld().getServer());
+            ServerPlayerEntity respawned = ETTestHelper.createServerPlayer(helper, GameMode.SURVIVAL);
+            respawned.getInventory().armor.set(3, ItemStack.EMPTY);
+            ServerPlayerEvents.AFTER_RESPAWN.invoker().afterRespawn(old, respawned, false);
+            helper.assertTrue(respawned.getInventory().armor.get(3).isEmpty(),
+                "disconnect cleanup must prevent stale armor restoration");
         } finally {
             ETTestHelper.setFeature("more_binding", false);
             ETTestHelper.setConfigValue("more_binding_step", "0.1");
@@ -1620,6 +1760,7 @@ public class EnhancedGameTest implements FabricGameTest {
         arrow.setOwner(shooter);
         arrow.setOnFireFor(10);
         world.spawnEntity(arrow);
+        arrow.applyEnchantmentEffects(shooter, 0.0f);
         ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
         try {
             Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod("onEntityHit", EntityHitResult.class);
@@ -1950,13 +2091,15 @@ public class EnhancedGameTest implements FabricGameTest {
         arrow.setOwner(shooter);
         arrow.setOnFireFor(10);
         world.spawnEntity(arrow);
+        arrow.applyEnchantmentEffects(shooter, 0.0f);
         ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
         try {
             Method onEntityHit = PersistentProjectileEntity.class.getDeclaredMethod("onEntityHit", EntityHitResult.class);
             onEntityHit.setAccessible(true);
             onEntityHit.invoke(arrow, new EntityHitResult(target));
-            helper.assertTrue(target.getFireTicks() >= 100,
-                "Huge more_flame_per_level must be clamped, never dropping below vanilla's 100 ticks (got " + target.getFireTicks() + ")");
+            helper.assertTrue(target.getFireTicks() == 2_147_483_640,
+                "Huge more_flame_per_level should clamp to the largest safe tick count (got "
+                    + target.getFireTicks() + ")");
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         } finally {
@@ -1984,6 +2127,7 @@ public class EnhancedGameTest implements FabricGameTest {
         arrow.setOwner(shooter);
         // deliberately NOT on fire
         world.spawnEntity(arrow);
+        ((FlameLevelAccess) arrow).enchanttweaker$setFlameLevel(2);
         ZombieEntity target = helper.spawnMob(EntityType.ZOMBIE, new BlockPos(2, 2, 0));
         // a freshly spawned mob is not burning; its raw fireTicks sentinel is a negative spawn
         // compare against the initial fire state instead of assuming zero ticks
@@ -2368,7 +2512,7 @@ public class EnhancedGameTest implements FabricGameTest {
         try {
             Method m = RangedWeaponItem.class.getDeclaredMethod("getProjectile", ItemStack.class, ItemStack.class, LivingEntity.class, boolean.class);
             m.setAccessible(true);
-            // plain arrow: isInfinity true -> mixin threshold clamp(1 - 1.0*1, 0, 1) = 0 -> random > 0 -> always free
+            // plain arrow: isInfinity true -> threshold 0 -> random >= 0 -> always free
             ItemStack plain = (ItemStack) m.invoke(null, bow, new ItemStack(Items.ARROW), shooter, false);
             helper.assertTrue(plain.contains(DataComponentTypes.INTANGIBLE_PROJECTILE),
                 "Plain arrow at pct=1.0 should be free (intangible) - the contrast case");
