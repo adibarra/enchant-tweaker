@@ -38,6 +38,12 @@
 - Fix dead channeling entry in capmod config
 - Regenerate a blank or unreadable config from defaults instead of deleting it
 - Clamp out-of-range config values (protection bases, looting multiplier, multishot per-level, xp scaling overflow, mending floor)
+- Preserve MoreFlame levels on fired projectiles across weapon switches and save/load
+- Keep CheapNames from changing costs when an anvil operation has no valid output
+- Reject malformed booleans and non-finite decimal config values
+- Ignore malformed Protection bypass IDs instead of crashing damage handling
+- Clear pending MoreBinding armor when a player disconnects
+- Include exact random-threshold boundary rolls for MoreBinding and MoreInfinity
 
 ### Internal
 
@@ -48,8 +54,9 @@
 - Version the client sync payload and exclude client-only cosmetic prefs (`roman_numerals`, `shiny_name`) from sync
 - Declare `fabric-api` and `minecraft` dependencies in fabric.mod.json
 - Add a GitHub Actions CI workflow that builds the mod and runs the gametests
+- Add a Quilt Loader server smoke test to CI
 - Upgrade to Java 21, Gradle 9, and Fabric Loom 1.15
-- Expand the test suite to 190 gametests
+- Expand the test suite to 422 gametests
 
 ## 1.5.0
 

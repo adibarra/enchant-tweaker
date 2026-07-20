@@ -116,7 +116,7 @@ Enabling this tweak will make Looting also increase XP drops from mob kills. Hig
 Enabling this tweak will allow Mending to scale with enchantment level. Mending II is the same as vanilla Mending. Mending I has ~10% XP efficiency loss and Mending III has ~10% XP efficiency gain. Formula: `Repair Cost = clamp(0.6 - step * mendingLevel, floor, 0.6)`. Both step (default 0.05) and floor (default 0.1) are configurable.
 
 ### More Multishot
-Enabling this tweak will allow Multishot to scale with enchantment level. Each additional level adds extra arrows to the shot. Crossbows take damage for **each** Multishot arrow shot. Continues scaling for higher levels (uncapped). Formula: `Arrow Count = multishotLevel * per_level + 1`. The per-level increment is configurable (default 2).
+Enabling this tweak will allow Multishot to scale with enchantment level. Each additional level adds extra arrows to the shot. Crossbows take damage for **each** Multishot arrow shot. Continues scaling for higher levels without an artificial cap. Formula: `Arrow Count = multishotLevel * per_level + 1`. The per-level increment is configurable (default 2).
 
 ### More Protection
 Enabling this tweak will replace the additive EPF protection formula with multiplicative scaling. Protection never reaches 100% immunity. Formula: `Damage = damage * base^epf`. The base is configurable (default 0.96, meaning 4% reduction per EPF point).
