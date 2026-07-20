@@ -1041,9 +1041,9 @@ public class TweakGameTest implements FabricGameTest {
 
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void protectionBypassWhitespaceTokens(TestContext helper) {
-        // whitespace-padded and trailing-empty tokens must be trimmed/skipped: both magic and wither bypass
+        // whitespace, malformed, and trailing-empty tokens must be skipped without discarding valid entries
         ETTestHelper.setFeature("protection_bypass_enabled", true);
-        ETTestHelper.setConfigValue("protection_bypass_types", "magic , wither ,");
+        ETTestHelper.setConfigValue("protection_bypass_types", "magic , bad id! , wither ,");
         try {
             float magic = protectedZombieDamageDelta(helper, helper.getWorld().getDamageSources().magic(), 10.0f);
             helper.assertTrue(Math.abs(magic - 10.0f) < 0.05f,
@@ -1054,6 +1054,32 @@ public class TweakGameTest implements FabricGameTest {
         } finally {
             ETTestHelper.setConfigValue("protection_bypass_types", "");
             ETTestHelper.setFeature("protection_bypass_enabled", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void protectionBypassPrecedesMoreProtection(TestContext helper) {
+        ETTestHelper.setFeature("more_protection", true);
+        ETTestHelper.setConfigValue("more_protection_base", "0.96");
+        ETTestHelper.setFeature("protection_bypass_enabled", true);
+        ETTestHelper.setConfigValue("protection_bypass_types", "magic");
+        try {
+            float bypassed = protectedZombieDamageDelta(
+                helper, helper.getWorld().getDamageSources().magic(), 10.0f);
+            helper.assertTrue(Math.abs(bypassed - 10.0f) < 0.05f,
+                "configured damage must bypass MoreProtection as well as vanilla Protection");
+
+            float protectedDamage = protectedZombieDamageDelta(
+                helper, helper.getWorld().getDamageSources().generic(), 10.0f);
+            float expected = (float)(10.0 * Math.pow(0.96, 16));
+            helper.assertTrue(Math.abs(protectedDamage - expected) < 0.05f,
+                "unlisted damage should retain MoreProtection scaling (got "
+                    + protectedDamage + ", expected ~" + expected + ")");
+        } finally {
+            ETTestHelper.setConfigValue("protection_bypass_types", "");
+            ETTestHelper.setFeature("protection_bypass_enabled", false);
+            ETTestHelper.setFeature("more_protection", false);
         }
         helper.complete();
     }

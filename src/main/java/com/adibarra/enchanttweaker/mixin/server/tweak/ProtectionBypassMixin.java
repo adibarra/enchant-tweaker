@@ -44,9 +44,8 @@ public abstract class ProtectionBypassMixin {
             for (String entry : config.split(",")) {
                 String trimmed = entry.trim();
                 if (trimmed.isEmpty()) continue;
-                Identifier id = trimmed.contains(":")
-                    ? Identifier.tryParse(trimmed)
-                    : Identifier.of("minecraft", trimmed);
+                String normalized = trimmed.contains(":") ? trimmed : "minecraft:" + trimmed;
+                Identifier id = Identifier.tryParse(normalized);
                 if (id != null) {
                     keys.add(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, id));
                 }
