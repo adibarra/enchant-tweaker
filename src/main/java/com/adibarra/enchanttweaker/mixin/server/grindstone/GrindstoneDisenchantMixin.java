@@ -24,9 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @description Allow extracting enchantments from items into books via grindstone.
- * Place an enchanted item + regular book in the grindstone to extract enchantments.
- * Also supports splitting multi-enchantment books.
+ * @description allow extracting enchantments from items into books via grindstone
+ * place an enchanted item + regular book in the grindstone to extract enchantments
+ * also supports splitting multi-enchantment books
  * @environment Server
  */
 @Mixin(value=GrindstoneScreenHandler.class)
@@ -35,7 +35,7 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
     @Shadow @Final private Inventory result;
     @Shadow @Final Inventory input;
 
-    /** Which input slot holds the book (0 or 1), or -1 if not a disenchant operation. */
+    /** which input slot holds the book (0 or 1), or -1 if not a disenchant operation */
     @Unique
     private int enchanttweaker$bookSlot = -1;
 
@@ -49,7 +49,12 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
         ItemStack stack0 = input.getStack(0);
         ItemStack stack1 = input.getStack(1);
 
-        // Detect: one slot is a regular book, the other has enchantments
+        // reject stacked inputs because grindstones process one item at a time
+        if (stack0.getCount() > 1 || stack1.getCount() > 1) {
+            enchanttweaker$bookSlot = -1;
+            return;
+        }
+
         int bookSlot = -1;
         int enchantedSlot = -1;
         if (stack0.isOf(Items.BOOK) && !stack1.isEmpty() && EnchantmentHelper.hasEnchantments(stack1)) {
@@ -62,14 +67,13 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
 
         if (bookSlot == -1) {
             enchanttweaker$bookSlot = -1;
-            return; // Let vanilla handle it
+            return;
         }
 
         enchanttweaker$bookSlot = bookSlot;
         ItemStack enchantedItem = input.getStack(enchantedSlot);
         ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(enchantedItem);
 
-        // Collect non-curse enchantments
         List<Object2IntMap.Entry<RegistryEntry<Enchantment>>> nonCurse = new ArrayList<>();
         for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchants.getEnchantmentsMap()) {
             if (!entry.getKey().value().isCursed()) {
@@ -79,18 +83,15 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
 
         if (nonCurse.isEmpty()) {
             enchanttweaker$bookSlot = -1;
-            return; // Only curses, let vanilla handle
+            return;
         }
 
-        // Build the enchanted book output
         ItemStack outputBook = new ItemStack(Items.ENCHANTED_BOOK);
 
         if (enchantedItem.isOf(Items.ENCHANTED_BOOK) && nonCurse.size() > 1) {
-            // Splitting: pick the first non-curse enchantment
             Object2IntMap.Entry<RegistryEntry<Enchantment>> picked = nonCurse.getFirst();
             outputBook.addEnchantment(picked.getKey().value(), picked.getIntValue());
         } else {
-            // Extract all non-curse enchantments
             for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : nonCurse) {
                 outputBook.addEnchantment(entry.getKey().value(), entry.getIntValue());
             }
@@ -101,13 +102,13 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
         ci.cancel();
     }
 
-    /** Gets which input slot holds the book (0 or 1), or -1 if not a disenchant operation. */
+    /** gets which input slot holds the book (0 or 1), or -1 if not a disenchant operation */
     @Unique
     public int enchanttweaker$getBookSlot() {
         return enchanttweaker$bookSlot;
     }
 
-    /** Exposes the input inventory for the output slot mixin. */
+    /** exposes the input inventory for the output slot mixin */
     @Unique
     public Inventory enchanttweaker$getInput() {
         return input;

@@ -11,6 +11,7 @@
     "server.anvil.SturdyAnvilsMixin",
     "server.capmod.CapmodMixin",
     "server.grindstone.GrindstoneDisenchantMixin",
+    "server.grindstone.GrindstoneInputSlotMixin",
     "server.grindstone.GrindstoneOutputSlotMixin",
     "server.enhanced.MoreBindingMixin",
     "server.enhanced.MoreChannelingMixin",
