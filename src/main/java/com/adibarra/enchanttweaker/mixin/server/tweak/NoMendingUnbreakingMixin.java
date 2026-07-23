@@ -1,17 +1,17 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.registry.Registries;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.utils.ADUtils;
 
 /**
- * @description Make Mending and Unbreaking enchantments mutually exclusive.
- * @environment Server
+ * @description make mending and unbreaking enchantments mutually exclusive
+ * @environment server
  */
 @Mixin(
     value = Enchantment.class)
@@ -25,12 +25,13 @@ public abstract class NoMendingUnbreakingMixin {
         CallbackInfoReturnable<Boolean> cir) {
         if (!ETMixinPlugin.getMixinConfig("NoMendingUnbreakingMixin"))
             return;
-        String selfP = ADUtils.getEnchantmentPath((Enchantment) (Object) this);
-        String otherP = ADUtils.getEnchantmentPath(other);
-        if (selfP == null || otherP == null)
+        String selfId = Registries.ENCHANTMENT.getKey((Enchantment) (Object) this).map(key -> key.getValue().toString())
+            .orElse(null);
+        String otherId = Registries.ENCHANTMENT.getKey(other).map(key -> key.getValue().toString()).orElse(null);
+        if (selfId == null || otherId == null)
             return;
-        if ((selfP.equals("mending") && otherP.equals("unbreaking"))
-            || (selfP.equals("unbreaking") && otherP.equals("mending"))) {
+        if ((selfId.equals("minecraft:mending") && otherId.equals("minecraft:unbreaking"))
+            || (selfId.equals("minecraft:unbreaking") && otherId.equals("minecraft:mending"))) {
             cir.setReturnValue(false);
         }
     }

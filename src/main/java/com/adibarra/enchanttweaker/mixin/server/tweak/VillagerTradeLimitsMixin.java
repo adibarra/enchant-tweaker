@@ -8,6 +8,7 @@ import java.util.Set;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
 import net.minecraft.village.TradeOffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,7 +22,7 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
  * @description limit villager enchantment trade uses and restock behavior
- * @environment Server
+ * @environment server
  */
 @Mixin(
     value = TradeOffer.class)
@@ -37,7 +38,7 @@ public abstract class VillagerTradeLimitsMixin {
     // reads
     // possible with two independently-published static fields
     @Unique
-    private static volatile Map.Entry<String, Set<String>> enchanttweaker$noRestockCache;
+    private static volatile Map.Entry<String, Set<Identifier>> enchanttweaker$noRestockCache;
 
     @Inject(
         method = "isDisabled()Z",
@@ -49,9 +50,7 @@ public abstract class VillagerTradeLimitsMixin {
         int effectiveMax = enchanttweaker$getEffectiveMaxUses(this.getSellItem());
         if (effectiveMax < 0)
             return;
-        if (effectiveMax == 0 || this.getUses() >= effectiveMax) {
-            cir.setReturnValue(true);
-        }
+        cir.setReturnValue(effectiveMax == 0 || this.getUses() >= effectiveMax);
     }
 
     @Inject(
@@ -73,39 +72,47 @@ public abstract class VillagerTradeLimitsMixin {
             return -1;
 
         int globalMax = ETMixinPlugin.getConfig().getOrDefault("enchant_trade_max_uses", -1);
-        int effectiveMax = globalMax;
-
+        int effectiveMax = -1;
         for (var entry : enchants.getEnchantmentsMap()) {
-            String path = entry.getKey().getKey().map(k -> k.getValue().getPath()).orElse(null);
-            if (path == null)
-                continue;
-            int perEnchantMax = ETMixinPlugin.getConfig().getOrDefault("trade_" + path, -1);
-            if (perEnchantMax == 0)
-                return 0;
-            if (perEnchantMax > 0) {
-                effectiveMax = (effectiveMax < 0) ? perEnchantMax : Math.min(effectiveMax, perEnchantMax);
-            }
+            Identifier id = entry.getKey().getKey().map(k -> k.getValue()).orElse(null);
+            int candidate = id == null ? globalMax : enchanttweaker$getPerEnchantMax(id, globalMax);
+            if (candidate >= 0)
+                effectiveMax = effectiveMax < 0 ? candidate : Math.min(effectiveMax, candidate);
         }
 
         return effectiveMax;
     }
 
     @Unique
-    private static Set<String> enchanttweaker$parseNoRestockList(String config) {
-        Map.Entry<String, Set<String>> cached = enchanttweaker$noRestockCache;
+    private static int enchanttweaker$getPerEnchantMax(Identifier id, int globalMax) {
+        int namespacedMax = ETMixinPlugin.getConfig().getOrDefault("trade_" + id, -1);
+        if (namespacedMax >= 0)
+            return namespacedMax;
+        if (Identifier.DEFAULT_NAMESPACE.equals(id.getNamespace())) {
+            int legacyMax = ETMixinPlugin.getConfig().getOrDefault("trade_" + id.getPath(), -1);
+            if (legacyMax >= 0)
+                return legacyMax;
+        }
+        return globalMax;
+    }
+
+    @Unique
+    private static Set<Identifier> enchanttweaker$parseNoRestockList(String config) {
+        Map.Entry<String, Set<Identifier>> cached = enchanttweaker$noRestockCache;
         if (cached != null && cached.getKey().equals(config)) {
             return cached.getValue();
         }
-        Set<String> names = new HashSet<>();
+        Set<Identifier> names = new HashSet<>();
         if (!config.isEmpty()) {
             for (String entry : config.split(",")) {
-                String trimmed = entry.trim();
-                if (!trimmed.isEmpty())
-                    names.add(trimmed);
+                Identifier id = Identifier.tryParse(entry.trim());
+                if (id != null)
+                    names.add(id);
             }
         }
-        enchanttweaker$noRestockCache = new AbstractMap.SimpleImmutableEntry<>(config, names);
-        return names;
+        Set<Identifier> parsed = Set.copyOf(names);
+        enchanttweaker$noRestockCache = new AbstractMap.SimpleImmutableEntry<>(config, parsed);
+        return parsed;
     }
 
     @Unique
@@ -122,10 +129,10 @@ public abstract class VillagerTradeLimitsMixin {
         if (noRestockConfig.isEmpty())
             return true;
 
-        Set<String> noRestock = enchanttweaker$parseNoRestockList(noRestockConfig);
+        Set<Identifier> noRestock = enchanttweaker$parseNoRestockList(noRestockConfig);
         for (var entry : enchants.getEnchantmentsMap()) {
-            String path = entry.getKey().getKey().map(k -> k.getValue().getPath()).orElse(null);
-            if (path != null && noRestock.contains(path))
+            Identifier id = entry.getKey().getKey().map(k -> k.getValue()).orElse(null);
+            if (id != null && noRestock.contains(id))
                 return false;
         }
 
