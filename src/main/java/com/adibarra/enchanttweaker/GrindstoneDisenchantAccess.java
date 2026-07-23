@@ -3,9 +3,8 @@ package com.adibarra.enchanttweaker;
 import net.minecraft.inventory.Inventory;
 
 /**
- * Duck interface for cross-mixin communication between
- * GrindstoneDisenchantMixin and GrindstoneOutputSlotMixin. Avoids referencing
- * mixin class types in LVT.
+ * duck interface for communication between grindstone mixins avoids referencing
+ * mixin class types in lvt
  */
 public interface GrindstoneDisenchantAccess {
     int enchanttweaker$getBookSlot();

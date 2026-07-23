@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.grindstone;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -21,9 +22,8 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
 
 /**
- * @description Handle grindstone output slot behavior for disenchanting to
- *              books.
- * @environment Server
+ * @description handle grindstone output for disenchanting into books
+ * @environment server
  */
 @Mixin(
     targets = "net.minecraft.screen.GrindstoneScreenHandler$4")
@@ -43,7 +43,7 @@ public abstract class GrindstoneOutputSlotMixin {
 
         int bookSlot = ((GrindstoneDisenchantAccess) field_16780).enchanttweaker$getBookSlot();
         if (bookSlot < 0)
-            return; // Not a disenchant operation, let vanilla handle
+            return; // not a disenchant operation, let vanilla handle
 
         Inventory input = ((GrindstoneDisenchantAccess) field_16780).enchanttweaker$getInput();
         int enchantedSlot = bookSlot == 0 ? 1 : 0;
@@ -51,53 +51,53 @@ public abstract class GrindstoneOutputSlotMixin {
         boolean keepItem = ETMixinPlugin.getConfig().getOrDefault("grindstone_disenchant_keep_item", true);
 
         if (keepItem && !enchantedItem.isEmpty()) {
-            // Create clean version of the enchanted item
+            // create a clean enchanted item
             ItemStack cleanItem;
             if (enchantedItem.isOf(Items.ENCHANTED_BOOK)) {
-                // For book splitting: remove the extracted enchantment, keep the rest
+                // split books by removing the extracted enchantment
                 ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(enchantedItem);
-                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(
-                    ItemEnchantmentsComponent.DEFAULT);
-                boolean skippedFirst = false;
+                Enchantment extracted = null;
                 for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchants.getEnchantmentsMap()) {
-                    if (!entry.getKey().value().isCursed() && !skippedFirst) {
-                        skippedFirst = true; // Skip the first non-curse (it was extracted)
-                        continue;
+                    if (!entry.getKey().value().isCursed()) {
+                        extracted = entry.getKey().value();
+                        break;
                     }
-                    builder.add(entry.getKey().value(), entry.getIntValue());
+                }
+                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(enchants);
+                if (extracted != null) {
+                    Enchantment extractedEnchantment = extracted;
+                    builder.remove(enchantment -> enchantment.value() == extractedEnchantment);
                 }
                 ItemEnchantmentsComponent remaining = builder.build();
                 if (remaining.isEmpty()) {
-                    cleanItem = new ItemStack(Items.BOOK);
+                    cleanItem = enchantedItem.copyComponentsToNewStack(Items.BOOK, enchantedItem.getCount());
+                    cleanItem.remove(DataComponentTypes.REPAIR_COST);
+                    cleanItem.remove(DataComponentTypes.STORED_ENCHANTMENTS);
+                    cleanItem.remove(DataComponentTypes.ENCHANTMENTS);
                 } else {
                     cleanItem = enchantedItem.copy();
                     EnchantmentHelper.set(cleanItem, remaining);
                 }
             } else {
-                // Regular item: strip all non-curse enchantments
+                // regular items lose all non-curse enchantments
                 cleanItem = enchantedItem.copy();
+                cleanItem.remove(DataComponentTypes.REPAIR_COST);
                 ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(cleanItem);
-                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(
-                    ItemEnchantmentsComponent.DEFAULT);
-                for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchants.getEnchantmentsMap()) {
-                    if (entry.getKey().value().isCursed()) {
-                        builder.add(entry.getKey().value(), entry.getIntValue());
-                    }
-                }
+                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(enchants);
+                builder.remove(enchantment -> !enchantment.value().isCursed());
                 EnchantmentHelper.set(cleanItem, builder.build());
             }
 
-            // Return clean item to player
+            // return the clean item to the player
             if (!player.getInventory().insertStack(cleanItem)) {
                 player.dropItem(cleanItem, false);
             }
         }
 
-        // Consume both inputs
-        input.setStack(0, ItemStack.EMPTY);
-        input.setStack(1, ItemStack.EMPTY);
+        input.removeStack(bookSlot, 1);
+        input.setStack(enchantedSlot, ItemStack.EMPTY);
 
-        // Skip vanilla onTakeItem (no XP spawned)
+        // skip vanilla take behavior without spawning experience
         ci.cancel();
     }
 }

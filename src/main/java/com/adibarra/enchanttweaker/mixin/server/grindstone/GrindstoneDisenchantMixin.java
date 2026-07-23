@@ -24,11 +24,8 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
 
 /**
- * @description allow extracting enchantments from items into books via
- *              grindstone place an enchanted item + regular book in the
- *              grindstone to extract enchantments also supports splitting
- *              multi-enchantment books
- * @environment Server
+ * @description extract enchantments into books using a grindstone
+ * @environment server
  */
 @Mixin(
     value = GrindstoneScreenHandler.class)
@@ -43,7 +40,7 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
     Inventory input;
 
     /**
-     * which input slot holds the book (0 or 1), or -1 if not a disenchant operation
+     * input slot holding the book, or -1 when not disenchanting
      */
     @Unique
     private int enchanttweaker$bookSlot = -1;
@@ -53,6 +50,8 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$grindstoneDisenchant$updateResult(CallbackInfo ci) {
+        enchanttweaker$bookSlot = -1;
+        result.setStack(0, ItemStack.EMPTY);
         if (!ETMixinPlugin.getMixinConfig("GrindstoneDisenchantMixin")) {
             enchanttweaker$bookSlot = -1;
             return;
@@ -61,7 +60,7 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
         ItemStack stack0 = input.getStack(0);
         ItemStack stack1 = input.getStack(1);
 
-        // reject stacked inputs because grindstones process one item at a time
+        // reject stacked inputs because grindstones process one item
         if (stack0.getCount() > 1 || stack1.getCount() > 1) {
             enchanttweaker$bookSlot = -1;
             return;
@@ -115,8 +114,7 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
     }
 
     /**
-     * gets which input slot holds the book (0 or 1), or -1 if not a disenchant
-     * operation
+     * returns the book input slot, or -1 when not disenchanting
      */
     @Unique
     public int enchanttweaker$getBookSlot() {
