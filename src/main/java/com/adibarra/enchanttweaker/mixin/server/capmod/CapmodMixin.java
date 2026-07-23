@@ -10,8 +10,8 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.ADUtils;
 
 /**
- * @description Modify enchantment level cap.
- * @environment Server
+ * @description modify enchantment level cap
+ * @environment server
  */
 @Mixin(
     value = Enchantment.class)
