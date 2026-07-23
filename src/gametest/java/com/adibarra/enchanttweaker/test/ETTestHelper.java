@@ -2,14 +2,20 @@ package com.adibarra.enchanttweaker.test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.screen.ForgingScreenHandler;
+import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.test.TestContext;
@@ -37,11 +43,79 @@ class ETTestHelper {
         ETMixinPlugin.clearCaches();
     }
 
+    static Map<String, String> snapshotConfig(String... keys) {
+        Map<String, String> values = new LinkedHashMap<>();
+        for (String key : keys) {
+            String value = ETMixinPlugin.getConfig().getOrDefault(key, null);
+            if (value == null)
+                throw new IllegalArgumentException("missing config key: " + key);
+            values.put(key, value);
+        }
+        return values;
+    }
+
+    static void restoreConfig(Map<String, String> values) {
+        ETMixinPlugin.getConfig().setAll(values);
+        ETMixinPlugin.clearCaches();
+    }
+
+    private static final Map<TestContext, List<ServerPlayerEntity>> CREATED_SERVER_PLAYERS = new IdentityHashMap<>();
+
     @SuppressWarnings("removal")
     static ServerPlayerEntity createServerPlayer(TestContext helper, GameMode mode) {
         ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+        trackServerPlayer(helper, player);
         player.changeGameMode(mode);
         return player;
+    }
+
+    private static void trackServerPlayer(TestContext helper, ServerPlayerEntity player) {
+        synchronized (CREATED_SERVER_PLAYERS) {
+            List<ServerPlayerEntity> players = CREATED_SERVER_PLAYERS.get(helper);
+            if (players != null) {
+                players.add(player);
+                return;
+            }
+
+            players = new ArrayList<>();
+            List<ServerPlayerEntity> trackedPlayers = players;
+            try {
+                helper.addFinalTask(() -> {
+                    try {
+                        removeServerPlayers(helper, trackedPlayers);
+                    } finally {
+                        synchronized (CREATED_SERVER_PLAYERS) {
+                            CREATED_SERVER_PLAYERS.remove(helper);
+                        }
+                    }
+                });
+                CREATED_SERVER_PLAYERS.put(helper, players);
+                players.add(player);
+                return;
+            } catch (IllegalStateException exception) {
+                if (!"This test already has final clause".equals(exception.getMessage()))
+                    throw exception;
+            }
+        }
+
+        // final tasks cannot be registered after the test's final clause
+        removeServerPlayers(helper, List.of(player));
+    }
+
+    private static void removeServerPlayers(TestContext helper, List<ServerPlayerEntity> players) {
+        PlayerManager playerManager = helper.getWorld().getServer().getPlayerManager();
+        for (ServerPlayerEntity player : players) {
+            if (playerManager.getPlayer(player.getUuid()) == player) {
+                playerManager.remove(player);
+            } else {
+                ServerWorld world = player.getServerWorld();
+                if (!player.isRemoved() && !world.getPlayers(entity -> entity == player).isEmpty()) {
+                    // a player can have been removed from PlayerManager by a disconnect
+                    // before this final task runs.
+                    world.removePlayer(player, Entity.RemovalReason.DISCARDED);
+                }
+            }
+        }
     }
 
     /** calls the protected Enchantment.canAccept via reflection */
@@ -76,7 +150,17 @@ class ETTestHelper {
             Field inputField = ForgingScreenHandler.class.getDeclaredField("input");
             inputField.setAccessible(true);
             Object inv = inputField.get(handler);
-            Field stacksField = inv.getClass().getSuperclass().getDeclaredField("heldStacks");
+            Field stacksField = null;
+            for (Class<?> type = inv.getClass(); type != null; type = type.getSuperclass()) {
+                try {
+                    stacksField = type.getDeclaredField("heldStacks");
+                    break;
+                } catch (NoSuchFieldException ignored) {
+                    // continue through the inventory class hierarchy
+                }
+            }
+            if (stacksField == null)
+                throw new NoSuchFieldException("heldStacks");
             stacksField.setAccessible(true);
             @SuppressWarnings("unchecked")
             List<ItemStack> stacks = (List<ItemStack>) stacksField.get(inv);
@@ -186,6 +270,31 @@ class ETTestHelper {
             return (float) m.invoke(entity, source, damage);
         } catch (Exception e) {
             throw new RuntimeException("modifyAppliedDamage reflection failed", e);
+        }
+    }
+
+    static float[] snapshotRainGradient(ServerWorld world) {
+        try {
+            Field rg = World.class.getDeclaredField("rainGradient");
+            rg.setAccessible(true);
+            Field rgp = World.class.getDeclaredField("rainGradientPrev");
+            rgp.setAccessible(true);
+            return new float[]{rg.getFloat(world), rgp.getFloat(world)};
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("snapshotRainGradient reflection failed", e);
+        }
+    }
+
+    static void restoreRainGradient(ServerWorld world, float[] gradients) {
+        try {
+            Field rg = World.class.getDeclaredField("rainGradient");
+            rg.setAccessible(true);
+            rg.setFloat(world, gradients[0]);
+            Field rgp = World.class.getDeclaredField("rainGradientPrev");
+            rgp.setAccessible(true);
+            rgp.setFloat(world, gradients[1]);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("restoreRainGradient reflection failed", e);
         }
     }
 

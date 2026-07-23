@@ -39,6 +39,27 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.complete();
     }
 
+    // public schema lookups normalize config keys
+
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
+    public void schemaKeyLookupsNormalize(TestContext helper) {
+        helper.assertTrue(ETConfigSchema.typeOf(" CHEAP_NAMES ") == ETConfigSchema.ValueType.BOOLEAN,
+            "typeOf should trim and lowercase keys");
+        helper.assertTrue(ETConfigSchema.isValid(" CHEAP_NAMES ", "true"), "isValid should normalize keys");
+        helper.assertTrue(ETConfigSchema.isReserved(" CONFIG_VERSION "), "isReserved should normalize keys");
+        helper.assertFalse(ETConfigSchema.isReserved(null), "null reserved-key lookup should be false");
+        helper.assertFalse(ETMixinPlugin.getMixinConfig(null), "null mixin names should be rejected safely");
+        helper.assertTrue("false".equals(ETConfigSchema.defaultOf(" CHEAP_NAMES ")), "defaultOf should normalize keys");
+        helper.assertTrue(ETConfigSchema.descriptionOf(" CHEAP_NAMES ").contains("nineteen levels"),
+            "descriptionOf should normalize keys");
+        helper.assertTrue("master_switch".equals(ETConfigSchema.categoryOf(" MOD_ENABLED ")),
+            "categoryOf should normalize keys");
+        helper.assertTrue(ETConfigSchema.keysIn(" ANVIL_TWEAKS ").equals(ETConfigSchema.keysIn("anvil_tweaks")),
+            "keysIn should normalize category slugs");
+        helper.complete();
+    }
+
     // isValid per type
 
     @GameTest(
@@ -48,6 +69,8 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.assertTrue(ETConfigSchema.isValid("cheap_names", "true"), "cheap_names=true should be valid");
         helper.assertTrue(ETConfigSchema.isValid("cheap_names", "false"), "cheap_names=false should be valid");
         helper.assertTrue(!ETConfigSchema.isValid("cheap_names", "banana"), "cheap_names=banana should be invalid");
+        helper.assertFalse(ETConfigSchema.isValid("cheap_names", null),
+            "known keys must reject null values without throwing");
 
         // integer must int-parse
         helper.assertTrue(ETConfigSchema.isValid("nte_max_cost", "100"), "nte_max_cost=100 should be valid");
@@ -90,6 +113,23 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.assertTrue(!ETConfigSchema.expected("nte_max_cost").isEmpty(), "integer key should have a hint");
         helper.assertTrue(!ETConfigSchema.expected("anvil_damage_chance").isEmpty(), "decimal key should have a hint");
         helper.assertTrue(!ETConfigSchema.expected("disable_enchantments").isEmpty(), "list key should have a hint");
+        helper.complete();
+    }
+
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
+    public void schemaDescriptions(TestContext helper) {
+        helper.assertTrue(ETConfigSchema.descriptionOf("cheap_names").contains("nineteen levels"),
+            "cheap_names should expose its bundled setting description");
+        helper.assertTrue(ETConfigSchema.descriptionOf("nte_max_cost").contains("40 levels"),
+            "related value keys should share their setting description");
+        helper.assertTrue(
+            ETConfigSchema.descriptionOf("capmod_enabled").contains("ability to modify max enchantment levels"),
+            "capmod_enabled should expose its bundled setting description");
+        helper.assertFalse(ETConfigSchema.descriptionOf("capmod_enabled").contains("Tool Enchantments"),
+            "capmod description should not include the prior category");
+        helper.assertTrue(ETConfigSchema.descriptionOf("not_a_real_key").isEmpty(),
+            "unknown keys should have an empty description");
         helper.complete();
     }
 
@@ -160,9 +200,9 @@ public class ConfigSchemaGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void migrationOrdering(TestContext helper) {
-        // `toVersion` 1: rename old_name -> new_name; toVersion 2: rewrite color. Each
-        // appends to
-        // "trace" so the resulting order proves ascending-toVersion application
+        // version one renames old_name to new_name
+        // version two rewrites color
+        // trace confirms ascending migration application
         ADConfig.Migration m1 = new ADConfig.Migration(1, map -> {
             map.put("new_name", map.remove("old_name"));
             map.put("trace", map.getOrDefault("trace", "") + "A");
@@ -215,13 +255,13 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.assertTrue("red".equals(b.get("color")), "stored 2: no transform should run");
         helper.assertTrue("2".equals(b.get(ADConfig.VERSION_KEY)), "stored 2: VERSION_KEY should be stamped 2");
 
-        // stored 3 > current -> downgrade: no transform, keep values, stamp current
+        // newer stored versions remain unchanged
         Map<String, String> c = new HashMap<>();
         c.put("color", "red");
         ADConfig.applyMigrations(c, migrations, 3, 2);
-        helper.assertTrue("red".equals(c.get("color")), "downgrade: values should be kept as-is");
-        helper.assertTrue("2".equals(c.get(ADConfig.VERSION_KEY)),
-            "downgrade: VERSION_KEY should be stamped current (2)");
+        helper.assertTrue("red".equals(c.get("color")), "newer config: values should be kept as-is");
+        helper.assertTrue("3".equals(c.get(ADConfig.VERSION_KEY)),
+            "newer config: VERSION_KEY should remain at the stored version (3)");
         helper.complete();
     }
 
@@ -230,8 +270,7 @@ public class ConfigSchemaGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void liveConfigVersion(TestContext helper) {
-        // proves the bundled config_version migration ran against the gametest run-dir
-        // config
+        // bundled migration updates the gametest run-directory configuration
         helper.assertTrue(ETMixinPlugin.getConfig().getOrDefault("config_version", 0) == 1,
             "loaded config_version should be 1");
         helper.complete();
@@ -242,7 +281,7 @@ public class ConfigSchemaGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void migrateConfigKeyDiff(TestContext helper) {
-        Path tmp = configDir().resolve("et-migdiff-test.properties");
+        Path tmp = createConfigFixture("et-migdiff-test-");
         try {
             Files.writeString(tmp, "cheap_names=true\nobsolete_key=stale_value\n");
 
@@ -251,16 +290,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             // preserved: the user's customized value survives the migration
             helper.assertTrue(cfg.getOrDefault("cheap_names", false),
                 "migrateConfig should preserve the user's customized cheap_names=true");
-            // added: the missing bundled key is added at its bundled default
-            // (god_armor=false)
+            // missing bundled keys use their bundled defaults
             helper.assertTrue(!cfg.getOrDefault("god_armor", true),
                 "migrateConfig should add the missing god_armor key at its bundled default (false)");
             // dropped: the stale key is removed from the in-memory map
             helper.assertTrue(!cfg.getKeys().contains("obsolete_key"),
                 "migrateConfig should drop the stale obsolete_key");
 
-            // on-disk: the rewritten file carries the added key and no longer mentions the
-            // stale key
+            // rewritten files contain additions without stale keys
             String fileText = Files.readString(tmp);
             helper.assertTrue(fileText.contains("god_armor="),
                 "rewritten file should contain the added god_armor= line");
@@ -274,12 +311,36 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.complete();
     }
 
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
+    public void migrateConfigPreservesNewerSchema(TestContext helper) {
+        Path tmp = null;
+        String futureConfig = "config_version=999\nfuture_option=keep\ncheap_names=true\n";
+        try {
+            tmp = Files.createTempFile(configDir(), "et-migfuture-test-", ".properties");
+            Files.writeString(tmp, futureConfig);
+            ADConfig cfg = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(), REAL_BUNDLED);
+
+            helper.assertTrue("keep".equals(cfg.getOrDefault("future_option", "")),
+                "newer-schema keys should remain available in memory");
+            helper.assertTrue(cfg.getOrDefault("config_version", 0) == 999,
+                "newer config_version should remain unchanged");
+            helper.assertTrue(futureConfig.equals(Files.readString(tmp)),
+                "newer-schema files should remain unchanged on disk");
+        } catch (IOException e) {
+            throw new RuntimeException("newer-schema preservation failed", e);
+        } finally {
+            deleteQuietly(tmp);
+        }
+        helper.complete();
+    }
+
     // isolated applyVersionMigrations live caller + stamp
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void migrateConfigVersionStamp(TestContext helper) {
-        Path tmp = configDir().resolve("et-migver-test.properties");
+        Path tmp = createConfigFixture("et-migver-test-");
         try {
             String bundled = readResourceText(REAL_BUNDLED);
             helper.assertTrue(bundled != null, "bundled defaults resource must be present");
@@ -305,10 +366,8 @@ public class ConfigSchemaGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void migrateConfigParsePaths(TestContext helper) {
-        // (a) a non-numeric stored version parses to 0 and still migrates up to the
-        // bundled
-        // version without crashing
-        Path tmpA = configDir().resolve("et-migparse-abc.properties");
+        // non-numeric versions parse as zero and migrate
+        Path tmpA = createConfigFixture("et-migparse-abc-");
         try {
             String bundled = readResourceText(REAL_BUNDLED);
             helper.assertTrue(bundled != null, "bundled defaults resource must be present");
@@ -323,19 +382,20 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             deleteQuietly(tmpA);
         }
 
-        Path tmpB = configDir().resolve("et-migparse-noversion.properties");
+        Path tmpB = createConfigFixture("et-migparse-noversion-");
         try {
             Files.writeString(tmpB, "test_no_version_marker=false\nstale_thing=x\n");
 
             boolean bundledPresent = getClass().getClassLoader().getResourceAsStream(NOVER_BUNDLED) != null;
+            helper.assertTrue(bundledPresent, "versionless bundled defaults fixture should be present");
             ADConfig cfgB = new ADConfig(EnchantTweaker.MOD_NAME, tmpB.getFileName().toString(), NOVER_BUNDLED);
 
             helper.assertTrue(cfgB.getOrDefault("config_version", -99) == -99,
                 "a versionless bundled resource should disable the version machinery (no config_version stamp)");
-            if (bundledPresent) {
-                helper.assertTrue(cfgB.getOrDefault("another_test_key", -1) == 42,
-                    "key-diff should add another_test_key from the versionless bundled resource");
-            }
+            helper.assertTrue(cfgB.getOrDefault("another_test_key", -1) == 42,
+                "key-diff should add another_test_key from the versionless bundled resource");
+            helper.assertTrue("MiXeD".equals(cfgB.getOrDefault("mixed_case_default", "")),
+                "key-diff should preserve case in bundled default values");
         } catch (IOException e) {
             throw new RuntimeException("migrateConfigParsePaths (b) I/O failed", e);
         } finally {
@@ -384,11 +444,9 @@ public class ConfigSchemaGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void schemaLiveConfigParity(TestContext helper) {
-        // load a fresh, unmigrated config from a verbatim copy of the bundled defaults
-        // (a verbatim
-        // copy means no key-diff rewrite runs, so getKeys() is exactly the parsed key
-        // set)
-        Path tmp = configDir().resolve("et-parity-test.properties");
+        // a verbatim bundled copy prevents key-diff rewrites
+        // loaded keys match the bundled configuration
+        Path tmp = createConfigFixture("et-parity-test-");
         try {
             String bundled = readResourceText(REAL_BUNDLED);
             helper.assertTrue(bundled != null, "bundled defaults resource must be present");
@@ -397,18 +455,18 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             ADConfig cfg = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(), REAL_BUNDLED);
             Set<String> liveKeys = new HashSet<>(cfg.getKeys());
 
-            // direction A: no config key is missing from the schema (incl. reserved
-            // config_version)
+            // direction a checks every loaded configuration key
+            // including config_version
             for (String key : liveKeys) {
                 helper.assertTrue(ETConfigSchema.typeOf(key) != null,
                     "config key '" + key + "' has no ETConfigSchema entry (orphan config key)");
             }
-            // direction B: no non-reserved schema key is missing from the loaded config
+            // direction b checks every default schema key
             for (String key : ETConfigSchema.defaults().keySet()) {
                 helper.assertTrue(liveKeys.contains(key),
                     "schema key '" + key + "' is missing from the bundled config (orphan schema key)");
             }
-            // the one reserved key is present in both the schema and the loaded config
+            // the reserved key appears in schema and configuration
             helper.assertTrue(ETConfigSchema.typeOf("config_version") != null,
                 "reserved config_version must have a schema type");
             helper.assertTrue(liveKeys.contains("config_version"),
@@ -419,8 +477,7 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             deleteQuietly(tmp);
         }
 
-        // every mixin's config key resolves to a real schema entry (no orphan mixin
-        // key)
+        // every mixin configuration key resolves to a schema entry
         for (Map.Entry<String, String> entry : ETMixinPlugin.getMixinKeys().entrySet()) {
             String cfgKey = entry.getValue();
             helper.assertTrue(ETConfigSchema.typeOf(cfgKey) != null,
@@ -437,18 +494,20 @@ public class ConfigSchemaGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void parseRobustness(TestContext helper) {
-        Path tmp = configDir().resolve("et-parse-test.properties");
+        Path tmp = createConfigFixture("et-parse-test-");
         try {
             String fixture = String.join("\r\n", "# comment=should_be_ignored", // '#' line -> comment, no key
-                "!bang=hello", // '!' is NOT a comment in ADConfig -> key "!bang"
+                "!bang=hello", // '!' is not a comment in ADConfig -> key "!bang"
                 "", // blank line -> skipped
                 "     ", // whitespace-only line -> skipped
-                "Cheap_Names=TRUE", // key + value both lowercased
+                "Cheap_Names=TRUE", // key lowercased while value is preserved
                 "dup_key=first", // duplicate: first
                 "dup_key=second", // ...last write wins
                 "  spaced  =  padded_val  ", // key/value trimmed
                 "value_with_eq=a=b=c", // split on first '=' only
                 "empty_val=", // key present, empty value
+                "=empty_key", // empty key -> syntax error, skipped
+                "==equals_key", // '=' key -> syntax error, skipped
                 "missing_eq_line"); // no '=' -> syntax error, skipped
             Files.writeString(tmp, fixture);
 
@@ -456,22 +515,21 @@ public class ConfigSchemaGameTest implements FabricGameTest {
                 "enchanttweaker-test/NONEXISTENT-defaults.properties");
             List<String> keys = cfg.getKeys();
 
-            // '#' comment produced no key; '!' line DID produce a key (ADConfig only treats
-            // '#' as a comment)
+            // '#' creates no key while '!' does
             helper.assertTrue(keys.stream().noneMatch(k -> k.contains("comment")), "'#' line must not create any key");
             helper.assertTrue(keys.contains("!bang"), "'!' is not a comment: '!bang=hello' should create key '!bang'");
             helper.assertTrue("hello".equals(cfg.getOrDefault("!bang", "x")), "'!bang' should hold value 'hello'");
 
-            // key and value are both lowercased on parse
+            // keys are lowercased while case-sensitive values are preserved
             helper.assertTrue(keys.contains("cheap_names"), "key should be lowercased to cheap_names");
-            helper.assertTrue(cfg.getOrDefault("cheap_names", false),
-                "lowercased value TRUE->true should parse boolean true");
+            helper.assertTrue("TRUE".equals(cfg.getOrDefault("cheap_names", "")),
+                "case-sensitive value TRUE should be preserved during parsing");
 
             // duplicate key: last write wins
             helper.assertTrue("second".equals(cfg.getOrDefault("dup_key", "x")),
                 "duplicate key should keep the last value (got " + cfg.getOrDefault("dup_key", "x") + ")");
 
-            // surrounding whitespace trimmed from both key and value (no stray \r either)
+            // surrounding whitespace is trimmed from keys and values
             helper.assertTrue(keys.contains("spaced"), "whitespace around key should be trimmed");
             helper.assertTrue("padded_val".equals(cfg.getOrDefault("spaced", "x")),
                 "whitespace around value should be trimmed (got '" + cfg.getOrDefault("spaced", "x") + "')");
@@ -485,7 +543,9 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             helper.assertTrue(cfg.getOrDefault("empty_val", "sentinel").isEmpty(),
                 "empty-value key should hold the empty string");
 
-            // line without '=' is skipped entirely
+            // malformed keys are skipped while values containing '=' survive
+            helper.assertTrue(!keys.contains(""), "an empty key should be skipped");
+            helper.assertTrue(!keys.contains("="), "an '=' key should be skipped");
             helper.assertTrue(!keys.contains("missing_eq_line"), "line without '=' should be skipped");
         } catch (IOException e) {
             throw new RuntimeException("parseRobustness I/O failed", e);
@@ -497,8 +557,56 @@ public class ConfigSchemaGameTest implements FabricGameTest {
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
+    public void commentPrefixedKeysAreRejected(TestContext helper) {
+        Path tmp = createConfigFixture("et-comment-key-test-");
+        try {
+            Files.writeString(tmp, "safe=before\n#persisted=ignored\n");
+            ADConfig cfg = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(),
+                "enchanttweaker-test/NONEXISTENT-defaults.properties");
+
+            helper.assertFalse(cfg.getKeys().contains("persisted"),
+                "comment-prefixed assignments must not be parsed as keys");
+            helper.assertFalse(cfg.set(" #memory ", "value"),
+                "set should reject keys that become comment-prefixed after trimming");
+            cfg.setAll(Map.of("#memory", "value"));
+            helper.assertFalse(cfg.getKeys().contains("#memory"), "setAll should reject comment-prefixed keys");
+
+            String before = Files.readString(tmp);
+            cfg.setAllAndPersist(Map.of("#persisted", "value"));
+            helper.assertTrue(before.equals(Files.readString(tmp)),
+                "setAllAndPersist should not serialize comment-prefixed keys");
+        } catch (IOException e) {
+            throw new RuntimeException("comment-prefixed key rejection failed", e);
+        } finally {
+            deleteQuietly(tmp);
+        }
+        helper.complete();
+    }
+
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
+    public void getOrDefaultNormalizesKeyWhitespace(TestContext helper) {
+        Path tmp = createConfigFixture("et-lookup-whitespace-test-");
+        try {
+            Files.writeString(tmp, "spaced_key=before\n");
+            ADConfig cfg = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(),
+                "enchanttweaker-test/NONEXISTENT-defaults.properties");
+
+            helper.assertTrue(cfg.set("  SPACED_KEY  ", "after"), "set should continue to trim and lowercase keys");
+            helper.assertTrue("after".equals(cfg.getOrDefault("\t spaced_key \t", "missing")),
+                "getOrDefault should trim and lowercase keys like set");
+        } catch (IOException e) {
+            throw new RuntimeException("whitespace-normalized lookup failed", e);
+        } finally {
+            deleteQuietly(tmp);
+        }
+        helper.complete();
+    }
+
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void getOrDefaultCoercion(TestContext helper) {
-        Path tmp = configDir().resolve("et-coerce-test.properties");
+        Path tmp = createConfigFixture("et-coerce-test-");
         try {
             Files.writeString(tmp, "");
             ADConfig cfg = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(),
@@ -521,16 +629,15 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             junk.put("bool_true", "true");
             cfg.setAll(junk);
 
-            // int: empty / non-numeric / overflow all fall back to the default; a clean
-            // value parses
+            // invalid integers fall back to the supplied default
             helper.assertTrue(cfg.getOrDefault("int_empty", 7) == 7, "empty int value should fall back to default");
             helper.assertTrue(cfg.getOrDefault("int_bad", 7) == 7, "non-numeric int value should fall back to default");
             helper.assertTrue(cfg.getOrDefault("int_over", 7) == 7,
                 "overflowing int value should fall back to default");
             helper.assertTrue(cfg.getOrDefault("int_ok", 7) == 42, "clean int value should parse");
 
-            // floating-point getters accept finite values and reject non-numeric or
-            // non-finite values
+            // floating-point getters accept finite values
+            // invalid values use supplied defaults
             helper.assertTrue(cfg.getOrDefault("dbl_bad", 1.5) == 1.5,
                 "non-numeric double value should fall back to default");
             helper.assertTrue(cfg.getOrDefault("dbl_ok", 1.5) == 3.5, "clean double value should parse");
@@ -564,12 +671,50 @@ public class ConfigSchemaGameTest implements FabricGameTest {
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
+    public void configRejectsLineBreakValues(TestContext helper) {
+        Path tmp = configDir().resolve("x");
+        PathBackup original = null;
+        boolean isolated = false;
+        try {
+            original = isolatePath(tmp);
+            isolated = true;
+            Files.writeString(tmp, "tiny=before\n");
+            ADConfig cfg = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(),
+                "enchanttweaker-test/NONEXISTENT-defaults.properties");
+            String before = Files.readString(tmp);
+
+            helper.assertFalse(cfg.set("tiny", "line1\nline2"), "set should reject line-break values");
+            helper.assertTrue(before.equals(Files.readString(tmp)), "rejected set should not rewrite the file");
+            cfg.setAll(Map.of("tiny", "memory\r\ninjected"));
+            helper.assertTrue("before".equals(cfg.getOrDefault("tiny", "")), "setAll should ignore line-break values");
+            cfg.setAllAndPersist(Map.of("tiny", "disk\ninjected"));
+            helper.assertTrue(before.equals(Files.readString(tmp)), "setAllAndPersist should ignore line-break values");
+
+            helper.assertTrue(cfg.set("tiny", "safe"), "safe values should still persist");
+            helper.assertTrue("tiny=safe".equals(Files.readString(tmp)),
+                "a short config filename should use a valid temporary-file prefix");
+        } catch (IOException e) {
+            throw new RuntimeException("config line-break rejection failed", e);
+        } finally {
+            if (isolated) {
+                try {
+                    restorePath(tmp, original);
+                } catch (IOException e) {
+                    throw new RuntimeException("failed to restore config fixture", e);
+                }
+            }
+        }
+        helper.complete();
+    }
+
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
     public void migrationMissingVersionAppends(TestContext helper) {
-        Path tmp = configDir().resolve("et-mignover-test.properties");
+        Path tmp = createConfigFixture("et-mignover-test-");
         try {
             String bundled = readResourceText(REAL_BUNDLED);
             helper.assertTrue(bundled != null, "bundled defaults resource must be present");
-            // drop the config_version line entirely (not just set it to 0)
+            // remove the config_version line entirely
             String noVersion = String.join("\n",
                 bundled.lines().filter(l -> !l.trim().toLowerCase().startsWith("config_version=")).toList());
             helper.assertTrue(!noVersion.contains("config_version="), "fixture should have no config_version line");
@@ -595,6 +740,41 @@ public class ConfigSchemaGameTest implements FabricGameTest {
     private static final String REAL_BUNDLED = "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties";
     private static final String NOVER_BUNDLED = "enchanttweaker-test/defaults-no-version.properties";
 
+    private static Path createConfigFixture(String prefix) {
+        try {
+            return Files.createTempFile(configDir(), prefix, ".properties");
+        } catch (IOException e) {
+            throw new RuntimeException("failed to create config fixture", e);
+        }
+    }
+
+    private static PathBackup isolatePath(Path path) throws IOException {
+        if (!Files.exists(path, java.nio.file.LinkOption.NOFOLLOW_LINKS))
+            return new PathBackup(false, null, null);
+        if (Files.isSymbolicLink(path)) {
+            Path target = Files.readSymbolicLink(path);
+            Files.delete(path);
+            return new PathBackup(true, target, null);
+        }
+        byte[] contents = Files.readAllBytes(path);
+        Files.delete(path);
+        return new PathBackup(true, null, contents);
+    }
+
+    private static void restorePath(Path path, PathBackup backup) throws IOException {
+        Files.deleteIfExists(path);
+        if (!backup.existed())
+            return;
+        if (backup.symbolicLinkTarget() != null) {
+            Files.createSymbolicLink(path, backup.symbolicLinkTarget());
+        } else {
+            Files.write(path, backup.contents());
+        }
+    }
+
+    private record PathBackup(boolean existed, Path symbolicLinkTarget, byte[] contents) {
+    }
+
     private static Path configDir() {
         return FabricLoader.getInstance().getConfigDir();
     }
@@ -609,9 +789,15 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         }
     }
 
-    private static void deleteQuietly(Path p) {
+    private static void deleteQuietly(Path path) {
+        if (path == null || !configDir().equals(path.getParent()) || path.getFileName() == null
+            || !path.getFileName().toString().startsWith("et-")) {
+            return;
+        }
         try {
-            Files.deleteIfExists(p);
+            // deleteIfExists never follows a symlink, including a broken one.
+            if (Files.exists(path, java.nio.file.LinkOption.NOFOLLOW_LINKS))
+                Files.deleteIfExists(path);
         } catch (IOException ignored) {
             // best-effort cleanup
         }

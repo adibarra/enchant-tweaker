@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.fabricmc.loader.api.FabricLoader;
@@ -22,18 +24,21 @@ public class PluginConfigGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void modDisabledGatesFeatureMixins(TestContext helper) {
-        ETTestHelper.setFeature("cheap_names", true);
-        ETTestHelper.setFeature("more_protection", true);
-        ETTestHelper.setCapmod(true);
-        ETTestHelper.setEnchantCap("sharpness", 10);
-
-        helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 10,
-            "baseline: capmod should raise Sharpness getMaxLevel to 10 while mod_enabled=true (got "
-                + Enchantments.SHARPNESS.getMaxLevel() + ")");
-
-        // set last so every cache is cleared with mod_enabled=false in effect
-        ETTestHelper.setConfigValue("mod_enabled", "false");
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("cheap_names", "more_protection",
+            "capmod_enabled", "sharpness", "mod_enabled");
         try {
+            ETTestHelper.setConfigValue("mod_enabled", "true");
+            ETTestHelper.setFeature("cheap_names", true);
+            ETTestHelper.setFeature("more_protection", true);
+            ETTestHelper.setCapmod(true);
+            ETTestHelper.setEnchantCap("sharpness", 10);
+
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 10,
+                "baseline: capmod should raise Sharpness getMaxLevel to 10 while mod_enabled=true (got "
+                    + Enchantments.SHARPNESS.getMaxLevel() + ")");
+
+            // set this last to clear caches under mod_enabled=false
+            ETTestHelper.setConfigValue("mod_enabled", "false");
             helper.assertFalse(ETMixinPlugin.getMixinConfig("CheapNamesMixin"),
                 "cheap_names mixin should be gated off when mod_enabled=false");
             helper.assertFalse(ETMixinPlugin.getMixinConfig("MoreProtectionMixin"),
@@ -45,31 +50,13 @@ public class PluginConfigGameTest implements FabricGameTest {
                 "mod_enabled=false must gate the capmod mixin: Sharpness getMaxLevel should fall back "
                     + "to vanilla 5 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
 
-            // paired with the real getMaxLevel==5 above: getCapmodLevel ignores mod_enabled
-            // and still
-            // returns the configured cap 10. The pair documents that the gate lives in
-            // getMixinConfig,
-            // not in getCapmodLevel
+            // this confirms getMixinConfig handles the mod_enabled gate
             helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 5) == 10,
                 "getCapmodLevel should ignore mod_enabled and return the configured cap 10 (got "
                     + ETMixinPlugin.getCapmodLevel("sharpness", 5) + ")");
         } finally {
-            ETTestHelper.setConfigValue("mod_enabled", "true");
-            ETTestHelper.setFeature("cheap_names", false);
-            ETTestHelper.setFeature("more_protection", false);
-            ETTestHelper.setCapmod(false);
-            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
-        // with mod_enabled restored and capmod reset off, the gate lifts and
-        // getMaxLevel is
-        // back to vanilla 5 - confirms the finally cleaned up the raised cap that would
-        // otherwise
-        // leak into CapmodGameTest
-        helper.assertTrue(ETMixinPlugin.getConfig().getOrDefault("mod_enabled", false),
-            "mod_enabled must be restored to true after the test");
-        helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
-            "after restore (capmod off) Sharpness getMaxLevel should be vanilla 5 (got "
-                + Enchantments.SHARPNESS.getMaxLevel() + ")");
         helper.complete();
     }
 
@@ -78,6 +65,9 @@ public class PluginConfigGameTest implements FabricGameTest {
     public void setAllAndPersistWritesToDisk(TestContext helper) {
         String path = ETMixinPlugin.getConfig().getConfigPath();
         helper.assertTrue(path != null, "config path should be resolvable");
+        helper.assertTrue(ETMixinPlugin.getConfig().getKeys().contains("cheap_names"),
+            "precondition: loaded config should contain cheap_names");
+        String originalCheapNames = ETMixinPlugin.getConfig().getOrDefault("cheap_names", "false");
         try {
             ETMixinPlugin.getConfig().setAllAndPersist(Map.of("cheap_names", "true"));
             ETMixinPlugin.clearCaches();
@@ -91,7 +81,7 @@ public class PluginConfigGameTest implements FabricGameTest {
         } catch (java.io.IOException e) {
             throw new RuntimeException("failed to read config file", e);
         } finally {
-            ETMixinPlugin.getConfig().setAllAndPersist(Map.of("cheap_names", "false"));
+            ETMixinPlugin.getConfig().setAllAndPersist(Map.of("cheap_names", originalCheapNames));
             ETMixinPlugin.clearCaches();
         }
         helper.complete();
@@ -111,9 +101,8 @@ public class PluginConfigGameTest implements FabricGameTest {
         } catch (java.io.IOException e) {
             throw new RuntimeException("failed to read config file", e);
         }
-        // precondition: the run-dir config must actually contain the key we're about to
-        // remove,
-        // otherwise the append branch wouldn't be the thing under test
+        // confirm the source file contains sturdy_anvils
+        // otherwise append behavior cannot be tested
         helper.assertTrue(original.lines().anyMatch(l -> l.trim().toLowerCase().startsWith("sturdy_anvils=")),
             "precondition: run-dir config should contain a sturdy_anvils= line");
 
@@ -126,14 +115,12 @@ public class PluginConfigGameTest implements FabricGameTest {
                 Files.readString(configPath).lines().anyMatch(l -> l.trim().toLowerCase().startsWith("sturdy_anvils=")),
                 "the sturdy_anvils line should be gone before setAllAndPersist");
 
-            // `setAllAndPersist` loads the file fresh, finds no matching line, and hits the
-            // append branch
+            // setAllAndPersist appends when no matching line exists
             ETMixinPlugin.getConfig().setAllAndPersist(Map.of("sturdy_anvils", "false"));
             ETMixinPlugin.clearCaches();
 
             String rewritten = Files.readString(configPath);
-            // the append branch writes an un-indented "sturdy_anvils=false" line at the end
-            // of the file
+            // the append branch writes sturdy_anvils=false
             helper.assertTrue(rewritten.lines().anyMatch(l -> l.trim().equals("sturdy_anvils=false")),
                 "setAllAndPersist should append a fresh sturdy_anvils=false line when none exists");
             // in-memory state must agree with what was written
@@ -142,7 +129,7 @@ public class PluginConfigGameTest implements FabricGameTest {
         } catch (java.io.IOException e) {
             throw new RuntimeException("config file round-trip failed", e);
         } finally {
-            // restore the original file verbatim and re-sync the in-memory value from it
+            // restore the original file verbatim and re-sync the in-memory value
             try {
                 Files.writeString(configPath, original);
             } catch (java.io.IOException e) {
@@ -157,29 +144,47 @@ public class PluginConfigGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void reloadClearsCaches(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper
+            .snapshotConfig(ETMixinPlugin.getConfig().getKeys().toArray(new String[0]));
+        String configPath = ETMixinPlugin.getConfig().getConfigPath();
+        helper.assertTrue(configPath != null, "config path should be resolvable");
+        Path diskPath = Path.of(configPath);
+        String originalDisk;
+        try {
+            originalDisk = Files.readString(diskPath);
+        } catch (IOException e) {
+            throw new RuntimeException("failed to snapshot config file", e);
+        }
+
         try {
             ETTestHelper.setEnchantCap("sharpness", 5); // setAll + clearCaches
             helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 10) == 5,
                 "primed capmod level should be 5 (got " + ETMixinPlugin.getCapmodLevel("sharpness", 10) + ")");
 
-            // mutate the live config in-memory but do NOT clear the cache: the cached 5
-            // must survive
+            // establish the on-disk value before changing only the in-memory config
+            ETMixinPlugin.getConfig().setAllAndPersist(Map.of("sharpness", "-1"));
+            helper.assertTrue(Files.readString(diskPath).lines().anyMatch(line -> line.trim().equals("sharpness=-1")),
+                "reload precondition: disk should contain sharpness=-1");
             ETMixinPlugin.getConfig().setAll(Map.of("sharpness", "7"));
             helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 10) == 5,
                 "CAPMOD_CACHE is sticky: level should still read the cached 5 until a cache-clearing reload (got "
                     + ETMixinPlugin.getCapmodLevel("sharpness", 10) + ")");
 
-            // `reloadConfig` must clear the cache AND swap in the on-disk config
-            // (sharpness=-1 default),
-            // so cap<0 falls through to the vanilla passthrough level 10
+            // reloadConfig clears the cache and reloads disk
             ETMixinPlugin.reloadConfig();
             helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 10) == 10,
                 "reloadConfig must clear CAPMOD_CACHE and reload disk (sharpness=-1) -> vanilla passthrough 10 (got "
                     + ETMixinPlugin.getCapmodLevel("sharpness", 10) + ")");
+        } catch (IOException e) {
+            throw new RuntimeException("reload cache test I/O failed", e);
         } finally {
-            // `reloadConfig` restores the pristine on-disk baseline and clears caches
+            try {
+                Files.writeString(diskPath, originalDisk);
+            } catch (IOException e) {
+                throw new RuntimeException("failed to restore config file", e);
+            }
             ETMixinPlugin.reloadConfig();
-            ETMixinPlugin.clearCaches();
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -187,10 +192,43 @@ public class PluginConfigGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void setAllAndPersistEdgeCases(TestContext helper) {
-        Path tmp = configDir().resolve("et-persist-edge-test.properties");
+        Path tmp = null;
         try {
-            Files.writeString(tmp, "existing_key=orig\n");
+            tmp = Files.createTempFile(configDir(), "et-persist-edge-test-", ".properties");
+            Files.writeString(tmp,
+                "existing_key=orig\nspaced_key = OriginalCase\ncase_key=MiXeD\nduplicate_key=first\nduplicate_key=second\n");
             ADConfig cfg = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(), BOGUS_BUNDLED);
+            helper.assertTrue("MiXeD".equals(cfg.getOrDefault("case_key", "")),
+                "config parsing should preserve case-sensitive values");
+            helper.assertTrue(cfg.set("CASE_KEY", "ChangedCase"),
+                "set should normalize mixed-case keys before updating");
+            helper.assertTrue("ChangedCase".equals(cfg.getOrDefault("case_key", "")),
+                "set should update the normalized key");
+            Map<String, String> mixedValues = new HashMap<>();
+            mixedValues.put("BOOL_KEY", "true");
+            mixedValues.put("INT_KEY", "42");
+            mixedValues.put("DOUBLE_KEY", "2.5");
+            mixedValues.put(null, "ignored");
+            mixedValues.put("NULL_VALUE", null);
+            cfg.setAll(mixedValues);
+            helper.assertTrue(cfg.getOrDefault("bool_key", false), "setAll should normalize boolean keys");
+            helper.assertTrue(cfg.getOrDefault("int_key", 0) == 42, "setAll should normalize integer keys");
+            helper.assertTrue(cfg.getOrDefault("double_key", 0.0) == 2.5, "setAll should normalize decimal keys");
+            cfg.setAll(null);
+            helper.assertTrue(cfg.set("spaced_key", "UpdatedValue"),
+                "set should recognize assignments with whitespace around the key");
+            String spacedText = Files.readString(tmp);
+            helper.assertTrue(spacedText.contains("spaced_key = UpdatedValue"),
+                "set should replace a whitespace-spaced assignment in place");
+            helper.assertTrue(spacedText.lines().filter(line -> line.contains("spaced_key")).count() == 1,
+                "set should not append a duplicate whitespace-spaced assignment");
+            helper.assertTrue(cfg.set("duplicate_key", "updated"), "set should update duplicate assignments");
+            String duplicateText = Files.readString(tmp);
+            helper.assertTrue(duplicateText.lines().filter(line -> line.equals("duplicate_key=updated")).count() == 2,
+                "set should update every duplicate assignment");
+            ADConfig reloaded = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(), BOGUS_BUNDLED);
+            helper.assertTrue("updated".equals(reloaded.getOrDefault("duplicate_key", "")),
+                "duplicate assignments should retain the updated value after reload");
 
             String before = Files.readString(tmp);
             cfg.setAllAndPersist(Map.of()); // empty map -> no-op
@@ -219,7 +257,7 @@ public class PluginConfigGameTest implements FabricGameTest {
             helper.assertTrue("café🗡️".equals(cfg.getOrDefault("uni_key", "x")),
                 "in-memory unicode value should round-trip");
 
-            // null values in the map are sanitized away; non-null siblings still persist
+            // null values are dropped while valid siblings persist
             Map<String, String> withNull = new HashMap<>();
             withNull.put("null_val_key", null);
             withNull.put("kept_key", "kept");
@@ -236,7 +274,91 @@ public class PluginConfigGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // local helpers (private to this owned test file)
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
+    public void setAllAndPersistSerializesConcurrentUpdates(TestContext helper) {
+        Path tmp = null;
+        Thread left = null;
+        Thread right = null;
+        try {
+            tmp = Files.createTempFile(configDir(), "et-persist-race-test-", ".properties");
+            Files.writeString(tmp, "# pad\n".repeat(10000) + "left=0\nright=0\n");
+            ADConfig cfg = new ADConfig(EnchantTweaker.MOD_NAME, tmp.getFileName().toString(), BOGUS_BUNDLED);
+
+            for (int round = 1; round <= 64; round++) {
+                cfg.setAllAndPersist(Map.of("left", "0", "right", "0"));
+                String value = Integer.toString(round);
+                CountDownLatch start = new CountDownLatch(1);
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                left = concurrentUpdate(start, failure, () -> cfg.setAllAndPersist(Map.of("left", value)));
+                right = concurrentUpdate(start, failure, () -> cfg.setAllAndPersist(Map.of("right", value)));
+                left.start();
+                right.start();
+                start.countDown();
+                left.join(CONCURRENT_UPDATE_TIMEOUT_MILLIS);
+                if (failure.get() != null)
+                    throw new RuntimeException("concurrent persistence failed", failure.get());
+                right.join(CONCURRENT_UPDATE_TIMEOUT_MILLIS);
+                if (failure.get() != null)
+                    throw new RuntimeException("concurrent persistence failed", failure.get());
+                if (left.isAlive() || right.isAlive()) {
+                    throw new RuntimeException("concurrent persistence worker timed out (left alive=" + left.isAlive()
+                        + ", right alive=" + right.isAlive() + ")");
+                }
+
+                String persisted = Files.readString(tmp);
+                helper.assertTrue(persisted.contains("left=" + value) && persisted.contains("right=" + value),
+                    "concurrent updates should both persist in round " + round);
+            }
+        } catch (InterruptedException e) {
+            interruptWorkers(left, right);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("concurrent persistence test interrupted", e);
+        } catch (IOException e) {
+            throw new RuntimeException("concurrent persistence test failed", e);
+        } finally {
+            cleanupWorkers(left, right);
+            deleteQuietly(tmp);
+        }
+        helper.complete();
+    }
+
+    private static Thread concurrentUpdate(CountDownLatch start, AtomicReference<Throwable> failure, Runnable update) {
+        return new Thread(() -> {
+            try {
+                start.await();
+                update.run();
+            } catch (Throwable throwable) {
+                failure.compareAndSet(null, throwable);
+            }
+        });
+    }
+
+    private static void interruptWorkers(Thread... workers) {
+        for (Thread worker : workers) {
+            if (worker != null && worker.isAlive())
+                worker.interrupt();
+        }
+    }
+
+    private static void cleanupWorkers(Thread... workers) {
+        interruptWorkers(workers);
+        for (Thread worker : workers) {
+            if (worker == null || !worker.isAlive())
+                continue;
+            try {
+                worker.join(WORKER_CLEANUP_TIMEOUT_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    private static final long CONCURRENT_UPDATE_TIMEOUT_MILLIS = 10_000L;
+    private static final long WORKER_CLEANUP_TIMEOUT_MILLIS = 1_000L;
+
+    // local test helpers
 
     private static final String BOGUS_BUNDLED = "enchanttweaker-test/NONEXISTENT-defaults.properties";
 
@@ -244,9 +366,12 @@ public class PluginConfigGameTest implements FabricGameTest {
         return FabricLoader.getInstance().getConfigDir();
     }
 
-    private static void deleteQuietly(Path p) {
+    private static void deleteQuietly(Path path) {
+        if (path == null || !configDir().equals(path.getParent()) || !path.getFileName().toString().startsWith("et-")) {
+            return;
+        }
         try {
-            Files.deleteIfExists(p);
+            Files.deleteIfExists(path);
         } catch (IOException ignored) {
             // best-effort cleanup
         }

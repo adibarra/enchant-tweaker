@@ -1,5 +1,7 @@
 package com.adibarra.enchanttweaker.test;
 
+import java.util.Map;
+
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -14,6 +16,8 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.world.GameMode;
 
+import com.adibarra.enchanttweaker.ETMixinPlugin;
+
 public class CapmodGameTest implements FabricGameTest {
 
     // capmod master switch
@@ -21,6 +25,7 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodDisabled(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         ETTestHelper.setCapmod(false);
         ETTestHelper.setEnchantCap("sharpness", 10);
         try {
@@ -28,8 +33,7 @@ public class CapmodGameTest implements FabricGameTest {
                 "Sharpness should be vanilla 5 when capmod disabled (got " + Enchantments.SHARPNESS.getMaxLevel()
                     + ")");
         } finally {
-            ETTestHelper.setCapmod(false);
-            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -37,13 +41,38 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodVanillaPassthrough(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled");
         ETTestHelper.setCapmod(true);
-        // all caps already -1 from run/gametest config; just verify passthrough
-        helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5, "Sharpness -1 should passthrough to vanilla 5");
-        helper.assertTrue(Enchantments.UNBREAKING.getMaxLevel() == 3, "Unbreaking -1 should passthrough to vanilla 3");
-        helper.assertTrue(Enchantments.LOOTING.getMaxLevel() == 3, "Looting -1 should passthrough to vanilla 3");
-        helper.assertTrue(Enchantments.PROTECTION.getMaxLevel() == 4, "Protection -1 should passthrough to vanilla 4");
-        helper.assertTrue(Enchantments.MENDING.getMaxLevel() == 1, "Mending -1 should passthrough to vanilla 1");
+        try {
+            // all caps are -1 in the GameTest config verify vanilla
+            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
+                "Sharpness -1 should passthrough to vanilla 5");
+            helper.assertTrue(Enchantments.UNBREAKING.getMaxLevel() == 3,
+                "Unbreaking -1 should passthrough to vanilla 3");
+            helper.assertTrue(Enchantments.LOOTING.getMaxLevel() == 3, "Looting -1 should passthrough to vanilla 3");
+            helper.assertTrue(Enchantments.PROTECTION.getMaxLevel() == 4,
+                "Protection -1 should passthrough to vanilla 4");
+            helper.assertTrue(Enchantments.MENDING.getMaxLevel() == 1, "Mending -1 should passthrough to vanilla 1");
+        } finally {
+            ETTestHelper.restoreConfig(originalConfig);
+        }
+        helper.complete();
+    }
+
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
+    public void capmodPassthroughDoesNotCacheVanillaLevel(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
+        try {
+            ETTestHelper.setCapmod(true);
+            ETTestHelper.setEnchantCap("sharpness", -1);
+            helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 5) == 5,
+                "a missing cap should preserve vanilla level 5");
+            helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 10) == 10,
+                "a missing cap should preserve a later vanilla level 10");
+        } finally {
+            ETTestHelper.restoreConfig(originalConfig);
+        }
         helper.complete();
     }
 
@@ -52,6 +81,8 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodDamageCustom(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness", "smite",
+            "bane_of_arthropods");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 10);
         ETTestHelper.setEnchantCap("smite", 7);
@@ -61,9 +92,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.SMITE.getMaxLevel() == 7, "Smite should be 7");
             helper.assertTrue(Enchantments.BANE_OF_ARTHROPODS.getMaxLevel() == 8, "Bane of Arthropods should be 8");
         } finally {
-            ETTestHelper.setEnchantCap("sharpness", -1);
-            ETTestHelper.setEnchantCap("smite", -1);
-            ETTestHelper.setEnchantCap("bane_of_arthropods", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -71,12 +100,13 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodDamageClampMax(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 300);
         try {
             helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 255, "Sharpness 300 should clamp to 255");
         } finally {
-            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -84,12 +114,13 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodDamageZero(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 0);
         try {
             helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 0, "Sharpness should be 0");
         } finally {
-            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -99,6 +130,7 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodGenericCustom(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "unbreaking", "efficiency");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("unbreaking", 10);
         ETTestHelper.setEnchantCap("efficiency", 8);
@@ -106,8 +138,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.UNBREAKING.getMaxLevel() == 10, "Unbreaking should be 10");
             helper.assertTrue(Enchantments.EFFICIENCY.getMaxLevel() == 8, "Efficiency should be 8");
         } finally {
-            ETTestHelper.setEnchantCap("unbreaking", -1);
-            ETTestHelper.setEnchantCap("efficiency", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -115,12 +146,13 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodGenericClampMax(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "unbreaking");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("unbreaking", 300);
         try {
             helper.assertTrue(Enchantments.UNBREAKING.getMaxLevel() == 255, "Unbreaking 300 should clamp to 255");
         } finally {
-            ETTestHelper.setEnchantCap("unbreaking", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -128,6 +160,9 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodGenericAllRemaining(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "depth_strider",
+            "fire_aspect", "frost_walker", "impaling", "knockback", "loyalty", "lure", "piercing", "power", "punch",
+            "quick_charge", "respiration", "riptide", "soul_speed", "sweeping_edge", "swift_sneak", "thorns");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("depth_strider", 5);
         ETTestHelper.setEnchantCap("fire_aspect", 4);
@@ -165,23 +200,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.SWIFT_SNEAK.getMaxLevel() == 5, "Swift Sneak should be 5");
             helper.assertTrue(Enchantments.THORNS.getMaxLevel() == 5, "Thorns should be 5");
         } finally {
-            ETTestHelper.setEnchantCap("depth_strider", -1);
-            ETTestHelper.setEnchantCap("fire_aspect", -1);
-            ETTestHelper.setEnchantCap("frost_walker", -1);
-            ETTestHelper.setEnchantCap("impaling", -1);
-            ETTestHelper.setEnchantCap("knockback", -1);
-            ETTestHelper.setEnchantCap("loyalty", -1);
-            ETTestHelper.setEnchantCap("lure", -1);
-            ETTestHelper.setEnchantCap("piercing", -1);
-            ETTestHelper.setEnchantCap("power", -1);
-            ETTestHelper.setEnchantCap("punch", -1);
-            ETTestHelper.setEnchantCap("quick_charge", -1);
-            ETTestHelper.setEnchantCap("respiration", -1);
-            ETTestHelper.setEnchantCap("riptide", -1);
-            ETTestHelper.setEnchantCap("soul_speed", -1);
-            ETTestHelper.setEnchantCap("sweeping_edge", -1);
-            ETTestHelper.setEnchantCap("swift_sneak", -1);
-            ETTestHelper.setEnchantCap("thorns", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -191,6 +210,8 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodLuckCustom(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "looting", "fortune",
+            "luck_of_the_sea");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("looting", 10);
         ETTestHelper.setEnchantCap("fortune", 8);
@@ -200,9 +221,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.FORTUNE.getMaxLevel() == 8, "Fortune should be 8");
             helper.assertTrue(Enchantments.LUCK_OF_THE_SEA.getMaxLevel() == 6, "Luck of the Sea should be 6");
         } finally {
-            ETTestHelper.setEnchantCap("looting", -1);
-            ETTestHelper.setEnchantCap("fortune", -1);
-            ETTestHelper.setEnchantCap("luck_of_the_sea", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -212,6 +231,8 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodProtectionCustom(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "protection",
+            "fire_protection");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("protection", 10);
         ETTestHelper.setEnchantCap("fire_protection", 8);
@@ -219,8 +240,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.PROTECTION.getMaxLevel() == 10, "Protection should be 10");
             helper.assertTrue(Enchantments.FIRE_PROTECTION.getMaxLevel() == 8, "Fire Protection should be 8");
         } finally {
-            ETTestHelper.setEnchantCap("protection", -1);
-            ETTestHelper.setEnchantCap("fire_protection", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -228,6 +248,8 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodProtectionAllTypes(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "protection",
+            "fire_protection", "feather_falling", "blast_protection", "projectile_protection");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("protection", 6);
         ETTestHelper.setEnchantCap("fire_protection", 6);
@@ -242,11 +264,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.PROJECTILE_PROTECTION.getMaxLevel() == 6,
                 "Projectile Protection should be 6");
         } finally {
-            ETTestHelper.setEnchantCap("protection", -1);
-            ETTestHelper.setEnchantCap("fire_protection", -1);
-            ETTestHelper.setEnchantCap("feather_falling", -1);
-            ETTestHelper.setEnchantCap("blast_protection", -1);
-            ETTestHelper.setEnchantCap("projectile_protection", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -256,6 +274,8 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodSpecialCustom(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "mending", "infinity",
+            "silk_touch");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("mending", 5);
         ETTestHelper.setEnchantCap("infinity", 3);
@@ -265,9 +285,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.INFINITY.getMaxLevel() == 3, "Infinity should be 3");
             helper.assertTrue(Enchantments.SILK_TOUCH.getMaxLevel() == 2, "Silk Touch should be 2");
         } finally {
-            ETTestHelper.setEnchantCap("mending", -1);
-            ETTestHelper.setEnchantCap("infinity", -1);
-            ETTestHelper.setEnchantCap("silk_touch", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -275,12 +293,13 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodSpecialClampMax(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "mending");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("mending", 300);
         try {
             helper.assertTrue(Enchantments.MENDING.getMaxLevel() == 255, "Mending 300 should clamp to 255");
         } finally {
-            ETTestHelper.setEnchantCap("mending", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -288,6 +307,8 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodSpecialAllRemaining(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "aqua_affinity",
+            "binding_curse", "channeling", "multishot", "vanishing_curse");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("aqua_affinity", 3);
         ETTestHelper.setEnchantCap("binding_curse", 5);
@@ -301,11 +322,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.MULTISHOT.getMaxLevel() == 5, "Multishot should be 5");
             helper.assertTrue(Enchantments.VANISHING_CURSE.getMaxLevel() == 3, "Vanishing Curse should be 3");
         } finally {
-            ETTestHelper.setEnchantCap("aqua_affinity", -1);
-            ETTestHelper.setEnchantCap("binding_curse", -1);
-            ETTestHelper.setEnchantCap("channeling", -1);
-            ETTestHelper.setEnchantCap("multishot", -1);
-            ETTestHelper.setEnchantCap("vanishing_curse", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -315,6 +332,7 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodNegativeClamp(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", -5);
         try {
@@ -323,7 +341,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
                 "Sharpness -5 should passthrough to vanilla 5 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
         } finally {
-            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -334,6 +352,7 @@ public class CapmodGameTest implements FabricGameTest {
         templateName = EMPTY_STRUCTURE)
     public void capmodEnchantCommandRegression(TestContext helper) {
         // issue #46: /enchant command should respect capmod-raised levels
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 10);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -342,14 +361,13 @@ public class CapmodGameTest implements FabricGameTest {
         player.getInventory().selectedSlot = 0;
         MinecraftServer server = helper.getWorld().getServer();
         try {
-            // dispatch via the command manager (same path as a player typing /enchant)
+            // dispatch via the command manager (same path as a player
             server.getCommandManager().executeWithPrefix(player.getCommandSource().withLevel(4),
                 "enchant @s minecraft:sharpness 10");
             int level = EnchantmentHelper.getLevel(Enchantments.SHARPNESS, player.getInventory().getStack(0));
             helper.assertTrue(level == 10, "Sword should have Sharpness 10 after /enchant command (got " + level + ")");
         } finally {
-            ETTestHelper.setCapmod(false);
-            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -357,13 +375,14 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodValueOf1(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 1);
         try {
             helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 1,
                 "Sharpness 1 should give max level 1 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
         } finally {
-            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -371,6 +390,8 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodDisableEnchantmentsHeadCancelWins(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness", "smite",
+            "disable_enchantments_enabled", "disable_enchantments");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 10);
         ETTestHelper.setEnchantCap("smite", 7);
@@ -383,11 +404,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.SMITE.getMaxLevel() == 7,
                 "Non-disabled Smite should still honor capmod cap 7 (got " + Enchantments.SMITE.getMaxLevel() + ")");
         } finally {
-            ETTestHelper.setConfigValue("disable_enchantments", "");
-            ETTestHelper.setFeature("disable_enchantments_enabled", false);
-            ETTestHelper.setEnchantCap("sharpness", -1);
-            ETTestHelper.setEnchantCap("smite", -1);
-            ETTestHelper.setCapmod(false);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -395,6 +412,7 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodOverflowNonNumericCap(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         ETTestHelper.setCapmod(true);
         try {
             ETTestHelper.setConfigValue("sharpness", "9999999999");
@@ -411,8 +429,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 255,
                 "Cap Integer.MAX_VALUE should clamp to 255 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
         } finally {
-            ETTestHelper.setEnchantCap("sharpness", -1);
-            ETTestHelper.setCapmod(false);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -420,6 +437,7 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodEnchantTableAboveVanilla(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 10);
         try {
@@ -428,15 +446,14 @@ public class CapmodGameTest implements FabricGameTest {
                 "With capmod cap 10, an enchant-table Sharpness entry above vanilla 5 should be offered (got max "
                     + raised + ")");
 
-            // cap back to passthrough: the same gameplay must never exceed vanilla 5
+            // cap back to passthrough: the same gameplay must never exceed
             ETTestHelper.setEnchantCap("sharpness", -1);
             int vanilla = maxOfferedLevel(helper, Enchantments.SHARPNESS, new ItemStack(Items.BOOK));
             helper.assertTrue(vanilla > 0 && vanilla <= 5,
                 "With capmod off, Sharpness enchant-table entries must stay within vanilla 1..5 (got max " + vanilla
                     + ")");
         } finally {
-            ETTestHelper.setEnchantCap("sharpness", -1);
-            ETTestHelper.setCapmod(false);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -444,6 +461,7 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodModDisabledPassthrough(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness", "mod_enabled");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 10);
         try {
@@ -456,9 +474,7 @@ public class CapmodGameTest implements FabricGameTest {
                 "With mod_enabled=false the capmod inject must passthrough to vanilla 5 (got "
                     + Enchantments.SHARPNESS.getMaxLevel() + ")");
         } finally {
-            ETTestHelper.setConfigValue("mod_enabled", "true");
-            ETTestHelper.setEnchantCap("sharpness", -1);
-            ETTestHelper.setCapmod(false);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }
@@ -466,6 +482,7 @@ public class CapmodGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void capmodEnchantCommandRejectsAboveRaisedCap(TestContext helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 10);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -489,8 +506,7 @@ public class CapmodGameTest implements FabricGameTest {
             helper.assertTrue(atCap == 10,
                 "Sharpness 10 is exactly at the raised cap and must apply (got " + atCap + ")");
         } finally {
-            ETTestHelper.setCapmod(false);
-            ETTestHelper.setEnchantCap("sharpness", -1);
+            ETTestHelper.restoreConfig(originalConfig);
         }
         helper.complete();
     }

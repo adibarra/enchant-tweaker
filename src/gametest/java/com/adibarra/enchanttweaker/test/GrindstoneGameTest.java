@@ -3,6 +3,7 @@ package com.adibarra.enchanttweaker.test;
 import java.util.List;
 
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -26,11 +27,10 @@ import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
 
 public class GrindstoneGameTest implements FabricGameTest {
 
-    // gameplay helpers (private to this test; ETTestHelper is read-only)
+    // test-local helpers use the read-only ettesthelper
 
     /**
-     * the handler's shared input inventory, exposed by GrindstoneDisenchantMixin's
-     * duck interface
+     * exposes the handler's shared input inventory via the duck interface
      */
     private static Inventory grindstoneInput(GrindstoneScreenHandler handler) {
         return ((GrindstoneDisenchantAccess) handler).enchanttweaker$getInput();
@@ -43,17 +43,17 @@ public class GrindstoneGameTest implements FabricGameTest {
         handler.onContentChanged(input);
     }
 
-    /** reads the grindstone result through the real output slot (slot 2) */
+    /** reads the real result from output slot two */
     private static ItemStack resultStack(GrindstoneScreenHandler handler) {
         return handler.getSlot(2).getStack();
     }
 
-    /** number of distinct enchantments (curses included) on a stack */
+    /** counts distinct enchantments including curses */
     private static int enchantCount(ItemStack stack) {
         return EnchantmentHelper.getEnchantments(stack).getEnchantments().size();
     }
 
-    /** first stack of the given item found in the player's inventory, or EMPTY */
+    /** finds the first matching player inventory stack */
     private static ItemStack findInInventory(ServerPlayerEntity player, Item item) {
         for (int i = 0; i < player.getInventory().size(); i++) {
             ItemStack s = player.getInventory().getStack(i);
@@ -63,7 +63,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         return ItemStack.EMPTY;
     }
 
-    // grindstoneDisenchant: updateResult (real onContentChanged path)
+    // real grindstone content-change path
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
@@ -125,8 +125,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
 
-        // a book with 2 enchantments: splitting extracts exactly one onto the output
-        // book
+        // splitting a two-enchantment book extracts one enchantment
         ItemStack enchantedBook = new ItemStack(Items.ENCHANTED_BOOK);
         enchantedBook.addEnchantment(Enchantments.SHARPNESS, 3);
         enchantedBook.addEnchantment(Enchantments.UNBREAKING, 2);
@@ -185,8 +184,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         placeAndUpdate(handler, book, sword);
         ItemStack result = resultStack(handler);
 
-        // with the feature off, vanilla grindstone can't combine a book with a sword:
-        // empty output
+        // vanilla cannot combine a plain book and sword
         helper.assertTrue(result.isEmpty(), "Grindstone disenchant disabled should not produce enchanted book output");
         helper.complete();
     }
@@ -198,8 +196,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
 
-        // item with only curses: no non-curse enchant to extract, so it falls through
-        // to vanilla
+        // curse-only items have no enchantment to extract
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
         sword.addEnchantment(Enchantments.VANISHING_CURSE, 1);
         ItemStack book = new ItemStack(Items.BOOK);
@@ -218,10 +215,7 @@ public class GrindstoneGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantNotADisenchantSetup(TestContext helper) {
-        // `updateResult` bookSlot==-1 fall-through: feature ON, but neither slot
-        // qualifies
-        // (plain book + UNENCHANTED sword => no enchantments to extract => vanilla =>
-        // empty)
+        // an unenchanted sword does not form a disenchant setup
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
@@ -251,21 +245,23 @@ public class GrindstoneGameTest implements FabricGameTest {
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             ItemStack dirt = new ItemStack(Items.DIRT);
 
-            // both input slots must accept a plain book when the feature is on
+            // both input slots accept plain books when enabled
             helper.assertTrue(handler.getSlot(0).canInsert(book),
                 "Input slot 0 should accept a plain book when grindstone_disenchant is on");
             helper.assertTrue(handler.getSlot(1).canInsert(book),
                 "Input slot 1 should accept a plain book when grindstone_disenchant is on");
+            helper.assertTrue(handler.getSlot(0).getMaxItemCount(book) == 1,
+                "Input slot 0 should limit plain books to one");
+            helper.assertTrue(handler.getSlot(1).getMaxItemCount(book) == 1,
+                "Input slot 1 should limit plain books to one");
 
-            // regression: a damageable item is still accepted (vanilla predicate untouched)
-            // on BOTH slots
+            // damageable items remain valid in both input slots
             helper.assertTrue(handler.getSlot(0).canInsert(sword),
                 "Input slot 0 should still accept a damageable item");
             helper.assertTrue(handler.getSlot(1).canInsert(sword),
                 "Input slot 1 ($3) should still accept a damageable item");
 
-            // not broadened to junk: a non-book, non-damageable, unenchanted item is still
-            // rejected on BOTH slots
+            // both slots reject unenchanted non-book nondamageable items
             helper.assertFalse(handler.getSlot(0).canInsert(dirt),
                 "Input slot 0 should still reject a non-book, non-damageable item");
             helper.assertFalse(handler.getSlot(1).canInsert(dirt),
@@ -284,8 +280,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
 
         ItemStack book = new ItemStack(Items.BOOK);
-        // feature off: vanilla predicate applies, so a plain book is rejected by both
-        // input slots
+        // vanilla rejects plain books in both input slots
         helper.assertFalse(handler.getSlot(0).canInsert(book),
             "Input slot 0 should reject a plain book when grindstone_disenchant is off");
         helper.assertFalse(handler.getSlot(1).canInsert(book),
@@ -303,6 +298,7 @@ public class GrindstoneGameTest implements FabricGameTest {
 
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
         sword.addEnchantment(Enchantments.SHARPNESS, 3);
+        sword.set(DataComponentTypes.REPAIR_COST, 7);
         ItemStack book = new ItemStack(Items.BOOK);
 
         try {
@@ -320,6 +316,8 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(EnchantmentHelper.getEnchantments(returned).getLevel(Enchantments.SHARPNESS) == 0,
                 "Returned sword should have Sharpness stripped (got "
                     + EnchantmentHelper.getEnchantments(returned).getLevel(Enchantments.SHARPNESS) + ")");
+            helper.assertTrue(returned.get(DataComponentTypes.REPAIR_COST) == null,
+                "Returned clean item should not retain prior-work cost");
         } finally {
             ETTestHelper.setFeature("grindstone_disenchant", false);
             ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
@@ -358,7 +356,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // grindstoneOutputSlot: keep-branch variants additional cases
+    // additional keep-branch output cases
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
@@ -391,12 +389,11 @@ public class GrindstoneGameTest implements FabricGameTest {
 
             handler.getSlot(2).onTakeItem(player, result);
 
-            // both inputs consumed
+            // taking output consumes both input stacks
             helper.assertTrue(handler.getSlot(0).getStack().isEmpty(), "Input slot 0 should be emptied after takeout");
             helper.assertTrue(handler.getSlot(1).getStack().isEmpty(), "Input slot 1 should be emptied after takeout");
 
-            // `keep_item=true:` the source book returns with the extracted enchant removed,
-            // the other kept
+            // keeping source books removes only the extracted enchantment
             ItemStack kept = findInInventory(player, Items.ENCHANTED_BOOK);
             helper.assertFalse(kept.isEmpty(), "keep_item=true should return the leftover enchanted book");
             helper.assertTrue(enchantCount(kept) == 1,
@@ -422,9 +419,7 @@ public class GrindstoneGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantKeepBranchRemainingEmpty(TestContext helper) {
-        // book keep branch, remaining EMPTY => plain Items.BOOK returned
-        // book(Sharpness5, single enchant) + plain book: all extracted, source has
-        // nothing left
+        // fully extracted books return as plain books
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -432,6 +427,10 @@ public class GrindstoneGameTest implements FabricGameTest {
 
         ItemStack enchantedBook = new ItemStack(Items.ENCHANTED_BOOK);
         enchantedBook.addEnchantment(Enchantments.SHARPNESS, 5);
+        enchantedBook.set(DataComponentTypes.REPAIR_COST, 7);
+        enchantedBook.set(DataComponentTypes.STORED_ENCHANTMENTS,
+            enchantedBook.getOrDefault(DataComponentTypes.STORED_ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
+                .withShowInTooltip(false));
         ItemStack book = new ItemStack(Items.BOOK);
 
         try {
@@ -444,13 +443,18 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertTrue(handler.getSlot(0).getStack().isEmpty(), "Input slot 0 should be emptied after takeout");
             helper.assertTrue(handler.getSlot(1).getStack().isEmpty(), "Input slot 1 should be emptied after takeout");
 
-            // remaining empty => the returned item degrades to a PLAIN book, not an
-            // enchanted book
+            // fully drained books return as plain books
             ItemStack returnedPlain = findInInventory(player, Items.BOOK);
             helper.assertFalse(returnedPlain.isEmpty(),
                 "keep_item=true with nothing remaining should return a plain Items.BOOK");
             helper.assertTrue(enchantCount(returnedPlain) == 0,
                 "Returned plain book should carry no enchantments (got " + enchantCount(returnedPlain) + ")");
+            helper.assertTrue(returnedPlain.get(DataComponentTypes.STORED_ENCHANTMENTS) == null,
+                "Returned plain book should not retain stored enchantments");
+            helper.assertTrue(returnedPlain.get(DataComponentTypes.REPAIR_COST) == null,
+                "Returned plain book should not retain prior-work cost");
+            helper.assertTrue(returnedPlain.get(DataComponentTypes.ENCHANTMENTS) == null,
+                "Returned plain book should use the canonical empty component set");
             helper.assertTrue(findInInventory(player, Items.ENCHANTED_BOOK).isEmpty(),
                 "No enchanted book should be returned when the source book is fully drained");
         } finally {
@@ -463,10 +467,7 @@ public class GrindstoneGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void grindstoneDisenchantKeepBranchPreservesCurse(TestContext helper) {
-        // regular-item keep branch preserves curses
-        // sword(Sharpness3 + VanishingCurse1) + book: Sharpness goes to the output
-        // book; taking it
-        // returns the sword with Sharpness stripped but the curse retained
+        // kept swords retain curses after extracting other enchantments
         ETTestHelper.setFeature("grindstone_disenchant", true);
         ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
@@ -565,7 +566,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.SURVIVAL);
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
 
-        // fill main inventory (slots 0..35) so insertStack of the returned sword fails
+        // fill inventory so returning the sword drops it
         for (int i = 0; i < 36; i++) {
             player.getInventory().setStack(i, new ItemStack(Items.STONE, 64));
         }
@@ -584,7 +585,7 @@ public class GrindstoneGameTest implements FabricGameTest {
 
             ServerWorld world = helper.getWorld();
             Box search = player.getBoundingBox().expand(8.0);
-            // clear any pre-existing dropped swords in range to avoid stale matches
+            // remove stale dropped swords before this assertion
             world.getEntitiesByClass(ItemEntity.class, search, e -> e.getStack().isOf(Items.DIAMOND_SWORD))
                 .forEach(ItemEntity::discard);
 
@@ -620,8 +621,7 @@ public class GrindstoneGameTest implements FabricGameTest {
             ItemStack result = resultStack(handler);
             helper.assertFalse(result.isEmpty(), "Grindstone should produce output book before takeout");
 
-            // disable the feature: the take path must fall through to vanilla (no keep-item
-            // logic)
+            // feature-off takeout uses vanilla behavior
             ETTestHelper.setFeature("grindstone_disenchant", false);
             handler.getSlot(2).onTakeItem(player, result); // must not throw
 
@@ -634,7 +634,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // edge sweep: extra updateResult / onTakeItem branches
+    // additional result and takeout branches
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
@@ -688,7 +688,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         sword.addEnchantment(Enchantments.SHARPNESS, 3);
 
         try {
-            // enchanted sword in slot 0, slot 1 EMPTY
+            // a single enchanted sword uses vanilla grinding
             placeAndUpdate(handler, sword, ItemStack.EMPTY);
             ItemStack result = resultStack(handler);
 
@@ -717,18 +717,50 @@ public class GrindstoneGameTest implements FabricGameTest {
         ItemStack bookStack = new ItemStack(Items.BOOK, 2); // more than one book
 
         try {
+            // establish a valid output before transitioning to an invalid stack
+            ItemStack validSword = new ItemStack(Items.DIAMOND_SWORD);
+            validSword.addEnchantment(Enchantments.SHARPNESS, 3);
+            placeAndUpdate(handler, new ItemStack(Items.BOOK, 1), validSword);
+            helper.assertFalse(resultStack(handler).isEmpty(),
+                "A single book should engage disenchant before the invalid transition");
+
             placeAndUpdate(handler, bookStack, swordStack);
             helper.assertTrue(resultStack(handler).isEmpty(),
-                "A multi-count book stack must not engage disenchant (vanilla bails on count>1): result must be empty");
+                "A multi-count book stack must clear a previous disenchant output");
 
-            // control: a single book still engages, proving the guard is specifically about
-            // count>1
+            // a single book confirms the count guard control
             ItemStack swordSingle = new ItemStack(Items.DIAMOND_SWORD);
             swordSingle.addEnchantment(Enchantments.SHARPNESS, 3);
             placeAndUpdate(handler, new ItemStack(Items.BOOK, 1), swordSingle);
             helper.assertFalse(resultStack(handler).isEmpty(),
-                "A single book should still engage disenchant (count-specific guard control)");
+                "A single book should still engage disenchant after the invalid transition");
         } finally {
+            ETTestHelper.setFeature("grindstone_disenchant", false);
+        }
+        helper.complete();
+    }
+
+    @GameTest(
+        templateName = EMPTY_STRUCTURE)
+    public void grindstoneDisenchantConsumesOneBook(TestContext helper) {
+        ETTestHelper.setFeature("grindstone_disenchant", true);
+        ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "false");
+        ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
+        GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory());
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        sword.addEnchantment(Enchantments.SHARPNESS, 3);
+        try {
+            placeAndUpdate(handler, new ItemStack(Items.BOOK), sword);
+            ItemStack result = resultStack(handler);
+            helper.assertFalse(result.isEmpty(), "Disenchant should produce an output book");
+            handler.getSlot(0).getStack().increment(2);
+            handler.getSlot(2).onTakeItem(player, result);
+            helper.assertTrue(handler.getSlot(0).getStack().getCount() == 2,
+                "Taking one result should consume exactly one book");
+            helper.assertTrue(handler.getSlot(1).getStack().isEmpty(),
+                "Taking the result should consume the enchanted item");
+        } finally {
+            ETTestHelper.setConfigValue("grindstone_disenchant_keep_item", "true");
             ETTestHelper.setFeature("grindstone_disenchant", false);
         }
         helper.complete();
@@ -742,9 +774,7 @@ public class GrindstoneGameTest implements FabricGameTest {
         ServerPlayerEntity player = ETTestHelper.createServerPlayer(helper, GameMode.CREATIVE);
 
         ServerWorld world = helper.getWorld();
-        // a real context tied to a loaded position inside the test structure; XP orbs
-        // would spawn at
-        // this block's center if vanilla onTakeItem ran
+        // use a loaded context for vanilla takeout behavior
         BlockPos absPos = helper.getAbsolutePos(new BlockPos(1, 2, 1));
         ScreenHandlerContext ctx = ScreenHandlerContext.create(world, absPos);
         GrindstoneScreenHandler handler = new GrindstoneScreenHandler(0, player.getInventory(), ctx);
@@ -759,7 +789,7 @@ public class GrindstoneGameTest implements FabricGameTest {
             helper.assertFalse(result.isEmpty(), "Disenchant should produce an output book before takeout");
 
             Box search = new Box(absPos).expand(8.0);
-            // clear any stale orbs so the post-takeout count reflects only this operation
+            // remove stale experience orbs before takeout
             world.getEntitiesByClass(ExperienceOrbEntity.class, search, e -> true)
                 .forEach(ExperienceOrbEntity::discard);
 
@@ -768,7 +798,7 @@ public class GrindstoneGameTest implements FabricGameTest {
             List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(ExperienceOrbEntity.class, search, e -> true);
             helper.assertTrue(orbs.isEmpty(),
                 "Disenchant takeout must NOT spawn XP orbs (mixin suppresses vanilla grind XP); got " + orbs.size());
-            // and the inputs are still emptied by the mixin's own path
+            // the mixin still empties both inputs
             helper.assertTrue(handler.getSlot(0).getStack().isEmpty(), "Input slot 0 should be emptied after takeout");
             helper.assertTrue(handler.getSlot(1).getStack().isEmpty(), "Input slot 1 should be emptied after takeout");
         } finally {
@@ -812,8 +842,7 @@ public class GrindstoneGameTest implements FabricGameTest {
                 "Leftover book should keep exactly 2 enchants (got " + enchantCount(kept) + ")");
             ItemEnchantmentsComponent keptE = EnchantmentHelper.getEnchantments(kept);
 
-            // complement invariant: each enchant lives entirely on exactly one of
-            // output/kept
+            // each enchantment belongs entirely to output or kept stack
             helper.assertTrue(outSharp + keptE.getLevel(Enchantments.SHARPNESS) == 3,
                 "Sharpness must total 3 across output+kept");
             helper.assertTrue(outUnbreak + keptE.getLevel(Enchantments.UNBREAKING) == 2,

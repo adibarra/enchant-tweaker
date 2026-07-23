@@ -85,13 +85,12 @@ public class RomanNumeralGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // levelKeyOverride translation-key gate (extracted from mixin)
+    // levelKeyOverride translation-key gate
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void levelKeyOverrideGate(TestContext helper) {
-        // prefix + parseInt + NumberFormatException gate the mixin injectors used to
-        // inline
+        // mixin injectors use prefix and parseInt guards
         helper.assertTrue("XI".equals(ADRoman.levelKeyOverride("enchantment.level.11")),
             "enchantment.level.11 should override to XI");
         helper.assertTrue("0".equals(ADRoman.levelKeyOverride("enchantment.level.0")),
@@ -110,15 +109,12 @@ public class RomanNumeralGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // toRoman full 1-10 basics (fills the gap between 1, 4, 9)
+    // toRoman remaining single digits
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void toRomanOneThroughTen(TestContext helper) {
-        // 1, 4, 9 are already covered in toRomanBasics; cover the remaining
-        // single-digit domain
-        // exhaustively so the additive (II/III), five (V/VI/VII/VIII) and ten (X) forms
-        // are locked
+        // complements basic coverage with remaining single digits
         helper.assertTrue(ADRoman.toRoman(2).equals("II"), "2 should be II");
         helper.assertTrue(ADRoman.toRoman(3).equals("III"), "3 should be III");
         helper.assertTrue(ADRoman.toRoman(5).equals("V"), "5 should be V");
@@ -130,20 +126,19 @@ public class RomanNumeralGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // toRoman extreme-negative / sign boundary
+    // toRoman extreme negative boundaries
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void toRomanExtremeNegative(TestContext helper) {
-        // the num <= 0 guard must swallow the whole non-positive domain, including the
-        // most extreme negative (Integer.MIN_VALUE) and the -1 boundary just below zero
-        // no sign flip / no allocation
+        // non-positive inputs return before sign handling
+        // including Integer.MIN_VALUE
         helper.assertTrue(ADRoman.toRoman(-1).equals(""), "-1 should be an empty string");
         helper.assertTrue(ADRoman.toRoman(Integer.MIN_VALUE).equals(""), "Integer.MIN_VALUE should be an empty string");
         helper.complete();
     }
 
-    // toRoman output length is always bounded (no unbounded alloc)
+    // toRoman output length stays bounded
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
@@ -161,8 +156,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void levelOverrideExtremes(TestContext helper) {
-        // sign/overflow boundaries not covered by levelOverrideGating (which stops at
-        // -5 / 1,000,000)
+        // covers sign and overflow boundaries omitted above
         helper.assertTrue(ADRoman.enchantmentLevelOverride(-1) == null, "level -1 should defer to vanilla (null)");
         helper.assertTrue(ADRoman.enchantmentLevelOverride(Integer.MIN_VALUE) == null,
             "level Integer.MIN_VALUE should defer to vanilla (null)");
@@ -171,57 +165,52 @@ public class RomanNumeralGameTest implements FabricGameTest {
         helper.complete();
     }
 
-    // levelKeyOverride: null key + valid large + full MAX chain
+    // levelKeyOverride null and large values
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void levelKeyOverrideNullAndLarge(TestContext helper) {
-        // null must be swallowed by the key == null short-circuit (no NPE from
-        // startsWith)
+        // null keys return before startsWith runs
         helper.assertTrue(ADRoman.levelKeyOverride(null) == null,
             "null key should defer to vanilla (null), never throw");
-        // a valid large suffix flows prefix -> parseInt -> enchantmentLevelOverride ->
-        // toRoman
+        // large values pass through the complete override chain
         helper.assertTrue("MMMCMXCIX".equals(ADRoman.levelKeyOverride("enchantment.level.3999")),
             "enchantment.level.3999 should override to MMMCMXCIX");
-        // the full parse chain even survives the largest parseable int, which clamps in
-        // toRoman
+        // Integer.MAX_VALUE also passes through the complete chain
         helper.assertTrue("MMMCMXCIX".equals(ADRoman.levelKeyOverride("enchantment.level.2147483647")),
             "enchantment.level.2147483647 (Integer.MAX_VALUE) should clamp to MMMCMXCIX");
-        // a parseable but negative min-int suffix parses fine, then defers as a
-        // negative level
+        // negative minimum values parse then defer to vanilla
         helper.assertTrue(ADRoman.levelKeyOverride("enchantment.level.-2147483648") == null,
             "enchantment.level.-2147483648 (Integer.MIN_VALUE) should defer to vanilla (null)");
         helper.complete();
     }
 
-    // levelKeyOverride: Integer.parseInt quirks (verified vs JDK 21)
+    // levelKeyOverride Integer.parseInt quirks
 
     @GameTest(
         templateName = EMPTY_STRUCTURE)
     public void levelKeyOverrideParseQuirks(TestContext helper) {
-        // `parseInt` accepts leading zeros: "011" -> 11 -> XI
+        // parseInt accepts leading zeros
         helper.assertTrue("XI".equals(ADRoman.levelKeyOverride("enchantment.level.011")),
             "leading-zero suffix 011 parses to 11 -> XI");
-        // `parseInt` accepts a leading '+' sign: "+11" -> 11 -> XI
+        // parseInt accepts leading plus signs
         helper.assertTrue("XI".equals(ADRoman.levelKeyOverride("enchantment.level.+11")),
             "leading-plus suffix +11 parses to 11 -> XI");
-        // `parseInt` treats "-0" as 0, so this hits the level == 0 branch -> "0"
+        // parseInt treats negative zero as zero
         helper.assertTrue("0".equals(ADRoman.levelKeyOverride("enchantment.level.-0")),
             "negative-zero suffix -0 parses to 0 -> \"0\"");
-        // `parseInt` does NOT trim: surrounding or interior whitespace throws -> null
+        // parseInt rejects surrounding or internal whitespace
         helper.assertTrue(ADRoman.levelKeyOverride("enchantment.level. 11 ") == null,
             "whitespace-padded suffix should defer to vanilla (null)");
         helper.assertTrue(ADRoman.levelKeyOverride("enchantment.level.   ") == null,
             "whitespace-only suffix should defer to vanilla (null)");
-        // embedded non-digit -> NumberFormatException -> null
+        // embedded non-digits return null
         helper.assertTrue(ADRoman.levelKeyOverride("enchantment.level.1a") == null,
             "embedded-non-digit suffix 1a should defer to vanilla (null)");
-        // missing trailing dot means the prefix does not match at all -> null (no
-        // substring/parse)
+        // keys without a trailing dot skip parsing
         helper.assertTrue(ADRoman.levelKeyOverride("enchantment.level") == null,
             "prefix without trailing dot should defer to vanilla (null)");
-        // case-sensitive prefix: a capitalized key is not an enchantment-level key
+        // prefix comparison is case-sensitive
         helper.assertTrue(ADRoman.levelKeyOverride("Enchantment.level.11") == null,
             "case-mismatched prefix should defer to vanilla (null)");
         helper.complete();
