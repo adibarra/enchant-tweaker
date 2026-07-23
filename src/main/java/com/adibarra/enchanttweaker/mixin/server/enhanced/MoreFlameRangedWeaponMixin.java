@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.adibarra.enchanttweaker.FlameLevelAccess;
 
-/** Captures Flame from the weapon when a player-fired projectile is created. */
+/** captures flame from the weapon for player-fired projectiles */
 @Mixin(RangedWeaponItem.class)
 public abstract class MoreFlameRangedWeaponMixin {
 

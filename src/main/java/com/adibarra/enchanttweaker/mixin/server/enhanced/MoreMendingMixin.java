@@ -19,8 +19,8 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.MendingLevelAccess;
 
 /**
- * @description scales the efficiency of the Mending enchant based on its level
- * @environment Server
+ * @description scales mending efficiency based on enchantment level
+ * @environment server
  */
 @Mixin(
     value = ExperienceOrbEntity.class)
@@ -30,8 +30,7 @@ public abstract class MoreMendingMixin implements MendingLevelAccess {
     private int mendingLevel = 0;
 
     /**
-     * lets BetterMendingMixin supply the Mending level when it takes over
-     * repairPlayerGears
+     * lets the mending mixin provide its level during repair
      */
     @Unique
     public void enchanttweaker$setMendingLevel(int level) {
@@ -51,7 +50,7 @@ public abstract class MoreMendingMixin implements MendingLevelAccess {
         if (entry != null) {
             mendingLevel = EnchantmentHelper.getLevel(Enchantments.MENDING, entry.getValue());
         } else {
-            mendingLevel = 0; // no mending gear this pass, avoid reusing a stale level
+            mendingLevel = 0; // clears stale levels when no gear is found
         }
     }
 
@@ -63,10 +62,12 @@ public abstract class MoreMendingMixin implements MendingLevelAccess {
         if (!ETMixinPlugin.getMixinConfig("MoreMendingMixin"))
             return;
         double step = ETMixinPlugin.getConfig().getOrDefault("more_mending_step", 0.05);
-        // clamp the configured floor into [0.0, 0.6] first: a user-set floor above 0.6
-        // would make
-        // the Math.clamp below see min > max and throw IllegalArgumentException
+        // clamps the floor before calculating the repair cost
         double floor = Math.clamp(ETMixinPlugin.getConfig().getOrDefault("more_mending_floor", 0.1), 0.0, 0.6);
-        cir.setReturnValue((int) Math.round(repairAmount * Math.clamp(0.6 - step * mendingLevel, floor, 0.6)));
+        double scaledCost = repairAmount * Math.clamp(0.6 - step * mendingLevel, floor, 0.6);
+        double nearestInteger = Math.rint(scaledCost);
+        if (Math.abs(scaledCost - nearestInteger) <= Math.ulp(scaledCost) * 4)
+            scaledCost = nearestInteger;
+        cir.setReturnValue((int) Math.floor(scaledCost));
     }
 }

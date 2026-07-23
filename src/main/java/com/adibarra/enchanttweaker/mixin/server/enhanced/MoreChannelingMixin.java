@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description lets Channeling enchant work in rain at level 2
- * @environment Server
+ * @description enables channeling during rain at level 2
+ * @environment server
  */
 @Mixin(
     value = TridentEntity.class)
@@ -37,6 +37,6 @@ public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
         if (!ETMixinPlugin.getMixinConfig("MoreChannelingMixin"))
             return orig;
         boolean isChannelingII = EnchantmentHelper.getLevel(Enchantments.CHANNELING, this.getItemStack()) > 1;
-        return orig || (isChannelingII && this.getWorld().isRaining());
+        return orig || (isChannelingII && this.getWorld().hasRain(this.getBlockPos()));
     }
 }

@@ -11,9 +11,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description scales XP drops from mob kills based on the killer's Looting
- *              level
- * @environment Server
+ * @description scales experience drops from kills using looting
+ * @environment server
  */
 @Mixin(
     value = LivingEntity.class)

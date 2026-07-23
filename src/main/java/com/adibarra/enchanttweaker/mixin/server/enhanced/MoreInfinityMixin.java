@@ -16,9 +16,8 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.ADUtils;
 
 /**
- * @description lets bows with Infinity enchant have a chance at shooting
- *              without consuming an arrow. Overrides BowInfinityFix
- * @environment Server
+ * @description lets infinity bows sometimes preserve arrows
+ * @environment server
  */
 @Mixin(
     value = RangedWeaponItem.class)
@@ -39,8 +38,8 @@ public abstract class MoreInfinityMixin {
         if (!ETMixinPlugin.getMixinConfig("MoreInfinityMixin"))
             return orig;
         if (!orig)
-            return false; // already no infinity, don't change
-        // creative-mode shots must remain free
+            return false; // already lacks infinity, so leave unchanged
+        // creative shots must remain free
         if (shooter != null && shooter.isInCreativeMode())
             return true;
         int infinityLevel = EnchantmentHelper.getLevel(Enchantments.INFINITY, weaponStack);

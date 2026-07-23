@@ -9,10 +9,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description replace additive EPF protection formula with multiplicative
- *              scaling vanilla: damage * (1 - clamp(epf, 0, 20) / 25) modded:
- *              damage * 0.96^epf
- * @environment Server
+ * @description scale protection damage multiplicatively
+ * @environment server
  */
 @Mixin(
     value = LivingEntity.class)

@@ -12,10 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description replace additive fire protection duration formula with
- *              multiplicative scaling vanilla: duration -= floor(duration *
- *              level * 0.15) modded: duration * 0.85^level
- * @environment Server
+ * @description scale fire protection duration multiplicatively
+ * @environment server
  */
 @Mixin(
     value = ProtectionEnchantment.class)

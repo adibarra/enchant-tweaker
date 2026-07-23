@@ -18,9 +18,9 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.FlameLevelAccess;
 
 /**
- * @description scales the burn time of the Flame enchant based on its level
- *              adds 2 seconds of burn time per level above 1
- * @environment Server
+ * @description scales flame burn time by enchantment level adds two seconds per
+ *              level above one
+ * @environment server
  */
 @Mixin(
     value = PersistentProjectileEntity.class)

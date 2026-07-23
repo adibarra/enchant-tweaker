@@ -12,10 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description replace additive blast protection knockback formula with
- *              multiplicative scaling vanilla: knockback *= clamp(1 - level *
- *              0.15, 0, 1) modded: knockback * 0.85^level
- * @environment Server
+ * @description scale blast protection knockback multiplicatively
+ * @environment server
  */
 @Mixin(
     value = ProtectionEnchantment.class)
