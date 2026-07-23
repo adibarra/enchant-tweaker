@@ -4,6 +4,7 @@
 
 ### Added
 
+- Add Mod Menu support
 - Sync server config to clients on join, reload, and config change
   - ShinyNames and capmod levels update automatically without reconnecting
 - Update `/et reload` to also re-sync connected clients
@@ -36,27 +37,48 @@
 - Fix renaming costing more than one level with `cheap_names` and `prior_work_free` combined
 - Fix race conditions in the MoreBinding, MoreMultishot, and MoreFlame mixins
 - Fix dead channeling entry in capmod config
-- Regenerate a blank or unreadable config from defaults instead of deleting it
+- Regenerate blank configs from defaults, retain the active configuration when an existing file cannot be read
 - Clamp out-of-range config values (protection bases, looting multiplier, multishot per-level, xp scaling overflow, mending floor)
 - Preserve MoreFlame levels on fired projectiles across weapon switches and save/load
 - Keep CheapNames from changing costs when an anvil operation has no valid output
 - Reject malformed booleans and non-finite decimal config values
 - Ignore malformed Protection bypass IDs instead of crashing damage handling
-- Clear pending MoreBinding armor when a player disconnects
+- Preserve pending MoreBinding armor across death-screen disconnects
 - Include exact random-threshold boundary rolls for MoreBinding and MoreInfinity
+- Remove prior-work penalties before the anvil's too-expensive output check
+- Apply disabled enchantments to explicit and registry-backed loot choices, with namespace-aware configured ID matching
+- Read villager enchanted-book offers from stored enchantments and combine per-enchantment `-1` values with global or vanilla fallback limits
+- Allow all configured trident weapon enchantments through the enchanting table's primary-item check
+- Strip stored enchantments from returned plain books and consume only one book per grindstone extraction
+- Let ownerless Loyalty tridents resume normal void cleanup and make More Mending floor boundary costs reliable
+- Preserve newer config schema versions, roll back failed migrations, and avoid exposing unpersisted config changes
+- Fix config schema descriptions, long list values, compact-screen pagination, namespaced suggestions, and comma-space completion
+- Preserve case-sensitive config values and replace whitespace-spaced assignments without duplicates
+- Sync an explicitly disabled server state to joining clients
+- Preserve local client configuration when disconnect reload fails
+- Preserve unsaved config values across resize and save failures, and prevent compact-screen status overlap
+- Reject overflowing MoreMultishot projectile counts before allocation
+- Apply the global villager limit when enchanted-book entries lack registry keys
+- Return canonical plain books without stale repair costs or hidden empty enchantment components
+- Preserve bundled value casing during migration, update every duplicate assignment, and replace config files atomically
+- Normalize loaded config-screen values and preserve the search caret across result refreshes
+- Harden config migration, payload snapshots, command aliases, test cleanup, and release-note/sync robustness
+- Harden config/API validation and synchronization, make anvil and config sync safer, improve deterministic isolated gametests and CI/wrapper/smoke checks, and correct documentation.
+- Final hardening of config migration, payload validation, command alias copying, and test resource cleanup
+- Isolate GameTest fixtures, namespace villager trade matching, and harden config and payload behavior
 
 ### Internal
 
 - Consolidate the capmod system into a single unified mixin
 - Cache feature flags and capmod levels (performance improvement)
 - Add a config migration framework and internal `config_version` key for future upgrades
-- Make config storage thread-safe for concurrent sync and gameplay reads
-- Version the client sync payload and exclude client-only cosmetic prefs (`roman_numerals`, `shiny_name`) from sync
+- Make config storage and persistence atomic across concurrent gameplay and sync writes
+- Give each config sync protocol version a distinct payload ID and exclude client-only cosmetic prefs (`roman_numerals`, `shiny_name`) from sync
 - Declare `fabric-api` and `minecraft` dependencies in fabric.mod.json
 - Add a GitHub Actions CI workflow that builds the mod and runs the gametests
 - Add a Quilt Loader server smoke test to CI
 - Upgrade to Java 21, Gradle 9, and Fabric Loom 1.15
-- Expand the test suite to 422 gametests
+- Expand the test suite to 439 gametests
 
 ## 1.5.0
 
