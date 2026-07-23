@@ -2,6 +2,7 @@ package com.adibarra.enchanttweaker.commands;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.mojang.brigadier.Command;
@@ -44,7 +45,7 @@ public class ResetCommand implements Command<ServerCommandSource> {
             return Command.SINGLE_SUCCESS;
         }
 
-        key = key.toLowerCase();
+        key = key.toLowerCase(Locale.ROOT);
         return key.equals("all") ? resetAll(source) : resetKey(source, key);
     }
 
@@ -65,7 +66,12 @@ public class ResetCommand implements Command<ServerCommandSource> {
 
         String previous = ETMixinPlugin.getConfig().getOrDefault(key, null);
         String value = ETConfigSchema.defaultOf(key);
-        ETMixinPlugin.getConfig().set(key, value);
+        if (!ETMixinPlugin.getConfig().set(key, value)) {
+            CommandFeedback.error(source, Text.literal("Failed to persist reset for key '").formatted(Formatting.GRAY),
+                Text.literal(key).formatted(Formatting.RED),
+                Text.literal("'. The value was not changed.").formatted(Formatting.GRAY));
+            return 0;
+        }
         ETMixinPlugin.clearCaches();
         ETCommands.broadcastConfigSync(source.getServer());
 
@@ -95,7 +101,10 @@ public class ResetCommand implements Command<ServerCommandSource> {
                 restored++;
         }
 
-        ETMixinPlugin.getConfig().setAllAndPersist(defaults);
+        if (!ETMixinPlugin.getConfig().setAllAndPersist(defaults)) {
+            CommandFeedback.error(source, Text.literal("Failed to persist config reset.").formatted(Formatting.GRAY));
+            return 0;
+        }
         ETMixinPlugin.clearCaches();
         ETCommands.broadcastConfigSync(source.getServer());
 

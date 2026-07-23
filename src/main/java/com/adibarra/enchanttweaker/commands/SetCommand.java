@@ -2,6 +2,7 @@ package com.adibarra.enchanttweaker.commands;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -19,9 +20,9 @@ public class SetCommand implements Command<ServerCommandSource> {
 
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
-        String key = StringArgumentType.getString(context, "key").toLowerCase();
+        String key = StringArgumentType.getString(context, "key").toLowerCase(Locale.ROOT);
         // trim the remaining command text before validation
-        String value = boolString(StringArgumentType.getString(context, "value").trim().toLowerCase());
+        String value = boolString(StringArgumentType.getString(context, "value").trim());
         ServerCommandSource source = context.getSource();
 
         // key must exist before we can set it
@@ -32,8 +33,7 @@ public class SetCommand implements Command<ServerCommandSource> {
             return 0;
         }
 
-        // reserved keys (e.g. config_version) are managed internally and cannot be
-        // changed
+        // reserved config keys are managed internally and cannot be changed
         if (ETConfigSchema.isReserved(key)) {
             CommandFeedback.error(source, Text.literal("Key '").formatted(Formatting.GRAY),
                 Text.literal(key).formatted(Formatting.RED),
@@ -52,9 +52,13 @@ public class SetCommand implements Command<ServerCommandSource> {
             return 0;
         }
 
-        // `set()` updates the in-memory map and disk; a cache clear is enough to pick
-        // up the new value (a full reload would re-read disk + re-run migration)
-        ETMixinPlugin.getConfig().set(key, value);
+        // update memory and disk, then clear the config cache
+        if (!ETMixinPlugin.getConfig().set(key, value)) {
+            CommandFeedback.error(source, Text.literal("Failed to persist key '").formatted(Formatting.GRAY),
+                Text.literal(key).formatted(Formatting.RED),
+                Text.literal("'. The value was not changed.").formatted(Formatting.GRAY));
+            return 0;
+        }
         ETMixinPlugin.clearCaches();
         ETCommands.broadcastConfigSync(source.getServer());
 
@@ -74,9 +78,10 @@ public class SetCommand implements Command<ServerCommandSource> {
     }
 
     private static String boolString(String value) {
-        if (ADText.TRUE_VALUES.contains(value))
+        String normalized = value.toLowerCase(Locale.ROOT);
+        if (ADText.TRUE_VALUES.contains(normalized))
             return "true";
-        if (ADText.FALSE_VALUES.contains(value))
+        if (ADText.FALSE_VALUES.contains(normalized))
             return "false";
         return value;
     }

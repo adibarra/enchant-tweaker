@@ -43,10 +43,12 @@ public class DiagnoseCommand implements Command<ServerCommandSource> {
                 continue; // shared keys (e.g. grindstone) reported once
             boolean want = config.getOrDefault(configKey, false);
             boolean applied = ETMixinPlugin.getMixinConfig(mixinName);
-            if (want && !applied) {
+            if (want != applied) {
                 anyDesynced = true;
                 String reason;
-                if (!modEnabledNow)
+                if (!want)
+                    reason = "feature remains active while configured false";
+                else if (!modEnabledNow)
                     reason = "mod_enabled is currently false";
                 else if (activeCompat.containsKey(configKey))
                     reason = "COMPAT override: " + activeCompat.get(configKey);

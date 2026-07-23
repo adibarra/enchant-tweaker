@@ -2,6 +2,7 @@ package com.adibarra.enchanttweaker.commands;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -37,7 +38,7 @@ public class ListCommand implements Command<ServerCommandSource> {
         if (category == null) {
             return overview(context);
         }
-        return listCategory(context, category.toLowerCase(), getOptionalInt(context, "page", 1));
+        return listCategory(context, category.toLowerCase(Locale.ROOT), getOptionalInt(context, "page", 1));
     }
 
     private int overview(CommandContext<ServerCommandSource> context) {

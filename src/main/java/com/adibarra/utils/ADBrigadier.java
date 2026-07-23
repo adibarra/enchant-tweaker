@@ -2,6 +2,7 @@ package com.adibarra.utils;
 
 import java.util.function.Supplier;
 
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -15,10 +16,10 @@ public class ADBrigadier {
     }
 
     /**
-     * A record representing a command.
+     * a record representing a command
      *
      * @param description
-     *            the description of the command
+     *            the command description
      * @param node
      *            the command node
      */
@@ -26,21 +27,33 @@ public class ADBrigadier {
     }
 
     /**
-     * Builds an alias for a command node.
+     * builds an alias for a command node
      *
      * @param alias
-     *            the alias to build
+     *            the alias
      * @param destNode
-     *            the destination node to forward to
+     *            the destination node
      * @return the built alias node
      */
     public static <S> LiteralCommandNode<S> buildAlias(String alias, CommandNode<S> destNode) {
         LiteralArgumentBuilder<S> aliasNode = LiteralArgumentBuilder.<S>literal(alias)
-            .requires(destNode.getRequirement())
-            .forward(destNode.getRedirect(), destNode.getRedirectModifier(), destNode.isFork())
-            .executes(destNode.getCommand());
-        for (CommandNode<S> child : destNode.getChildren())
-            aliasNode.then(child);
+            .requires(destNode.getRequirement()).executes(destNode.getCommand());
+
+        if (destNode.getRedirect() == null)
+            for (CommandNode<S> child : destNode.getChildren())
+                aliasNode.then(copyNode(child));
+
+        if (destNode.getRedirect() != null || destNode.getRedirectModifier() != null || destNode.isFork())
+            aliasNode.forward(destNode.getRedirect(), destNode.getRedirectModifier(), destNode.isFork());
+
         return aliasNode.build();
+    }
+
+    private static <S> CommandNode<S> copyNode(CommandNode<S> sourceNode) {
+        ArgumentBuilder<S, ?> copy = sourceNode.createBuilder();
+        if (sourceNode.getRedirect() == null)
+            for (CommandNode<S> child : sourceNode.getChildren())
+                copy.then(copyNode(child));
+        return copy.build();
     }
 }

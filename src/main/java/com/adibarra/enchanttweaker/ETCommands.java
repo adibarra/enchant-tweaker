@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class ETCommands {
 
     public static final String BASE_CMD = "et";
     private static final List<ADBrigadier.Command> COMMANDS = new ArrayList<>();
+    private static final List<ADBrigadier.Command> COMMANDS_VIEW = Collections.unmodifiableList(COMMANDS);
 
     static {
         COMMANDS.add(new ADBrigadier.Command("Reloads the config file.",
@@ -96,6 +98,6 @@ public class ETCommands {
     }
 
     public static List<ADBrigadier.Command> getCommands() {
-        return COMMANDS;
+        return COMMANDS_VIEW;
     }
 }

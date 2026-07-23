@@ -20,7 +20,7 @@ public final class CommandFeedback {
     }
 
     /**
-     * builds the mod prefix followed by the given parts, joined into a single Text
+     * builds the mod prefix and joins text parts
      */
     private static MutableText build(List<Text> parts) {
         List<Text> msg = new ArrayList<>();

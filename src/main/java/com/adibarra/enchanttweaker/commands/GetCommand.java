@@ -1,5 +1,7 @@
 package com.adibarra.enchanttweaker.commands;
 
+import java.util.Locale;
+
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -21,13 +23,13 @@ public class GetCommand implements Command<ServerCommandSource> {
 
     @Override
     public int run(CommandContext<ServerCommandSource> context) {
-        String key = StringArgumentType.getString(context, "key").toLowerCase();
+        String key = StringArgumentType.getString(context, "key").toLowerCase(Locale.ROOT);
         String value = ETMixinPlugin.getConfig().getOrDefault(key, null);
 
         if (value != null) {
             CommandFeedback.feedback(context.getSource(), Text.literal("Key '").formatted(Formatting.GRAY),
-                Text.literal(key), Text.literal("' is set to '").formatted(Formatting.GRAY),
-                ADText.colorValue(value.toLowerCase()), Text.literal("'.").formatted(Formatting.GRAY));
+                Text.literal(key), Text.literal("' is set to '").formatted(Formatting.GRAY), ADText.colorValue(value),
+                Text.literal("'.").formatted(Formatting.GRAY));
             return Command.SINGLE_SUCCESS;
         }
 

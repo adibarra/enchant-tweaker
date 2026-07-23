@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker.commands.suggestions;
 
 import java.util.Collection;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -18,22 +19,23 @@ public class ListSuggestion {
 
     private static CompletableFuture<Suggestions> buildSuggestions(SuggestionsBuilder builder,
         Collection<String> options) {
-        String query = builder.getRemaining().toLowerCase();
+        String query = builder.getRemaining().toLowerCase(Locale.ROOT);
 
-        if (options.isEmpty()) {
+        if (options == null || options.isEmpty()) {
             return Suggestions.empty();
         }
 
         for (String str : options) {
-            if (str.toLowerCase().startsWith(query)) {
+            if (str != null && str.toLowerCase(Locale.ROOT).startsWith(query)) {
                 builder.suggest(str);
             }
         }
+
         return builder.buildFuture();
     }
 
     public static SuggestionProvider<ServerCommandSource> of(Supplier<Collection<String>> options) {
         return (CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) -> buildSuggestions(builder,
-            options.get());
+            options == null ? null : options.get());
     }
 }
