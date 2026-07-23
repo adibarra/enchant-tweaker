@@ -10,7 +10,7 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
  * @description enchanting/repairing cost is cheaper with prior work
- * @environment Server
+ * @environment server
  */
 @Mixin(
     value = AnvilScreenHandler.class)
@@ -27,6 +27,6 @@ public abstract class PriorWorkCheaperMixin {
         double coefficient = ETMixinPlugin.getConfig().getOrDefault("pw_cost_multiplier", 2.0);
         double newCost = Math.clamp(coefficient, 0, Double.MAX_VALUE) * cost + 1;
         // clamp the scaled cost to vanilla's integer range
-        cir.setReturnValue(Math.clamp(Math.round(newCost), 0, Integer.MAX_VALUE));
+        cir.setReturnValue((int) Math.clamp(Math.round(newCost), 0L, Integer.MAX_VALUE));
     }
 }

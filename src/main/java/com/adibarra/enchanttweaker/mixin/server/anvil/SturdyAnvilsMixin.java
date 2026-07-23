@@ -9,7 +9,7 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
  * @description customize the chance of an anvil breaking when used
- * @environment Server
+ * @environment server
  */
 @Mixin(
     value = AnvilScreenHandler.class)

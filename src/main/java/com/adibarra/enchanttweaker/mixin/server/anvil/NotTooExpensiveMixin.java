@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import com.adibarra.enchanttweaker.AnvilCost;
 
 /**
- * @description Anvils no longer say "Too Expensive!"
- * @environment Server
+ * @description anvils no longer say "Too Expensive!"
+ * @environment server
  */
 @Mixin(
     value = AnvilScreenHandler.class)

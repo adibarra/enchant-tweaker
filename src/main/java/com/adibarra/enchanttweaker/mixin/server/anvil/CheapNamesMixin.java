@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description Renaming items in anvils costs 1 level.
- * @environment Server
+ * @description renaming items in anvils costs 1 level
+ * @environment server
  */
 @Mixin(
     value = AnvilScreenHandler.class)

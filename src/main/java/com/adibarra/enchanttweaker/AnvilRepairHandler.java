@@ -15,11 +15,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldEvents;
 
-/** allows repairing damaged anvils by sneak+right-clicking with iron */
+/** repairs damaged anvils with iron while sneaking */
 public final class AnvilRepairHandler {
 
-    // set once when the callback is wired up; read by /et diagnose to report live
-    // handler state
+    // tracks callback registration for diagnostics
     private static volatile boolean registered = false;
 
     private AnvilRepairHandler() {
@@ -35,19 +34,20 @@ public final class AnvilRepairHandler {
     }
 
     private static ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hit) {
-        // useBlockCallback fires before the spectator check, so gate on it explicitly
+        // gate callback before spectator handling
         if (hand != Hand.MAIN_HAND)
             return ActionResult.PASS;
         if (!player.isSneaking() || player.isSpectator())
             return ActionResult.PASS;
-        // direct config read (not getMixinConfig): the handler reads its config key
-        // directly
+        // read the repair setting directly
         if (!ETMixinPlugin.getConfig().getOrDefault("anvil_repair", false))
             return ActionResult.PASS;
 
         BlockPos pos = hit.getBlockPos();
         BlockState state = world.getBlockState(pos);
         if (!state.isOf(Blocks.DAMAGED_ANVIL) && !state.isOf(Blocks.CHIPPED_ANVIL))
+            return ActionResult.PASS;
+        if (!world.canPlayerModifyAt(player, pos))
             return ActionResult.PASS;
 
         ItemStack held = player.getMainHandStack();
@@ -56,10 +56,7 @@ public final class AnvilRepairHandler {
         if (ingotCost <= 0)
             return ActionResult.PASS;
 
-        // ingots pay the cost directly. Iron blocks pay it only when the cost is an
-        // exact multiple
-        // of 9 (1 block = 9 ingots), with no overpaying, so a cost of 8 or 10 is
-        // ingots-only
+        // iron blocks work only for costs divisible by nine
         int consumeCount;
         if (held.isOf(Items.IRON_INGOT) && held.getCount() >= ingotCost) {
             consumeCount = ingotCost;
@@ -69,7 +66,7 @@ public final class AnvilRepairHandler {
             return ActionResult.PASS;
         }
 
-        // match found: arm-swing on the client, do the actual repair on the server
+        // swing client-side, repair server-side
         if (world.isClient)
             return ActionResult.SUCCESS;
 

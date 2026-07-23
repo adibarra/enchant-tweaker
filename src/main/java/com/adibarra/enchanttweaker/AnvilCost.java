@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker;
 
 /**
- * Shared anvil cost decisions used by the server handler and client display.
+ * shared anvil cost decisions for server and client display
  */
 public final class AnvilCost {
 

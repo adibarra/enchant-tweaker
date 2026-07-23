@@ -2,45 +2,32 @@ package com.adibarra.enchanttweaker.mixin.server.anvil;
 
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.screen.AnvilScreenHandler;
-import net.minecraft.screen.Property;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
  * @description enchanting/repairing cost does not increase with prior work
- * @environment Server
+ * @environment server
  */
 @Mixin(
     value = AnvilScreenHandler.class)
 public abstract class PriorWorkFreeMixin {
 
-    @Shadow
-    @Final
-    private Property levelCost;
-
-    @Inject(
+    @ModifyConstant(
         method = "updateResult()V",
-        at = @At("RETURN"))
-    private void enchanttweaker$priorWorkFree$removeRepairCostPenalty(CallbackInfo ci) {
+        constant = @Constant(
+            longValue = 0L,
+            ordinal = 0),
+        require = 1)
+    private long enchanttweaker$priorWorkFree$removeRepairCostPenalty(long cost) {
         if (!ETMixinPlugin.getMixinConfig("PriorWorkFreeMixin"))
-            return;
+            return cost;
         AnvilScreenHandler self = (AnvilScreenHandler) (Object) this;
-        // preserve CheapNames' one-level rename cost when both mixins run
-        if (ETMixinPlugin.getMixinConfig("CheapNamesMixin")
-            && self.getSlot(AnvilScreenHandler.INPUT_2_ID).getStack().isEmpty()) {
-            return;
-        }
-        int penalty = self.getSlot(AnvilScreenHandler.INPUT_1_ID).getStack()
+        return -(long) self.getSlot(AnvilScreenHandler.INPUT_1_ID).getStack()
             .getOrDefault(DataComponentTypes.REPAIR_COST, 0)
-            + self.getSlot(AnvilScreenHandler.INPUT_2_ID).getStack().getOrDefault(DataComponentTypes.REPAIR_COST, 0);
-        if (penalty <= 0)
-            return;
-        levelCost.set(Math.max(0, levelCost.get() - penalty));
+            - self.getSlot(AnvilScreenHandler.INPUT_2_ID).getStack().getOrDefault(DataComponentTypes.REPAIR_COST, 0);
     }
 }

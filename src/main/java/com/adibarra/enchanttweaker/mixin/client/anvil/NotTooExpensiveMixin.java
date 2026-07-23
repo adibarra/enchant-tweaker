@@ -11,7 +11,7 @@ import com.adibarra.enchanttweaker.AnvilCost;
 
 /**
  * @description anvils no longer say "Too Expensive!"
- * @environment Client
+ * @environment client
  */
 @Environment(EnvType.CLIENT)
 @Mixin(
