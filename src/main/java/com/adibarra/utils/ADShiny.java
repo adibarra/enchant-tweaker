@@ -18,7 +18,7 @@ public class ADShiny {
         return !cursed;
     }
 
-    /** Applies the complete shiny-name style decision for an enchantment name. */
+    /** applies the complete shiny-name style decision for an enchantment name */
     public static void applyNameStyle(MutableText text, int level, int maxLevel, boolean cursed, float chargedRoll) {
         if (!shouldColorGold(level, maxLevel, cursed))
             return;

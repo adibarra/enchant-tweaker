@@ -1,8 +1,7 @@
 package com.adibarra.utils;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import net.minecraft.text.*;
@@ -15,17 +14,14 @@ public class ADText {
         throw new IllegalStateException("Utility class. Do not instantiate.");
     }
 
-    public static final Set<String> TRUE_VALUES = new HashSet<>(
-        Arrays.asList("true", "t", "yes", "on", "enable", "enabled"));
-    public static final Set<String> FALSE_VALUES = new HashSet<>(
-        Arrays.asList("false", "f", "no", "off", "disable", "disabled"));
+    public static final Set<String> TRUE_VALUES = Set.of("true", "t", "yes", "on", "enable", "enabled");
+    public static final Set<String> FALSE_VALUES = Set.of("false", "f", "no", "off", "disable", "disabled");
 
     /**
-     * Joins a list of Text objects into a single MutableText object.
+     * joins a list of text objects into a single mutable text object
      *
      * @param list
-     *            the list of Text objects to join
-     * @return the joined MutableText object
+     * @return the joined mutable text object
      */
     public static MutableText joinTextMutable(List<Text> list) {
         MutableText out = Text.empty();
@@ -36,22 +32,20 @@ public class ADText {
     }
 
     /**
-     * Joins a list of Text objects into a single Text object.
+     * joins a list of text objects into a single text object
      *
      * @param list
-     *            the list of Text objects to join
-     * @return the joined Text object
+     * @return the joined text object
      */
     public static Text joinText(List<Text> list) {
         return joinTextMutable(list);
     }
 
     /**
-     * Builds a pretty command link with hover and click events.
+     * builds a pretty command link with hover and click events
      *
      * @param literal
-     *            the literal to run
-     * @return the built command link as a MutableText object
+     * @return the built command link as a mutable text object
      */
     public static MutableText buildCmdLink(String base, String literal) {
         String cmd = "/" + base + " " + literal;
@@ -62,19 +56,18 @@ public class ADText {
     }
 
     /**
-     * Colors the value based on its type.
-     *
+     * colors the value based on its type
+
      * @param value
-     *            the value to color
-     * @return the colored value as a MutableText object
+     * @return the colored value as a mutable text object
      */
     public static MutableText colorValue(String value) {
-        value = value.toLowerCase();
-        if (TRUE_VALUES.contains(value)) {
+        String normalized = value.toLowerCase(Locale.ROOT);
+        if (TRUE_VALUES.contains(normalized)) {
             return Text.literal(value).formatted(Formatting.GREEN);
-        } else if (FALSE_VALUES.contains(value)) {
+        } else if (FALSE_VALUES.contains(normalized)) {
             return Text.literal(value).formatted(Formatting.RED);
-        } else if (ADMisc.isDouble(value)) {
+        } else if (ADMisc.isDouble(normalized)) {
             return Text.literal(value).formatted(Formatting.BLUE);
         }
         return Text.literal(value).formatted(Formatting.GOLD);

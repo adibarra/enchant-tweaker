@@ -2,7 +2,7 @@ package com.adibarra.utils;
 
 import org.jetbrains.annotations.Nullable;
 
-/** converts enchantment levels to Roman numerals */
+/** converts enchantment levels to roman numerals */
 @SuppressWarnings("unused")
 public class ADRoman {
 
@@ -12,8 +12,7 @@ public class ADRoman {
             "I"};
 
     /**
-     * translation-key prefix vanilla uses for enchantment level display, e.g.
-     * {@code "enchantment.level.5"}
+     * translation-key prefix for enchantment level display
      */
     private static final String LEVEL_PREFIX = "enchantment.level.";
 
@@ -25,7 +24,7 @@ public class ADRoman {
     }
 
     /**
-     * converts an integer to its Roman numeral representation using a greedy
+     * converts an integer to its roman numeral representation using a greedy
      * algorithm
      */
     public static String toRoman(int num) {
@@ -55,7 +54,7 @@ public class ADRoman {
         return null;
     }
 
-    /** returns a Roman numeral override for an enchantment-level key */
+    /** returns a roman numeral override for an enchantment-level key */
     public static @Nullable String levelKeyOverride(String key) {
         if (key == null || !key.startsWith(LEVEL_PREFIX))
             return null;

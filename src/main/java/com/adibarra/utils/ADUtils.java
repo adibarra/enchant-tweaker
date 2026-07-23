@@ -28,7 +28,7 @@ public class ADUtils {
     }
 
     /**
-     * Represents an inventory.
+     * represents an inventory
      */
     public record Inventory(List<ItemStack> inv) {
         public Inventory(ItemStack inv) {
@@ -37,7 +37,7 @@ public class ADUtils {
     }
 
     /**
-     * Gets the registry path of an enchantment (e.g. "sharpness", "mending").
+     * gets the registry path of an enchantment (e.g. "sharpness", "mending")
      *
      * @param ench
      *            the enchantment
@@ -54,7 +54,7 @@ public class ADUtils {
     }
 
     /**
-     * Broadcasts a message to all ops on the server.
+     * broadcasts a message to all ops on the server
      *
      * @param server
      *            the server to broadcast to
@@ -70,7 +70,7 @@ public class ADUtils {
     }
 
     /**
-     * Gets a player's hotbar.
+     * gets a player's hotbar
      *
      * @param player
      *            the player
@@ -86,9 +86,9 @@ public class ADUtils {
     }
 
     /**
-     * Gets an item that matches the condition from the given inventories. Checks
+     * gets an item that matches the condition from the given inventories checks
      * inventories in order, returning a random matching item from the first
-     * inventory that has one.
+     * inventory that has one
      *
      * @param inventories
      *            the inventories to search
@@ -112,14 +112,14 @@ public class ADUtils {
     }
 
     /**
-     * Returns whether a Binding Curse roll keeps the item instead of dropping it.
+     * returns whether a binding curse roll keeps the item instead of dropping it
      */
     public static boolean bindingKeepsItem(int level, double step, float roll) {
         double dropChance = Math.clamp(1.0 + step - step * level, 0.0, 1.0);
         return roll >= dropChance;
     }
 
-    /** Returns whether an Infinity roll preserves the arrow. */
+    /** returns whether an infinity roll preserves the arrow */
     public static boolean infinityPreservesArrow(int level, double percentPerLevel, float roll) {
         double consumeChance = Math.clamp(1.0 - percentPerLevel * level, 0.0, 1.0);
         return roll >= consumeChance;

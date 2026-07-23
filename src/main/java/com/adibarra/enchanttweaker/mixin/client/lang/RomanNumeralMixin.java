@@ -12,9 +12,8 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.ADRoman;
 
 /**
- * @description dynamically generate Roman numeral translations for enchantment
- *              levels above X
- * @environment Client
+ * @description generate roman numeral translations above level ten
+ * @environment client
  */
 @Environment(EnvType.CLIENT)
 @Mixin(TranslationStorage.class)

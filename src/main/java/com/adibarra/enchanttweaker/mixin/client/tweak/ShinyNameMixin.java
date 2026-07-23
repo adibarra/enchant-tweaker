@@ -18,10 +18,9 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.ADShiny;
 
 /**
- * @description makes the enchantment name yellow when at max level also adds a
- *              'charged' effect. Ignores curse enchantments
+ * @description show max-level enchantments with a charged yellow name
  * @note uses the client's mod config for max enchantment levels
- * @environment Client
+ * @environment client
  */
 @Environment(EnvType.CLIENT)
 @Mixin(
