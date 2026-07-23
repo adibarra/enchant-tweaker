@@ -17,12 +17,17 @@ Tweak many enchantment related mechanics while keeping the vanilla feel. Current
 
 
 ## Installation
-Client-side install is recommended but not required. Some visual quality-of-life tweaks (Not Too Expensive, Shiny Names) need to be installed on the client to work properly.
+Client-side install is required for singleplayer (the integrated server runs in the client) and recommended for multiplayer when using visual quality-of-life tweaks such as Not Too Expensive and Shiny Names. On multiplayer servers, the client mod is optional unless those visual tweaks are desired.
 
 |              | Client-Side  | Server-Side  |
 |:------------:|:------------:|:------------:|
 | Singleplayer | **Required** |     N/A      |
 | Multiplayer  |   Optional   | **Required** |
+
+
+
+## Configuration
+Install [Mod Menu](https://modrinth.com/mod/modmenu) on the client to edit Enchant Tweaker settings from its Mods screen. The optional configuration screen groups settings by category, searches names and descriptions, validates typed values, supports category resets, and warns before discarding unsaved changes. Save from the title screen to update the local config file. The screen is read-only while a world is open because multiplayer settings are controlled by the server; server operators can use the `/et config` commands below instead.
 
 
 
@@ -92,19 +97,19 @@ Some vanilla enchantments tweaked to scale better. Some of these require the enc
 <summary> View Enhanced Enchantments </summary>
 
 ### More Binding
-Enabling this tweak will allow Curse of Binding to scale with enchantment level. Higher levels will decrease the chance of the item dropping on death. The effect maxes out at Curse of Binding X, Binding I is kept the same as vanilla. Formula: `Drop Chance = 1.0 + step - step * bindingLevel`. The step is configurable (default 0.1).
+Enabling this tweak will allow Curse of Binding to scale with enchantment level. Higher levels will decrease the chance of the item dropping on death. With the default step of 0.1, each level after Binding I adds 10 percentage points of retention: Binding X reaches 90% retention, while Binding XI reaches the formula's 100% retention clamp. Changing `more_binding_step` changes the level at which the clamp is reached. Binding I keeps vanilla's 100% drop chance. Formula: `Drop Chance = clamp(1.0 + step - step * bindingLevel, 0.0, 1.0)`. The step is configurable (default 0.1).
 
 ### More Blast Protection
-Enabling this tweak will replace the additive blast protection knockback formula with multiplicative scaling. Knockback never reaches zero. Formula: `Knockback = knockback * base^level`. The base is configurable (default 0.85, meaning 15% reduction per level).
+Enabling this tweak will replace the additive blast protection knockback formula with multiplicative scaling. With a base between 0 and 1, knockback approaches but never reaches zero; a base of 0 reduces it to zero at any positive level. A base of 1 preserves knockback, while a base above 1 increases it with each level. Formula: `Knockback = knockback * base^level`. The base is configurable (default 0.85, meaning 15% reduction per level).
 
 ### More Channeling
 Enabling this tweak will allow Channeling to scale with enchantment level. Channeling I only works during thunderstorms. Channeling II will allow Channeling to work during rain. No scaling for higher levels.
 
 ### More Fire Protection
-Enabling this tweak will replace the additive fire protection duration formula with multiplicative scaling. Fire duration never reaches zero. Formula: `Duration = duration * base^level`. The base is configurable (default 0.85, meaning 15% reduction per level).
+Enabling this tweak will replace the additive fire protection duration formula with multiplicative scaling. With a base between 0 and 1, fire duration approaches but never reaches zero; a base of 0 reduces it to zero at any positive level. A base of 1 preserves fire duration, while a base above 1 increases it with each level. Formula: `Duration = duration * base^level`. The base is configurable (default 0.85, meaning 15% reduction per level).
 
 ### More Flame
-Enabling this tweak will allow Flame to scale with enchantment level. Flame I lasts 5 seconds. Each additional level adds extra burn time. Continues scaling for higher levels (uncapped). Formula: `Burn Duration = 5 + per_level * (flameLevel - 1)`. The per-level increment is configurable (default 2).
+Enabling this tweak will allow Flame to scale with enchantment level. Flame I lasts 5 seconds. Each additional level adds extra burn time. Continues scaling for higher levels subject to a safety cap. Formula: `Burn Duration = 5 + per_level * (flameLevel - 1)`. The per-level increment is configurable (default 2).
 
 ### More Infinity
 **Overrides BowInfinityFix.** Enabling this tweak will allow Infinity to scale with enchantment level. Lets bows with Infinity have a chance at shooting without consuming an arrow. Continues scaling for higher levels (capped at 100% chance). Formula: `Free Arrow Chance = pct * infinityLevel`. The per-level percentage is configurable (default 0.03, meaning +3% per level).
@@ -116,10 +121,10 @@ Enabling this tweak will make Looting also increase XP drops from mob kills. Hig
 Enabling this tweak will allow Mending to scale with enchantment level. Mending II is the same as vanilla Mending. Mending I has ~10% XP efficiency loss and Mending III has ~10% XP efficiency gain. Formula: `Repair Cost = clamp(0.6 - step * mendingLevel, floor, 0.6)`. Both step (default 0.05) and floor (default 0.1) are configurable.
 
 ### More Multishot
-Enabling this tweak will allow Multishot to scale with enchantment level. Each additional level adds extra arrows to the shot. Crossbows take damage for **each** Multishot arrow shot. Continues scaling for higher levels without an artificial cap. Formula: `Arrow Count = multishotLevel * per_level + 1`. The per-level increment is configurable (default 2).
+Enabling this tweak will allow Multishot to scale with enchantment level. Each additional level adds extra arrows to the shot. Crossbows take damage for **each** Multishot arrow shot. Continues scaling for higher levels up to 256 projectiles. Formula: `Arrow Count = multishotLevel * per_level + 1`. The per-level increment is configurable (default 2).
 
 ### More Protection
-Enabling this tweak will replace the additive EPF protection formula with multiplicative scaling. Protection never reaches 100% immunity. Formula: `Damage = damage * base^epf`. The base is configurable (default 0.96, meaning 4% reduction per EPF point).
+Enabling this tweak will replace the additive EPF protection formula with multiplicative scaling. With a base between 0 and 1, damage approaches but never reaches zero; a base of 0 reaches 100% immunity at any positive EPF. A base of 1 preserves damage, while a base above 1 increases it with each EPF. Formula: `Damage = damage * base^epf`. The base is configurable (default 0.96, meaning 4% reduction per EPF point).
 
 </details>
 
@@ -212,7 +217,7 @@ Override max uses for individual enchantment trades with `trade_<enchantment>` k
 
 
 ## Modify Max Enchantment Levels
-Tweak the max level for individual enchantments. Not all vanilla enchantments scale by default, some have capped effects at certain levels. For example: Protection 255 would still be affected by vanilla's 25 EPF cap despite going far above it. To avoid these limits you can enable a tweak from the 'Enhanced Enchantments' section (if available).
+Tweak the max level for individual enchantments. Not all vanilla enchantments scale by default, some have capped effects at certain levels. For example: Protection 255 would still be affected by vanilla's 20 EPF cap despite going far above it. To avoid these limits you can enable a tweak from the 'Enhanced Enchantments' section (if available).
 
 <details>
 <summary> View Suggested Custom Enchantment Levels </summary>
