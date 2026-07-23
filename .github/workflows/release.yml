@@ -14,7 +14,7 @@ permissions: {}
 
 jobs:
   release:
-    if: github.actor == github.repository_owner && github.ref == 'refs/heads/main'
+    if: github.triggering_actor == github.repository_owner && github.ref == 'refs/heads/main'
     name: 🚀 Release
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -45,11 +45,28 @@ jobs:
           MOD: ${{ steps.version.outputs.mod }}
           MC: ${{ steps.version.outputs.mc }}
         run: |
-          if gh release view "v${MOD}+mc${MC}" >/dev/null 2>&1; then
-            echo "v${MOD}+mc${MC} already has a GitHub release; upload will be skipped"
+          tag="v${MOD}+mc${MC}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "${tag} already has a GitHub release; upload will be skipped"
             echo "github_exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "github_exists=false" >> "$GITHUB_OUTPUT"
+            set +e
+            git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null
+            tag_status=$?
+            set -e
+            case "$tag_status" in
+              0)
+                echo "${tag} exists without a release; refusing to retarget it" >&2
+                exit 1
+                ;;
+              2)
+                echo "github_exists=false" >> "$GITHUB_OUTPUT"
+                ;;
+              *)
+                echo "GitHub tag lookup failed" >&2
+                exit 1
+                ;;
+            esac
           fi
 
           mr_status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \

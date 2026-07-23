@@ -13,15 +13,15 @@ on:
 permissions: {}
 
 concurrency:
-  group: "labels-${{ github.workflow }}-${{ github.ref }}"
-  cancel-in-progress: true
+  group: "labels-${{ github.workflow }}"
+  cancel-in-progress: false
 
 jobs:
   sync-labels:
     name: ♻️ Sync labels
     permissions:
-      contents: read
-      pull-requests: write # create, update, and delete repository labels
+      contents: read # read the label manifest
+      issues: write # update repository issue labels
     runs-on: ubuntu-latest
     steps:
       - name: Check out code from GitHub
