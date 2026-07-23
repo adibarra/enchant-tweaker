@@ -13,9 +13,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description Allow tridents to be enchanted with fire aspect, knockback, and
- *              looting.
- * @environment Server
+ * @description allow tridents to be enchanted with fire aspect, knockback, and
+ *              looting
+ * @environment server
  */
 @Mixin(
     value = Enchantment.class)
@@ -36,6 +36,19 @@ public abstract class TridentWeaponsMixin {
         Enchantment enchantment = (Enchantment) (Object) this;
         if (enchantment instanceof DamageEnchantment || enchantment == Enchantments.FIRE_ASPECT
             || enchantment == Enchantments.KNOCKBACK || enchantment == Enchantments.LOOTING) {
+            cir.setReturnValue(true);
+        }
+    }
+
+    @Inject(
+        method = "isPrimaryItem(Lnet/minecraft/item/ItemStack;)Z",
+        at = @At("HEAD"),
+        cancellable = true)
+    private void enchanttweaker$tridentWeapons$allowDamageEnchantmentsAtEnchantingTable(ItemStack stack,
+        CallbackInfoReturnable<Boolean> cir) {
+        if (!ETMixinPlugin.getMixinConfig("TridentWeaponsMixin"))
+            return;
+        if (stack.getItem() instanceof TridentItem && (Enchantment) (Object) this instanceof DamageEnchantment) {
             cir.setReturnValue(true);
         }
     }

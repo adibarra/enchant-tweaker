@@ -1,29 +1,30 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.enchantment.ThornsEnchantment;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.damage.DamageSource;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description disable Thorns enchant armor self-damage backlash
- * @environment Server
+ * @description disable thorns enchant armor self-damage backlash
+ * @environment server
  */
 @Mixin(
     value = ThornsEnchantment.class)
 public abstract class NoThornsBacklashMixin {
-
-    @SuppressWarnings("SameReturnValue")
-    @ModifyConstant(
+    @WrapOperation(
         method = "onUserDamaged(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/Entity;I)V",
-        constant = @Constant(
-            intValue = 2,
-            ordinal = 0))
-    private int enchanttweaker$noThornsBacklash$noBacklash(int orig) {
+        at = @org.spongepowered.asm.mixin.injection.At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/entity/Entity;damage(Lnet/minecraft/entity/damage/DamageSource;F)Z"))
+    private boolean enchanttweaker$noThornsBacklash$skipAttackerDamage(Entity attacker, DamageSource source,
+        float amount, Operation<Boolean> original) {
         if (!ETMixinPlugin.getMixinConfig("NoThornsBacklashMixin"))
-            return orig;
-        return 0;
+            return original.call(attacker, source, amount);
+        return false;
     }
 }

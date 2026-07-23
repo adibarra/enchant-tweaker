@@ -15,9 +15,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description lets tridents with Loyalty enchant return when thrown into the
+ * @description lets tridents with loyalty enchant return when thrown into the
  *              void
- * @environment Server
+ * @environment server
  */
 @Mixin(
     value = TridentEntity.class)
@@ -41,10 +41,13 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
     private void enchanttweaker$loyalVoidTridents$returnFromVoid(CallbackInfo ci) {
         if (!ETMixinPlugin.getMixinConfig("LoyalVoidTridentsMixin"))
             return;
-        if (dataTracker.get(LOYALTY) == 0 || this.dealtDamage)
+        if (dataTracker.get(LOYALTY) == 0)
+            return;
+        if (this.getOwner() == null)
             return;
 
         if (this.getY() <= this.getWorld().getBottomY()) {
+            this.setPosition(this.getX(), this.getWorld().getBottomY(), this.getZ());
             this.dealtDamage = true;
             this.setVelocity(0, 0, 0);
         }

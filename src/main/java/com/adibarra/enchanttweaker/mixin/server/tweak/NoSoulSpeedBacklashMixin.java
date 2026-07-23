@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description disable Soul Speed enchant armor self-damage backlash
- * @environment Server
+ * @description disable soul speed enchant armor self-damage backlash
+ * @environment server
  */
 @Mixin(
     value = LivingEntity.class)
