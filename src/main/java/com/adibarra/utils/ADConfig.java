@@ -2,7 +2,10 @@ package com.adibarra.utils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,18 +18,19 @@ public class ADConfig {
 
     // config is read and written from multiple game threads
     private final Map<String, String> config = new ConcurrentHashMap<>();
+    private final List<Migration> migrations;
     private final Logger LOGGER;
     private final String PREFIX;
     private File configFile;
+    private boolean loaded;
+    private boolean migrationWriteFailed;
 
     /**
-     * config key holding the schema version. Read from the bundled defaults; drives
-     * {@link #applyMigrations}
+     * config schema version from bundled defaults and migrations
      */
     public static final String VERSION_KEY = "config_version";
 
-    // static logger for the pure-static applyMigrations helper, which has no
-    // instance context
+    // static logger for pure-static applyMigrations without instance context
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(ADConfig.class);
 
     /** a single config schema migration */
@@ -34,7 +38,7 @@ public class ADConfig {
     }
 
     /**
-     * add entries in ascending toVersion order; applied when storedVersion &lt;
+     * add migrations in ascending toVersion order apply when storedVersion &lt;
      * toVersion &lt;= currentVersion
      */
     private static final List<Migration> MIGRATIONS = List.of();
@@ -48,13 +52,18 @@ public class ADConfig {
      *            the path to the config file
      */
     public ADConfig(String name, String configPath, String internalDefaultConfigPath) {
+        this(name, configPath, internalDefaultConfigPath, MIGRATIONS);
+    }
+
+    ADConfig(String name, String configPath, String internalDefaultConfigPath, List<Migration> migrations) {
         LOGGER = LoggerFactory.getLogger(name);
         PREFIX = "[" + name + "] [ADConfig] ";
+        this.migrations = List.copyOf(migrations);
         request(configPath, internalDefaultConfigPath);
     }
 
     /**
-     * load a config file. If the file doesn't exist, it will be generated
+     * loads or generates a config file
      *
      * @param configPath
      *            the path to the config file
@@ -68,31 +77,49 @@ public class ADConfig {
         createConfig(configFile, internalDefaultConfigPath);
 
         List<String> configLines = loadFile(configFile);
-        if (configLines.isEmpty()) {
-            // a blank or unreadable file must not disable the mod: fall through to migrate,
-            // which regenerates the file from the bundled defaults
-            LOGGER.warn(PREFIX + "Config '{}' is blank or unreadable! Regenerating from defaults...",
+        if (configLines == null) {
+            LOGGER.warn(PREFIX + "Config '{}' could not be read; leaving the existing file untouched.",
                 configFile.getName());
+            return;
+        }
+        if (configLines.isEmpty()) {
+            LOGGER.warn(PREFIX + "Config '{}' is blank! Regenerating from defaults...", configFile.getName());
         }
 
         parseConfig(configLines, configFile.getName());
-
-        // run version-based migrations BEFORE the key-diff migrateConfig, so a future
-        // rename
-        // transform can see the user's raw pre-diff key before key-diff drops it as
-        // stale
-        boolean versionChanged = applyVersionMigrations(internalDefaultConfigPath);
-
-        // migrate config if keys were added or removed. When it rewrites the file, the
-        // in-memory
-        // version_KEY stamp set above is carried to disk in that same batched write
-        boolean keyDiffRewrote = migrateConfig(internalDefaultConfigPath);
-
-        // version bumped but no key-diff rewrite persisted it: stamp the bump in one
-        // write
-        if (versionChanged && !keyDiffRewrote) {
-            set(VERSION_KEY, config.get(VERSION_KEY));
+        Map<String, String> originalConfig = new HashMap<>(config);
+        int currentVersion = readBundledVersion(internalDefaultConfigPath);
+        int storedVersion = parseVersion(config.get(VERSION_KEY));
+        boolean newerSchema = currentVersion > 0 && storedVersion > currentVersion;
+        if (newerSchema) {
+            LOGGER.warn(PREFIX + "Stored config version {} is newer than supported version {}; preserving it.",
+                storedVersion, currentVersion);
         }
+
+        // run version migrations before key-diff migration
+        // preserve raw keys before stale-key removal
+        Map<String, String> beforeVersionMigration = currentVersion > 0 && storedVersion < currentVersion
+            ? new HashMap<>(config)
+            : null;
+        boolean versionChanged = applyVersionMigrations(internalDefaultConfigPath);
+        boolean versionValuesChanged = versionChanged && beforeVersionMigration != null
+            && hasValueChanges(beforeVersionMigration, config);
+
+        // migrate config when keys change or values were transformed
+        // persist the in-memory version stamp with rewrites
+        boolean migrationRewrote = !newerSchema && migrateConfig(internalDefaultConfigPath, versionValuesChanged);
+
+        // persist version-only migrations
+        // restore disk values if migration writes fail
+        if (versionChanged && !migrationRewrote && !migrationWriteFailed
+            && !set(VERSION_KEY, config.get(VERSION_KEY))) {
+            migrationWriteFailed = true;
+        }
+        if (migrationWriteFailed) {
+            config.clear();
+            config.putAll(originalConfig);
+        }
+        loaded = true;
     }
 
     /** applies config migrations up to the bundled schema version */
@@ -102,10 +129,10 @@ public class ADConfig {
             return false; // machinery disabled: no config_version in the bundled defaults
 
         int storedVersion = parseVersion(config.get(VERSION_KEY));
-        if (storedVersion == currentVersion)
+        if (storedVersion >= currentVersion)
             return false;
 
-        applyMigrations(config, MIGRATIONS, storedVersion, currentVersion);
+        applyMigrations(config, migrations, storedVersion, currentVersion);
         return true;
     }
 
@@ -116,11 +143,29 @@ public class ADConfig {
             STATIC_LOGGER.warn(
                 "[ADConfig] Stored config version {} is newer than the supported version {}; keeping existing values.",
                 storedVersion, currentVersion);
-        } else if (storedVersion < currentVersion) {
+            config.putIfAbsent(VERSION_KEY, String.valueOf(storedVersion));
+            return;
+        }
+        if (storedVersion < currentVersion) {
             migrations.stream().filter(m -> storedVersion < m.toVersion() && m.toVersion() <= currentVersion)
                 .sorted(Comparator.comparingInt(Migration::toVersion)).forEach(m -> m.transform().accept(config));
         }
         config.put(VERSION_KEY, String.valueOf(currentVersion));
+    }
+
+    /** returns whether migrations changed a non-version value */
+    private static boolean hasValueChanges(Map<String, String> before, Map<String, String> after) {
+        for (Map.Entry<String, String> entry : before.entrySet()) {
+            if (VERSION_KEY.equals(entry.getKey()))
+                continue;
+            if (!after.containsKey(entry.getKey()) || !Objects.equals(entry.getValue(), after.get(entry.getKey())))
+                return true;
+        }
+        for (String key : after.keySet()) {
+            if (!VERSION_KEY.equals(key) && !before.containsKey(key))
+                return true;
+        }
+        return false;
     }
 
     /** reads #VERSION_KEY from the bundled defaults */
@@ -129,13 +174,12 @@ public class ADConfig {
         if (defaultLines == null)
             return 0;
         for (String line : defaultLines) {
-            String trimmed = line.trim().toLowerCase();
+            String trimmed = line.trim().toLowerCase(Locale.ROOT);
             if (trimmed.isEmpty() || trimmed.startsWith("#"))
                 continue;
             String[] keyPair = trimmed.split("=", 2);
-            if (keyPair.length == 2 && keyPair[0].trim().equals(VERSION_KEY)) {
+            if (keyPair.length == 2 && VERSION_KEY.equals(normalizeKey(keyPair[0])))
                 return parseVersion(keyPair[1].trim());
-            }
         }
         return 0;
     }
@@ -151,23 +195,40 @@ public class ADConfig {
         }
     }
 
+    /** normalizes a config key or returns null for malformed keys */
+    private static String normalizeKey(String key) {
+        if (key == null)
+            return null;
+        String normalized = key.trim().toLowerCase(Locale.ROOT);
+        return normalized.isEmpty() || normalized.charAt(0) == '#' || normalized.indexOf('=') >= 0
+            || containsLineBreak(normalized) ? null : normalized;
+    }
+
+    /** returns the stored value for a normalized public key lookup */
+    private String lookup(String key) {
+        String normalized = normalizeKey(key);
+        return normalized == null ? null : config.get(normalized);
+    }
+
     /**
-     * checks if the user's config is missing keys (or has stale keys) compared to
-     * the internal defaults
+     * checks user keys against internal defaults removes stale keys and adds
+     * missing keys
      */
-    private boolean migrateConfig(String internalDefaultConfigPath) {
+    private boolean migrateConfig(String internalDefaultConfigPath, boolean forceRewrite) {
         List<String> defaultLines = loadInternalFile(internalDefaultConfigPath);
         if (defaultLines == null)
             return false;
 
         Map<String, String> defaults = new HashMap<>();
         for (String line : defaultLines) {
-            line = line.trim().toLowerCase();
-            if (line.isEmpty() || line.startsWith("#"))
+            String trimmed = line.trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("#"))
                 continue;
-            String[] keyPair = line.split("=", 2);
+            String[] keyPair = trimmed.split("=", 2);
             if (keyPair.length == 2) {
-                defaults.put(keyPair[0].trim(), keyPair[1].trim());
+                String key = normalizeKey(keyPair[0]);
+                if (key != null)
+                    defaults.put(key, keyPair[1].trim());
             }
         }
 
@@ -176,7 +237,7 @@ public class ADConfig {
         Set<String> staleKeys = new HashSet<>(config.keySet());
         staleKeys.removeAll(defaults.keySet());
 
-        if (missingKeys.isEmpty() && staleKeys.isEmpty())
+        if (missingKeys.isEmpty() && staleKeys.isEmpty() && !forceRewrite)
             return false;
 
         if (!missingKeys.isEmpty())
@@ -186,10 +247,7 @@ public class ADConfig {
 
         Map<String, String> userValues = new HashMap<>(config);
 
-        // rebuild the file content in memory from the bundled defaults, substituting
-        // the user's
-        // existing values line-by-line (preserving the defaults' comments and
-        // formatting), and
+        // rebuild defaults with user values and preserve formatting
         // write the file exactly once
         List<String> newLines = new ArrayList<>(defaultLines.size());
         for (String rawLine : defaultLines) {
@@ -199,18 +257,28 @@ public class ADConfig {
                 newLines.add(rawLine);
                 continue;
             }
-            String key = rawLine.substring(0, eq).trim().toLowerCase();
+            String key = normalizeKey(rawLine.substring(0, eq));
+            if (key == null) {
+                newLines.add(rawLine);
+                continue;
+            }
             String value = userValues.getOrDefault(key, defaults.get(key));
             newLines.add(rawLine.substring(0, eq + 1) + value);
         }
 
-        config.clear();
+        Map<String, String> migratedValues = new HashMap<>();
         for (Map.Entry<String, String> entry : defaults.entrySet()) {
-            config.put(entry.getKey(), userValues.getOrDefault(entry.getKey(), entry.getValue()));
+            migratedValues.put(entry.getKey(), userValues.getOrDefault(entry.getKey(), entry.getValue()));
         }
 
-        writeFile(configFile, newLines);
+        if (!writeFile(configFile, newLines)) {
+            migrationWriteFailed = true;
+            LOGGER.error(PREFIX + "Config migration could not be written; keeping the existing config file.");
+            return false;
+        }
 
+        config.clear();
+        config.putAll(migratedValues);
         LOGGER.info(PREFIX + "Config migration complete!");
         return true;
     }
@@ -250,6 +318,10 @@ public class ADConfig {
         }
     }
 
+    private static boolean containsLineBreak(String value) {
+        return value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0;
+    }
+
     /**
      * attempts to write a list of lines to a file
      *
@@ -260,15 +332,33 @@ public class ADConfig {
      * @return true if successful, false otherwise
      */
     private boolean writeFile(File file, List<String> lines) {
+        if (file == null || lines == null || lines.stream().anyMatch(line -> line == null || containsLineBreak(line)))
+            return false;
+        Path target = file.toPath().toAbsolutePath();
+        Path temporary = null;
         try {
-            // files.write surfaces write failures as IOException (PrintWriter silently
-            // swallowed them)
-            Files.write(file.toPath(), String.join("\n", lines).getBytes(StandardCharsets.UTF_8));
+            String prefix = file.getName() + ".";
+            if (prefix.length() < 3)
+                prefix = "cfg-" + prefix;
+            temporary = Files.createTempFile(target.getParent(), prefix, ".tmp");
+            Files.writeString(temporary, String.join("\n", lines), StandardCharsets.UTF_8);
+            try {
+                Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+            }
             return true;
-
         } catch (IOException e) {
             LOGGER.error(PREFIX + "Failed to write '{}'!", file.getName(), e);
             return false;
+        } finally {
+            if (temporary != null) {
+                try {
+                    Files.deleteIfExists(temporary);
+                } catch (IOException e) {
+                    LOGGER.warn(PREFIX + "Failed to remove temporary config file '{}'.", temporary, e);
+                }
+            }
         }
     }
 
@@ -277,15 +367,14 @@ public class ADConfig {
      *
      * @param file
      *            the file to load
-     * @return the file's contents, or null if the file doesn't exist
+     * @return the file's contents, or null if it cannot be read
      */
     private List<String> loadFile(File file) {
         try {
             return Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-
         } catch (IOException e) {
             LOGGER.error(PREFIX + "Failed to load '{}'!", file.getName(), e);
-            return Collections.emptyList();
+            return null;
         }
     }
 
@@ -320,26 +409,30 @@ public class ADConfig {
      * @param value
      *            the value to replace with
      */
-    private void replaceValue(File file, String key, String value) {
-        // wrap in a mutable list: loadFile can return an immutable empty list on I/O
-        // failure
-        List<String> lines = new ArrayList<>(loadFile(file));
-        String lowerKey = key.toLowerCase();
+    private boolean replaceValue(File file, String key, String value) {
+        if (normalizeKey(key) == null)
+            return false;
+        if (value == null || containsLineBreak(value))
+            return false;
+        List<String> loadedLines = loadFile(file);
+        if (loadedLines == null)
+            return false;
+        List<String> lines = new ArrayList<>(loadedLines);
+        boolean matched = false;
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
-            if (line.trim().toLowerCase().startsWith(lowerKey + "=")) {
-                // match is case-insensitive, so locate the offset case-insensitively too:
-                // a case-sensitive indexOf(key) throws on a hand-edited mixed-case key
-                String spaces = line.substring(0, line.toLowerCase().indexOf(lowerKey));
-                lines.set(i, spaces + key + "=" + value);
-                writeFile(file, lines);
-                return;
-            }
+            int equals = line.indexOf('=');
+            if (equals < 0 || !line.substring(0, equals).trim().equalsIgnoreCase(key))
+                continue;
+            int valueStart = equals + 1;
+            while (valueStart < line.length() && Character.isWhitespace(line.charAt(valueStart)))
+                valueStart++;
+            lines.set(i, line.substring(0, valueStart) + value);
+            matched = true;
         }
-        // no matching line found (e.g. a hand-removed key): append it instead of doing
-        // nothing
-        lines.add(key + "=" + value);
-        writeFile(file, lines);
+        if (!matched)
+            lines.add(key + "=" + value);
+        return writeFile(file, lines);
     }
 
     /** attempts to parse config from a List of lines */
@@ -347,20 +440,23 @@ public class ADConfig {
         int lineNum = 0;
         for (String line : lines) {
             lineNum++;
-            line = line.trim().toLowerCase();
-            if (line.isEmpty() || line.startsWith("#"))
+            String trimmed = line.trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("#"))
                 continue;
 
-            String[] keyPair = line.split("=", 2);
+            String[] keyPair = trimmed.split("=", 2);
             if (keyPair.length != 2) {
                 LOGGER.warn(PREFIX + "'{}' line {}: Found a syntax error! Skipping line...", filename, lineNum);
                 continue;
             }
-
-            config.put(keyPair[0].trim(), keyPair[1].trim());
+            String key = normalizeKey(keyPair[0]);
+            if (key == null) {
+                LOGGER.warn(PREFIX + "'{}' line {}: Found a syntax error! Skipping line...", filename, lineNum);
+                continue;
+            }
+            config.put(key, keyPair[1].trim());
         }
     }
-
     /**
      * sets a key's config value and updates the config file
      *
@@ -370,14 +466,14 @@ public class ADConfig {
      *            the value to set
      * @return true if the key exists, false otherwise
      */
-    public boolean set(String key, String value) {
+    public synchronized boolean set(String key, String value) {
         // guard nulls: ConcurrentHashMap.containsKey/put both throw NPE on a null
         // key/value
-        if (key == null || value == null)
+        String normalizedKey = normalizeKey(key);
+        if (normalizedKey == null || value == null || containsLineBreak(value))
             return false;
-        if (config.containsKey(key)) {
-            config.put(key, value);
-            replaceValue(configFile, key, value);
+        if (config.containsKey(normalizedKey) && replaceValue(configFile, normalizedKey, value)) {
+            config.put(normalizedKey, value);
             return true;
         }
         return false;
@@ -390,7 +486,13 @@ public class ADConfig {
      *            the entries to set
      */
     public void setAll(Map<String, String> data) {
-        config.putAll(data);
+        if (data == null)
+            return;
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            String key = normalizeKey(entry.getKey());
+            if (key != null && entry.getValue() != null && !containsLineBreak(entry.getValue()))
+                config.put(key, entry.getValue());
+        }
     }
 
     /** gets the absolute path of the loaded config file */
@@ -398,31 +500,34 @@ public class ADConfig {
         return configFile == null ? null : configFile.getAbsolutePath();
     }
 
+    /** returns whether the configuration file was successfully read */
+    public boolean isLoaded() {
+        return loaded;
+    }
+
     /**
      * overwrites config entries in-memory and persists them to disk in a single
      * batched write
+     *
+     * @return true when all sanitized updates were persisted
      */
-    public void setAllAndPersist(Map<String, String> data) {
+    public synchronized boolean setAllAndPersist(Map<String, String> data) {
         if (data == null)
-            return;
-
-        // sanitize: drop null keys/values (ConcurrentHashMap rejects them) and
-        // lowercase keys to
-        // match the key convention used everywhere else in ADConfig
+            return true;
+        // sanitize: drop malformed keys/null values and lowercase valid keys
         Map<String, String> updates = new LinkedHashMap<>();
         for (Map.Entry<String, String> entry : data.entrySet()) {
-            if (entry.getKey() != null && entry.getValue() != null) {
-                updates.put(entry.getKey().toLowerCase(), entry.getValue());
-            }
+            String key = normalizeKey(entry.getKey());
+            if (key != null && entry.getValue() != null && !containsLineBreak(entry.getValue()))
+                updates.put(key, entry.getValue());
         }
         if (updates.isEmpty())
-            return;
+            return true;
 
-        config.putAll(updates);
-
-        // one batched file rewrite: substitute values for all matching keys in the
-        // existing lines
-        List<String> lines = new ArrayList<>(loadFile(configFile));
+        List<String> loadedLines = loadFile(configFile);
+        if (loadedLines == null)
+            return false;
+        List<String> lines = new ArrayList<>(loadedLines);
         Set<String> unwritten = new HashSet<>(updates.keySet());
         for (int i = 0; i < lines.size(); i++) {
             String rawLine = lines.get(i);
@@ -430,7 +535,9 @@ public class ADConfig {
             int eq = rawLine.indexOf('=');
             if (trimmed.isEmpty() || trimmed.startsWith("#") || eq < 0)
                 continue;
-            String key = rawLine.substring(0, eq).trim().toLowerCase();
+            String key = normalizeKey(rawLine.substring(0, eq));
+            if (key == null)
+                continue;
             if (updates.containsKey(key)) {
                 lines.set(i, rawLine.substring(0, eq + 1) + updates.get(key));
                 unwritten.remove(key);
@@ -440,7 +547,10 @@ public class ADConfig {
         for (String key : unwritten) {
             lines.add(key + "=" + updates.get(key));
         }
-        writeFile(configFile, lines);
+        if (!writeFile(configFile, lines))
+            return false;
+        config.putAll(updates);
+        return true;
     }
 
     /**
@@ -467,9 +577,7 @@ public class ADConfig {
      * @return the key value, or def if the key is missing
      */
     public String getOrDefault(String key, String def) {
-        if (key == null)
-            return def;
-        String val = config.get(key);
+        String val = lookup(key);
         return val == null ? def : val;
     }
 
@@ -479,9 +587,7 @@ public class ADConfig {
      * @return the key value, or def if the key is missing
      */
     public boolean getOrDefault(String key, boolean def) {
-        if (key == null)
-            return def;
-        String val = config.get(key);
+        String val = lookup(key);
         if (val == null)
             return def;
         if (val.equalsIgnoreCase("true"))
@@ -497,9 +603,7 @@ public class ADConfig {
      * @return the key value, or def if the key is missing
      */
     public int getOrDefault(String key, int def) {
-        if (key == null)
-            return def;
-        String val = config.get(key);
+        String val = lookup(key);
         if (val == null)
             return def;
         try {
@@ -515,9 +619,7 @@ public class ADConfig {
      * @return the key value, or def if the key is missing
      */
     public double getOrDefault(String key, double def) {
-        if (key == null)
-            return def;
-        String val = config.get(key);
+        String val = lookup(key);
         if (val == null)
             return def;
         try {
@@ -534,9 +636,7 @@ public class ADConfig {
      * @return the key value, or def if the key is missing
      */
     public float getOrDefault(String key, float def) {
-        if (key == null)
-            return def;
-        String val = config.get(key);
+        String val = lookup(key);
         if (val == null)
             return def;
         try {
