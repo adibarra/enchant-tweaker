@@ -19,10 +19,10 @@ import com.adibarra.enchanttweaker.MendingLevelAccess;
 import com.adibarra.utils.ADUtils;
 
 /**
- * @description lets Mending effect activate on any item in the inventory
- *              priority order: Main-Hand -> Off-Hand -> Armor -> Hotbar ->
- *              Inventory
- * @environment Server
+ * @description lets mending effect activate on any item in the inventory
+ *              priority order: main-hand -> off-hand -> armor -> hotbar ->
+ *              inventory
+ * @environment server
  */
 @Mixin(
     value = ExperienceOrbEntity.class)
@@ -56,11 +56,11 @@ public abstract class BetterMendingMixin {
             return;
         }
 
-        // use the running `amount` (XP still available on THIS call), not the orb's
+        // use the running `amount` (xp still available on this call), not the orb's
         // original this.amount
         int i = Math.min(this.getMendingRepairAmount(amount), repairItem.getDamage());
         repairItem.setDamage(repairItem.getDamage() - i);
-        // pass the repaired item's mending level to MoreMending
+        // pass the repaired item's mending level to moremending
         if ((Object) this instanceof MendingLevelAccess access) {
             access.enchanttweaker$setMendingLevel(EnchantmentHelper.getLevel(Enchantments.MENDING, repairItem));
         }

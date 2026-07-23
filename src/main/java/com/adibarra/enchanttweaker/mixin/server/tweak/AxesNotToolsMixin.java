@@ -11,7 +11,7 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
  * @description remove extra self-damage from axes when used as a weapon
- * @environment Server
+ * @environment server
  */
 @Mixin(
     value = MiningToolItem.class)

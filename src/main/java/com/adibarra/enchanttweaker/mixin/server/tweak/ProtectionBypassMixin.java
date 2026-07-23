@@ -21,11 +21,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description allow specific damage types to bypass Protection enchantment
- *              entirely configurable via comma-separated list of damage type
- *              IDs (e.g. "magic,wither,dragon_breath") supports both vanilla
- *              IDs (e.g. "magic") and modded IDs (e.g. "mymod:custom_damage")
- * @environment Server
+ * @description allow configured damage types to bypass protection
+ * @environment server
  */
 @Mixin(
     value = LivingEntity.class)

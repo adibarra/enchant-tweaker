@@ -12,9 +12,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description Allow armor to be enchanted with multiple protection
- *              enchantments.
- * @environment Server
+ * @description allow armor to be enchanted with multiple protection
+ *              enchantments
+ * @environment server
  */
 @Mixin(
     value = ProtectionEnchantment.class)

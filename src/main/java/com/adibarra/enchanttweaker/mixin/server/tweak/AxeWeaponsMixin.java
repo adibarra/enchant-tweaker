@@ -12,9 +12,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description Allow axes to be enchanted with fire aspect, knockback, and
- *              looting.
- * @environment Server
+ * @description allow axes to be enchanted with fire aspect, knockback, and
+ *              looting
+ * @environment server
  */
 @Mixin(
     value = Enchantment.class)

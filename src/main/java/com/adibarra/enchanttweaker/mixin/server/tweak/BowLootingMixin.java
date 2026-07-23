@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description Allow bows and crossbows to be enchanted with Looting.
- * @environment Server
+ * @description allow bows and crossbows to be enchanted with looting
+ * @environment server
  */
 @Mixin(
     value = Enchantment.class)

@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description replace vanilla's tiered XP-per-level formula with a
+ * @description replace vanilla's tiered xp-per-level formula with a
  *              configurable linear formula
- * @environment Server
+ * @environment server
  */
 @Mixin(
     value = PlayerEntity.class)
@@ -30,8 +30,8 @@ public abstract class XpScalingMixin {
             return;
         int base = ETMixinPlugin.getConfig().getOrDefault("xp_scaling_base", 7);
         int step = ETMixinPlugin.getConfig().getOrDefault("xp_scaling_step", 2);
-        // long math avoids int overflow; clamp keeps the result in a valid [1,
-        // MAX_VALUE] range
+        // long math avoids int overflow
+        // clamp the result to the valid range
         cir.setReturnValue((int) Math.clamp((long) base + (long) step * experienceLevel, 1, Integer.MAX_VALUE));
     }
 }

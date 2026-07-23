@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description lets bows with Infinity enchant shoot without arrows
- * @environment Server
+ * @description lets bows with infinity enchant shoot without arrows
+ * @environment server
  */
 @Mixin(
     value = BowItem.class)

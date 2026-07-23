@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
 /**
- * @description Allow weapons to be enchanted with multiple damage enchantments.
- * @environment Server
+ * @description allow weapons to be enchanted with multiple damage enchantments
+ * @environment server
  */
 @Mixin(
     value = DamageEnchantment.class)

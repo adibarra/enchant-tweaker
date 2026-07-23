@@ -11,8 +11,8 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.utils.ADUtils;
 
 /**
- * @description Allow Infinity and Mending enchantments to co-exist.
- * @environment Server
+ * @description allow infinity and mending enchantments to co-exist
+ * @environment server
  */
 @Mixin(
     value = InfinityEnchantment.class)
