@@ -14,6 +14,7 @@ import com.adibarra.enchanttweaker.network.ConfigSyncPayload;
 public class EnchantTweakerClient implements ClientModInitializer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EnchantTweaker.MOD_NAME);
+    private static volatile long connectionGeneration;
 
     @Override
     public void onInitializeClient() {
@@ -24,10 +25,20 @@ public class EnchantTweakerClient implements ClientModInitializer {
                     payload.version(), ConfigSyncPayload.PROTOCOL_VERSION);
                 return;
             }
-            context.client().execute(() -> ETMixinPlugin.syncConfigFrom(payload.configData()));
+            long generation = connectionGeneration;
+            context.client().execute(() -> {
+                if (generation == connectionGeneration)
+                    ETMixinPlugin.syncConfigFrom(payload.configData());
+            });
+        });
+
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            connectionGeneration++;
+            ETMixinPlugin.captureLocalConfig();
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            connectionGeneration++;
             ETMixinPlugin.restoreLocalConfig();
         });
     }

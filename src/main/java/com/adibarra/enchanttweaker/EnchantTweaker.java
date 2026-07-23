@@ -20,16 +20,16 @@ public class EnchantTweaker implements ModInitializer {
     public void onInitialize() {
         PayloadTypeRegistry.playS2C().register(ConfigSyncPayload.ID, ConfigSyncPayload.CODEC);
 
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            if (ServerPlayNetworking.canSend(handler.getPlayer(), ConfigSyncPayload.ID)) {
+                ServerPlayNetworking.send(handler.getPlayer(), new ConfigSyncPayload(ETMixinPlugin.getConfigMap()));
+            }
+        });
+
         if (ETMixinPlugin.getConfig().getOrDefault("mod_enabled", false)) {
             ETCommands.registerCommands();
             ETCommands.registerEventListeners();
             AnvilRepairHandler.register();
-
-            ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-                if (ServerPlayNetworking.canSend(handler.getPlayer(), ConfigSyncPayload.ID)) {
-                    ServerPlayNetworking.send(handler.getPlayer(), new ConfigSyncPayload(ETMixinPlugin.getConfigMap()));
-                }
-            });
 
             LOGGER.info(PREFIX + "Ready to go! Applied {} Mixins.", ETMixinPlugin.getNumMixins());
         }

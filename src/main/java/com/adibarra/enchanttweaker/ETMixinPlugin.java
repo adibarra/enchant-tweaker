@@ -18,7 +18,7 @@ import com.adibarra.utils.ADConfig;
 
 public final class ETMixinPlugin implements IMixinConfigPlugin {
 
-    // replaced during config updates; volatile keeps game-thread readers current
+    // replaced during config updates, volatile keeps game-thread readers current
     private static volatile int numMixins = 0;
     private static volatile boolean MOD_ENABLED = false;
     private static volatile ADConfig CONFIG;
@@ -27,9 +27,9 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
     private static final Map<String, CompatEntry> COMPAT = new HashMap<>();
     private static final Map<String, Boolean> FEATURE_CACHE = new ConcurrentHashMap<>();
     private static final Map<String, Integer> CAPMOD_CACHE = new ConcurrentHashMap<>();
-    // client-local cosmetic keys are never synced from the server so client
-    // preferences survive
+    // client-only cosmetic keys stay local
     private static final Set<String> CLIENT_LOCAL_KEYS = Set.of("roman_numerals", "shiny_name");
+    private static volatile Map<String, String> LOCAL_CONFIG_BACKUP;
 
     private record CompatEntry(boolean shouldApply, String reason, BooleanSupplier condition, Runnable callback) {
     }
@@ -63,6 +63,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         KEYS.put("BowInfinityFixMixin", "bow_infinity_fix");
         KEYS.put("BowLootingMixin", "bow_looting");
         KEYS.put("DisableEnchantmentsMixin", "disable_enchantments_enabled");
+        KEYS.put("DisableEnchantmentsLootMixin", "disable_enchantments_enabled");
         KEYS.put("GodArmorMixin", "god_armor");
         KEYS.put("GodWeaponsMixin", "god_weapons");
         KEYS.put("InfiniteMendingMixin", "infinite_mending");
@@ -80,7 +81,7 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
 
         KEYS.put("CapmodMixin", "capmod_enabled");
 
-        // apply compatibility overrides without changing the saved config
+        // apply compatibility overrides without changing saved config
         COMPAT.put("AxesNotToolsMixin",
             new CompatEntry(false, "Mod 'AxesAreWeapons' detected",
                 () -> FabricLoader.getInstance().isModLoaded("axesareweapons"),
@@ -118,12 +119,18 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         return true;
     }
 
-    public static void reloadConfig() {
+    public static synchronized void reloadConfig() {
         if (CONFIG != null)
             LOGGER.info(EnchantTweaker.PREFIX + "Reloading config...");
 
         String internalDefaultConfigPath = "assets/" + EnchantTweaker.MOD_ID + "/enchant-tweaker.properties";
-        CONFIG = new ADConfig(EnchantTweaker.MOD_NAME, "enchant-tweaker.properties", internalDefaultConfigPath);
+        ADConfig reloaded = new ADConfig(EnchantTweaker.MOD_NAME, "enchant-tweaker.properties",
+            internalDefaultConfigPath);
+        if (reloaded.isLoaded() || CONFIG == null) {
+            CONFIG = reloaded;
+        } else {
+            LOGGER.warn(EnchantTweaker.PREFIX + "Config reload failed; retaining the active configuration.");
+        }
         FEATURE_CACHE.clear();
         CAPMOD_CACHE.clear();
     }
@@ -135,11 +142,13 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         return key;
     }
 
-    public static boolean getMixinConfig(String mixinName) {
+    public static synchronized boolean getMixinConfig(String mixinName) {
+        if (CONFIG == null || mixinName == null)
+            return false;
         return FEATURE_CACHE.computeIfAbsent(mixinName, k -> {
             if (!CONFIG.getOrDefault("mod_enabled", false))
                 return false;
-            // reject unknown mixins instead of looking up a null config key
+            // reject mixins without config keys
             String key = getMixinKey(k);
             if (key == null)
                 return false;
@@ -147,13 +156,13 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         });
     }
 
-    public static int getCapmodLevel(String enchantmentPath, int vanillaLevel) {
-        return CAPMOD_CACHE.computeIfAbsent(enchantmentPath, k -> {
-            int cap = CONFIG.getOrDefault(k, -1);
-            if (cap < 0)
-                return vanillaLevel;
-            return Math.clamp(cap, 0, 255);
-        });
+    public static synchronized int getCapmodLevel(String enchantmentPath, int vanillaLevel) {
+        if (enchantmentPath == null || CONFIG == null)
+            return vanillaLevel;
+        int cap = CAPMOD_CACHE.computeIfAbsent(enchantmentPath, key -> CONFIG.getOrDefault(key, -1));
+        if (cap < 0)
+            return vanillaLevel;
+        return Math.clamp(cap, 0, 255);
     }
 
     public static int getNumMixins() {
@@ -188,29 +197,55 @@ public final class ETMixinPlugin implements IMixinConfigPlugin {
         return CONFIG;
     }
 
-    public static void clearCaches() {
+    public static synchronized void clearCaches() {
         FEATURE_CACHE.clear();
         CAPMOD_CACHE.clear();
     }
 
     public static Map<String, String> getConfigMap() {
-        Map<String, String> map = new ConcurrentHashMap<>();
-        for (Map.Entry<String, String> entry : CONFIG.getEntries()) {
-            // preserve client-only visual settings during server sync
-            if (CLIENT_LOCAL_KEYS.contains(entry.getKey()))
-                continue;
-            map.put(entry.getKey(), entry.getValue());
+        Map<String, String> map = new HashMap<>();
+        if (CONFIG != null) {
+            for (Map.Entry<String, String> entry : CONFIG.getEntries()) {
+                // preserve client-only visual settings during server sync
+                if (CLIENT_LOCAL_KEYS.contains(entry.getKey()))
+                    continue;
+                map.put(entry.getKey(), entry.getValue());
+            }
         }
+        // clear previously synced state when the server disables
+        map.put("mod_enabled", Boolean.toString(CONFIG != null && CONFIG.getOrDefault("mod_enabled", false)));
         return map;
     }
 
-    public static void syncConfigFrom(Map<String, String> data) {
-        CONFIG.setAll(data);
+    public static synchronized void captureLocalConfig() {
+        if (CONFIG == null)
+            return;
+        Map<String, String> snapshot = new HashMap<>();
+        for (Map.Entry<String, String> entry : CONFIG.getEntries()) {
+            snapshot.put(entry.getKey(), entry.getValue());
+        }
+        LOCAL_CONFIG_BACKUP = Map.copyOf(snapshot);
+    }
+
+    public static synchronized void syncConfigFrom(Map<String, String> data) {
+        if (CONFIG == null || data == null)
+            return;
+        if (LOCAL_CONFIG_BACKUP == null)
+            captureLocalConfig();
+        Map<String, String> synced = new HashMap<>();
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            if (!CLIENT_LOCAL_KEYS.contains(entry.getKey()))
+                synced.put(entry.getKey(), entry.getValue());
+        }
+        CONFIG.setAll(synced);
         FEATURE_CACHE.clear();
         CAPMOD_CACHE.clear();
     }
 
-    public static void restoreLocalConfig() {
+    public static synchronized void restoreLocalConfig() {
+        if (CONFIG != null && LOCAL_CONFIG_BACKUP != null)
+            CONFIG.setAll(LOCAL_CONFIG_BACKUP);
+        LOCAL_CONFIG_BACKUP = null;
         reloadConfig();
     }
 
