@@ -15,7 +15,8 @@
   "environment": "*",
   "entrypoints": {
     "main": ["com.adibarra.enchanttweaker.EnchantTweaker"],
-    "client": ["com.adibarra.enchanttweaker.EnchantTweakerClient"]
+    "client": ["com.adibarra.enchanttweaker.EnchantTweakerClient"],
+    "modmenu": ["com.adibarra.enchanttweaker.client.ETModMenuIntegration"]
   },
   "mixins": ["enchanttweaker.mixins.json"],
   "depends": {
@@ -23,5 +24,8 @@
     "fabric-api": "*",
     "minecraft": "~1.20.5",
     "java": ">=21"
+  },
+  "suggests": {
+    "modmenu": ">=10.0.0"
   }
 }

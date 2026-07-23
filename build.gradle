@@ -5,7 +5,7 @@ plugins {
     id 'com.diffplug.spotless' version '8.8.0'
 }
 
-// Name jar with supported MC versions
+// name jar with supported mc versions
 String supportedVersions = project.minecraft_version
 List<String> supportedVersionsArray = [project.minecraft_version]
 
@@ -17,12 +17,18 @@ base {
     archivesName = project.archives_base_name
 }
 
+repositories {
+    maven { url 'https://api.modrinth.com/maven' }
+}
+
 dependencies {
-    // To change the versions see the gradle.properties file
+    // to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modCompileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
+    modLocalRuntime "maven.modrinth:modmenu:${project.modmenu_version}"
 }
 
 processResources {
@@ -89,25 +95,35 @@ publishing {
     }
 }
 
-// Extract only the current version's section from CHANGELOG.md for Modrinth upload
-def rawChangelog = new File("CHANGELOG.md").text
-def versionHeader = "## ${project.mod_version}"
-def changelogIdx = rawChangelog.indexOf(versionHeader)
-def changelogEntry = changelogIdx < 0 ? "" : rawChangelog
-    .substring(changelogIdx + versionHeader.length())
-    .split("(?m)^## ")[0]
-    .trim()
+// extract only the current version's section from CHANGELOG.md for modrinth upload
+def changelogFile = new File(projectDir, "CHANGELOG.md")
+def modVersion = project.mod_version.toString()
+def extractChangelogEntry = { String rawChangelog, String version ->
+    def versionHeader = java.util.regex.Pattern.compile(
+        "(?m)^## " + java.util.regex.Pattern.quote(version) + '[ \\t]*\\r?$')
+    def versionMatch = versionHeader.matcher(rawChangelog)
+    versionMatch.find() ? rawChangelog
+        .substring(versionMatch.end())
+        .split("(?m)^## ")[0]
+        .trim()
+        : ""
+}
+def changelogEntry = extractChangelogEntry(changelogFile.getText("UTF-8"), modVersion)
 
 def releaseNotes = layout.buildDirectory.file("release-notes.md")
 tasks.register("writeReleaseNotes") {
+    inputs.file(changelogFile)
+    inputs.property("modVersion", modVersion)
     outputs.file(releaseNotes)
     doLast {
-        releaseNotes.get().asFile.text = changelogEntry
+        def outputFile = releaseNotes.get().asFile
+        outputFile.parentFile.mkdirs()
+        outputFile.setText(extractChangelogEntry(changelogFile.getText("UTF-8"), modVersion), "UTF-8")
     }
 }
 
 modrinth {
-    // Dry-run everywhere except explicit `-Prelease`
+    // dry-run everywhere except explicit `-Prelease`
     debugMode = !project.hasProperty("release")
     token = System.getenv("MODRINTH_TOKEN") ?: ""
     projectId = "e4Vpm1dD"
@@ -121,5 +137,6 @@ modrinth {
     loaders = ["fabric", "quilt"]
     dependencies {
         required.project "fabric-api"
+        optional.project "modmenu"
     }
 }
