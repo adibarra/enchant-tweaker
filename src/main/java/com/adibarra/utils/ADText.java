@@ -57,7 +57,7 @@ public class ADText {
 
     /**
      * colors the value based on its type
-
+     *
      * @param value
      * @return the colored value as a mutable text object
      */
