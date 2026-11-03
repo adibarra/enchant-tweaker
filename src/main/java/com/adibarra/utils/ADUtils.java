@@ -192,4 +192,18 @@ public class ADUtils {
         double consumeChance = Math.clamp(1.0 - percentPerLevel * level, 0.0, 1.0);
         return roll >= consumeChance;
     }
+
+    /**
+     * blast protection knockback resistance with multiplicative scaling
+     *
+     * @param level
+     *            the total blast protection level
+     * @param configBase
+     *            the configured base (clamped to 0-1)
+     * @return the knockback resistance (knockback is multiplied by one minus this)
+     */
+    public static double blastKnockbackResistance(int level, double configBase) {
+        double base = Math.clamp(configBase, 0.0, 1.0);
+        return 1.0 - Math.pow(base, level);
+    }
 }

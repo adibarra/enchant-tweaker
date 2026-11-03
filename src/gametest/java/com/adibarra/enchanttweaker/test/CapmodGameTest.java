@@ -528,9 +528,7 @@ public class CapmodGameTest {
         for (int power = 1; power <= 300; power++) {
             // streams are single-use, so build a fresh candidate stream per power
             Stream<Holder<Enchantment>> candidates = helper.getLevel().registryAccess()
-                .lookupOrThrow(Registries.ENCHANTMENT)
-                .listElements()
-                .map(candidate -> (Holder<Enchantment>) candidate);
+                .lookupOrThrow(Registries.ENCHANTMENT).listElements().map(candidate -> (Holder<Enchantment>) candidate);
             for (EnchantmentInstance entry : EnchantmentHelper.getAvailableEnchantmentResults(power, stack,
                 candidates)) {
                 if (entry.enchantment().is(target) && entry.level() > best)

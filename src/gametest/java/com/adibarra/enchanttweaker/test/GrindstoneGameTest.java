@@ -497,8 +497,8 @@ public class GrindstoneGameTest {
             helper.assertFalse(returned.isEmpty(), "keep_item=true should return the disenchanted sword");
             ItemEnchantments kept = EnchantmentHelper.getEnchantmentsForCrafting(returned);
             helper.assertTrue(level(kept, helper, Enchantments.SHARPNESS) == 0,
-                "Returned sword should have Sharpness stripped (got "
-                    + level(kept, helper, Enchantments.SHARPNESS) + ")");
+                "Returned sword should have Sharpness stripped (got " + level(kept, helper, Enchantments.SHARPNESS)
+                    + ")");
             helper.assertTrue(level(kept, helper, Enchantments.VANISHING_CURSE) == 1,
                 "Returned sword should still carry Vanishing Curse (got "
                     + level(kept, helper, Enchantments.VANISHING_CURSE) + ")");

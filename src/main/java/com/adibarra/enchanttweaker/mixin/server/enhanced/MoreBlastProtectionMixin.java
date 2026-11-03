@@ -45,7 +45,7 @@ public abstract class MoreBlastProtectionMixin {
         int level = enchanttweaker$moreBlastProtection$totalLevel(entity);
         if (level <= 0)
             return original.call(entity, attribute);
-        double base = Math.clamp(ETMixinPlugin.getConfig().getOrDefault("more_blast_protection_base", 0.85), 0.0, 1.0);
-        return 1.0 - Math.pow(base, level);
+        double base = ETMixinPlugin.getConfig().getOrDefault("more_blast_protection_base", 0.85);
+        return ADUtils.blastKnockbackResistance(level, base);
     }
 }

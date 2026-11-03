@@ -99,8 +99,10 @@ public class AnvilGameTest {
         try {
             helper.assertTrue(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
                 "CheapNames must not create a result when no rename or second input was supplied");
-            helper.assertTrue(handler.getCost() == 10,
-                "CheapNames must not rewrite the vanilla cost of an empty operation (got " + handler.getCost() + ")");
+            // 26.2 vanilla leaves the cost at 0 for an empty operation, so cheap_names
+            // must not replace that 0 with its rename cost of 1
+            helper.assertTrue(handler.getCost() == 0,
+                "CheapNames must leave the vanilla cost of an empty operation at 0 (got " + handler.getCost() + ")");
         } finally {
             ETTestHelper.setFeature("cheap_names", false);
         }
@@ -815,8 +817,8 @@ public class AnvilGameTest {
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
         player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 5)); // below
-                                                                                                           // cost
-                                                                                                           // nine
+        // cost
+        // nine
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
@@ -1400,7 +1402,8 @@ public class AnvilGameTest {
             ItemStack out = anvilMergeOutput(helper, player, new ItemStack(Items.DIAMOND_SWORD),
                 enchantedBook(helper, Enchantments.SHARPNESS, 3));
             helper.assertFalse(out.isEmpty(), "A normal enchantment merge should produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) == 3,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) == 3,
                 "Sharpness should merge normally when not disabled (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) + ")");
         } finally {
@@ -1419,14 +1422,18 @@ public class AnvilGameTest {
         try {
             ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
             chest.enchant(holder(helper, Enchantments.PROTECTION), 4);
-            ItemStack out = anvilMergeOutput(helper, player, chest, enchantedBook(helper, Enchantments.BLAST_PROTECTION, 4));
+            ItemStack out = anvilMergeOutput(helper, player, chest,
+                enchantedBook(helper, Enchantments.BLAST_PROTECTION, 4));
             helper.assertFalse(out.isEmpty(), "God Armor merge output should be present");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PROTECTION), out) == 4,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PROTECTION), out) == 4,
                 "Output should keep Protection IV (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PROTECTION), out) + ")");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.BLAST_PROTECTION), out) == 4,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.BLAST_PROTECTION), out) == 4,
                 "Output should gain Blast Protection IV (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.BLAST_PROTECTION), out) + ")");
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.BLAST_PROTECTION), out)
+                    + ")");
         } finally {
             ETTestHelper.setFeature("god_armor", false);
         }
@@ -1441,7 +1448,8 @@ public class AnvilGameTest {
         try {
             ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
             chest.enchant(holder(helper, Enchantments.PROTECTION), 4);
-            ItemStack out = anvilMergeOutput(helper, player, chest, enchantedBook(helper, Enchantments.BLAST_PROTECTION, 4));
+            ItemStack out = anvilMergeOutput(helper, player, chest,
+                enchantedBook(helper, Enchantments.BLAST_PROTECTION, 4));
             helper.assertTrue(out.isEmpty(),
                 "Without God Armor, incompatible protection enchantments must not produce output");
         } finally {
@@ -1462,12 +1470,13 @@ public class AnvilGameTest {
             sword.enchant(holder(helper, Enchantments.SHARPNESS), 3);
             ItemStack out = anvilMergeOutput(helper, player, sword, enchantedBook(helper, Enchantments.SMITE, 2));
             helper.assertFalse(out.isEmpty(), "God Weapons merge output should be present");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) == 3,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) == 3,
                 "Output should keep Sharpness III (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) + ")");
             helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SMITE), out) == 2,
-                "Output should gain Smite II (got " + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SMITE), out)
-                    + ")");
+                "Output should gain Smite II (got "
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SMITE), out) + ")");
         } finally {
             ETTestHelper.setFeature("god_weapons", false);
         }
@@ -1504,10 +1513,12 @@ public class AnvilGameTest {
             trident.enchant(holder(helper, Enchantments.IMPALING), 3);
             ItemStack out = anvilMergeOutput(helper, player, trident, enchantedBook(helper, Enchantments.SHARPNESS, 2));
             helper.assertFalse(out.isEmpty(), "Cross-tweak merge output should be present");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.IMPALING), out) == 3,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.IMPALING), out) == 3,
                 "Output should keep Impaling III (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.IMPALING), out) + ")");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) == 2,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) == 2,
                 "Output should gain Sharpness II (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) + ")");
         } finally {
@@ -1529,10 +1540,12 @@ public class AnvilGameTest {
             crossbow.enchant(holder(helper, Enchantments.MULTISHOT), 1);
             ItemStack out = anvilMergeOutput(helper, player, crossbow, enchantedBook(helper, Enchantments.PIERCING, 1));
             helper.assertFalse(out.isEmpty(), "Multishot Piercing merge output should be present");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.MULTISHOT), out) == 1,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.MULTISHOT), out) == 1,
                 "Output should keep Multishot I (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.MULTISHOT), out) + ")");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PIERCING), out) == 1,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PIERCING), out) == 1,
                 "Output should gain Piercing I (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PIERCING), out) + ")");
         } finally {
@@ -1569,19 +1582,22 @@ public class AnvilGameTest {
             ItemStack outFa = anvilMergeOutput(helper, player, new ItemStack(Items.TRIDENT),
                 enchantedBook(helper, Enchantments.FIRE_ASPECT, 2));
             helper.assertFalse(outFa.isEmpty(), "Fire Aspect transfer should produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.FIRE_ASPECT), outFa) == 2,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.FIRE_ASPECT), outFa) == 2,
                 "Fire Aspect II should transfer onto a trident (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.FIRE_ASPECT), outFa) + ")");
             ItemStack outKb = anvilMergeOutput(helper, player, new ItemStack(Items.TRIDENT),
                 enchantedBook(helper, Enchantments.KNOCKBACK, 2));
             helper.assertFalse(outKb.isEmpty(), "Knockback transfer should produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.KNOCKBACK), outKb) == 2,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.KNOCKBACK), outKb) == 2,
                 "Knockback II should transfer onto a trident (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.KNOCKBACK), outKb) + ")");
             ItemStack outLo = anvilMergeOutput(helper, player, new ItemStack(Items.TRIDENT),
                 enchantedBook(helper, Enchantments.LOOTING, 3));
             helper.assertFalse(outLo.isEmpty(), "Looting transfer should produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.LOOTING), outLo) == 3,
+            helper.assertTrue(
+                EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.LOOTING), outLo) == 3,
                 "Looting III should transfer onto a trident (got "
                     + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.LOOTING), outLo) + ")");
         } finally {
@@ -1973,8 +1989,7 @@ public class AnvilGameTest {
     /**
      * builds an anvil handler and updates its result returns the output stack
      */
-    private static ItemStack anvilMergeOutput(GameTestHelper helper, Player player, ItemStack first,
-        ItemStack second) {
+    private static ItemStack anvilMergeOutput(GameTestHelper helper, Player player, ItemStack first, ItemStack second) {
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
         setAnvilInputs(handler, first, second);
         handler.createResult();
@@ -1999,8 +2014,8 @@ public class AnvilGameTest {
 
     /**
      * sets the two input slots of an anvil menu by directly writing to the
-     * underlying container stacks list, bypassing the markDirty callback chain
-     * that would otherwise NPE in sendContentUpdates during tests
+     * underlying container stacks list, bypassing the markDirty callback chain that
+     * would otherwise NPE in sendContentUpdates during tests
      */
     private static void setAnvilInputs(AnvilMenu handler, ItemStack first, ItemStack second) {
         try {

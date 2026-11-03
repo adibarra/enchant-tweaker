@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -28,8 +27,6 @@ import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -44,6 +41,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerExplosion;
@@ -94,8 +92,11 @@ public class EnhancedGameTest {
     @GameTest(
         structure = "fabric-gametest-api-v1:empty")
     public void moreMultishotDisabled(GameTestHelper helper) {
-        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("more_multishot", "multishot");
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("more_multishot", "more_multishot_per_level",
+            "multishot");
         ETTestHelper.setFeature("more_multishot", false);
+        // per_level is ignored while gated off: it would give 7 if the mixin applied
+        ETTestHelper.setConfigValue("more_multishot_per_level", "3");
         ETTestHelper.setEnchantCap("multishot", 2);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.CREATIVE);
         ItemStack crossbow = new ItemStack(Items.CROSSBOW);
@@ -108,8 +109,9 @@ public class EnhancedGameTest {
             loadProjectiles.invoke(null, player, crossbow);
             var charged = crossbow.get(DataComponents.CHARGED_PROJECTILES);
             List<ItemStack> projectiles = charged != null ? charged.itemCopies() : List.of();
-            helper.assertTrue(projectiles.size() == 3,
-                "Multishot (vanilla) should load 3 projectiles when more_multishot disabled (got " + projectiles.size()
+            // 26.2 vanilla MULTISHOT scales past 3: 1 + linear(2, +2/level) = 5 at level 2
+            helper.assertTrue(projectiles.size() == 5,
+                "Multishot (vanilla) should load 5 projectiles when more_multishot disabled (got " + projectiles.size()
                     + ")");
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
@@ -289,15 +291,13 @@ public class EnhancedGameTest {
     public void moreFlameLevelSurvivesNbtRoundTrip(GameTestHelper helper) {
         ServerLevel world = helper.getLevel();
         BlockPos pos = helper.absolutePos(new BlockPos(0, 3, 0));
-        Arrow original = new Arrow(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.ARROW),
-            ItemStack.EMPTY);
+        Arrow original = new Arrow(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.ARROW), null);
         ((FlameLevelAccess) original).enchanttweaker$setFlameLevel(7);
         TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, world.registryAccess());
         original.saveWithoutId(output);
         CompoundTag nbt = output.buildResult();
 
-        Arrow restored = new Arrow(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.ARROW),
-            ItemStack.EMPTY);
+        Arrow restored = new Arrow(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.ARROW), null);
         ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, world.registryAccess(), nbt);
         restored.load(input);
         helper.assertTrue(((FlameLevelAccess) restored).enchanttweaker$getFlameLevel() == 7,
@@ -338,8 +338,7 @@ public class EnhancedGameTest {
             sword.setDamageValue(100);
             int levelOneRemaining = ETTestHelper.repairPlayerGears(orb, player, 100);
             helper.assertTrue(levelOneRemaining == 45,
-                "MoreMending level 1 should reduce the repair cost to 55 (got cost " + (100 - levelOneRemaining)
-                    + ")");
+                "MoreMending level 1 should reduce the repair cost to 55 (got cost " + (100 - levelOneRemaining) + ")");
 
             // 10 damage at Mending VI costs 3 XP
             enchant(helper, sword, Enchantments.MENDING, 6);
@@ -378,8 +377,8 @@ public class EnhancedGameTest {
         try {
             int remaining = ETTestHelper.repairPlayerGears(orb, player, 100);
             // vanilla 26.2 repairs two durability per experience: cost 50
-            helper.assertTrue(remaining == 50, "Vanilla repair cost for 100 damage should be 50 XP (got "
-                + (100 - remaining) + ")");
+            helper.assertTrue(remaining == 50,
+                "Vanilla repair cost for 100 damage should be 50 XP (got " + (100 - remaining) + ")");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
         }
@@ -1010,7 +1009,7 @@ public class EnhancedGameTest {
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.FIRE_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
         int result = fireDuration(entity, 200);
         int expected = (int) Math.ceil(200 * Math.pow(0.85, 4));
         try {
@@ -1030,7 +1029,7 @@ public class EnhancedGameTest {
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.FIRE_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
         int result = fireDuration(entity, 200);
         try {
             helper.assertTrue(result == 80, "Vanilla fire protection should give duration 80 (got " + result + ")");
@@ -1051,13 +1050,17 @@ public class EnhancedGameTest {
         ETTestHelper.setFeature("more_blast_protection", true);
         ETTestHelper.setConfigValue("more_blast_protection_base", "0.85");
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+        Zombie control = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(3, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.BLAST_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
-        double result = explosionKnockback(helper, entity);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
+        equipWithAttributes(control, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
         double expected = Math.pow(0.85, 4);
         try {
-            helper.assertTrue(Math.abs(result - expected) < 0.001,
+            helper.assertTrue(Math.abs(ADUtils.blastKnockbackResistance(4, 0.85) - (1.0 - expected)) < 1e-9,
+                "helper should give resistance " + (1.0 - expected));
+            double result = explosionPushRatio(helper, entity, control);
+            helper.assertTrue(Math.abs(result - expected) < 0.05,
                 "MoreBlastProtection should give knockback ~" + expected + " (got " + result + ")");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
@@ -1071,12 +1074,15 @@ public class EnhancedGameTest {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("more_blast_protection");
         ETTestHelper.setFeature("more_blast_protection", false);
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+        Zombie control = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(3, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.BLAST_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
-        double result = explosionKnockback(helper, entity);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
+        equipWithAttributes(control, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
         try {
-            helper.assertTrue(Math.abs(result - 0.4) < 0.001,
+            double result = explosionPushRatio(helper, entity, control);
+            // vanilla Blast IV: 4 x 0.15 resistance -> knockback factor 0.4
+            helper.assertTrue(Math.abs(result - 0.4) < 0.05,
                 "Vanilla blast protection should give knockback ~0.4 (got " + result + ")");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
@@ -1153,7 +1159,7 @@ public class EnhancedGameTest {
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.FIRE_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
         int result = fireDuration(entity, 200);
         int expected = (int) Math.ceil(200 * Math.pow(0.70, 4));
         try {
@@ -1173,13 +1179,17 @@ public class EnhancedGameTest {
         ETTestHelper.setFeature("more_blast_protection", true);
         ETTestHelper.setConfigValue("more_blast_protection_base", "0.70");
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+        Zombie control = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(3, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.BLAST_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
-        double result = explosionKnockback(helper, entity);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
+        equipWithAttributes(control, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
         double expected = Math.pow(0.70, 4);
         try {
-            helper.assertTrue(Math.abs(result - expected) < 0.001,
+            helper.assertTrue(Math.abs(ADUtils.blastKnockbackResistance(4, 0.70) - (1.0 - expected)) < 1e-9,
+                "helper should give resistance " + (1.0 - expected));
+            double result = explosionPushRatio(helper, entity, control);
+            helper.assertTrue(Math.abs(result - expected) < 0.05,
                 "MoreBlastProtection with base=0.70 should give knockback ~" + expected + " (got " + result + ")");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
@@ -1526,22 +1536,58 @@ public class EnhancedGameTest {
         return entity.getRemainingFireTicks();
     }
 
-    private static double explosionKnockback(GameTestHelper helper, LivingEntity entity) {
-        try {
-            ServerExplosion explosion = new ServerExplosion(helper.getLevel(), null, null, null, Vec3.ZERO, 1.0f,
-                false, Explosion.BlockInteraction.KEEP);
-            Method method = ServerExplosion.class.getDeclaredMethod(
-                "enchanttweaker$moreBlastProtection$multiplicative", LivingEntity.class, Holder.class,
-                Operation.class);
-            method.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            Operation<Double> original = args -> entity.getAttributeValue((Holder<Attribute>) args[0]);
-            double resistance = (double) method.invoke(explosion, entity, Attributes.EXPLOSION_KNOCKBACK_RESISTANCE,
-                original);
-            return 1.0 - resistance;
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("more blast protection reflection failed", e);
+    /**
+     * ticks once to clear spawn-time firstTick, equips, then ticks again so 26.2
+     * equipment attribute modifiers (e.g. burning_time,
+     * explosion_knockback_resistance) apply before the test reads them
+     */
+    private static void equipWithAttributes(LivingEntity entity, EquipmentSlot slot, ItemStack stack) {
+        entity.tick();
+        entity.setItemSlot(slot, stack);
+        entity.tick();
+    }
+
+    /**
+     * explosion calculator that deals no damage so knockback can be measured
+     * without killing the target
+     */
+    private static final ExplosionDamageCalculator NO_DAMAGE_CALCULATOR = new ExplosionDamageCalculator() {
+        @Override
+        public boolean shouldDamageEntity(Explosion explosion, Entity entity) {
+            return false;
         }
+
+        @Override
+        public float getKnockbackMultiplier(Entity entity) {
+            return 1.0f;
+        }
+    };
+
+    /**
+     * runs the real ServerExplosion.hurtEntities() centered between the two zombies
+     * and returns armored push / control push. symmetric placement cancels distance
+     * and exposure, isolating the knockback resistance under test
+     */
+    private static double explosionPushRatio(GameTestHelper helper, LivingEntity armored, LivingEntity control) {
+        ServerLevel world = helper.getLevel();
+        armored.setDeltaMovement(Vec3.ZERO);
+        control.setDeltaMovement(Vec3.ZERO);
+        Vec3 a = armored.position();
+        Vec3 b = control.position();
+        Vec3 center = new Vec3((a.x + b.x) / 2.0, (a.y + b.y) / 2.0, (a.z + b.z) / 2.0);
+        ServerExplosion explosion = new ServerExplosion(world, null, null, NO_DAMAGE_CALCULATOR, center, 2.0f, false,
+            Explosion.BlockInteraction.KEEP);
+        try {
+            Method hurt = ServerExplosion.class.getDeclaredMethod("hurtEntities");
+            hurt.setAccessible(true);
+            hurt.invoke(explosion);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("hurtEntities reflection failed", e);
+        }
+        double controlPush = control.getDeltaMovement().length();
+        helper.assertTrue(controlPush > 1e-6,
+            "explosion must push the unprotected control zombie (got " + controlPush + ")");
+        return armored.getDeltaMovement().length() / controlPush;
     }
 
     /** equips enchanted diamond armor at the requested level */
@@ -1626,9 +1672,8 @@ public class EnhancedGameTest {
 
             ItemStack restored = respawned.getItemBySlot(EquipmentSlot.HEAD);
             helper.assertTrue(
-                restored.getItem() == Items.DIAMOND_HELMET
-                    && EnchantmentHelper.getItemEnchantmentLevel(
-                        enchantment(helper, Enchantments.BINDING_CURSE), restored) == 5,
+                restored.getItem() == Items.DIAMOND_HELMET && EnchantmentHelper
+                    .getItemEnchantmentLevel(enchantment(helper, Enchantments.BINDING_CURSE), restored) == 5,
                 "AFTER_RESPAWN should restore the Binding-5 helmet to slot 3 (got " + restored + ")");
 
             // a second invocation finds no remaining stash entry
@@ -2133,12 +2178,24 @@ public class EnhancedGameTest {
         AABB search = player.getBoundingBox().inflate(64.0);
         try {
             int before = world.getEntitiesOfClass(AbstractArrow.class, search, e -> true).size();
-            crossbow.getItem().use(world, player, InteractionHand.MAIN_HAND); // begin charge
-            crossbow.getItem().releaseUsing(crossbow, world, player, 0); // finish charge (loads 5)
-            crossbow.getItem().use(world, player, InteractionHand.MAIN_HAND); // fire all charged
+            // 26.2 charges on use-tick, so load directly then fire the charged crossbow
+            // through its real shooting path (use() delegates here when charged)
+            Method loadProjectiles = CrossbowItem.class.getDeclaredMethod("tryLoadProjectiles", LivingEntity.class,
+                ItemStack.class);
+            loadProjectiles.setAccessible(true);
+            loadProjectiles.invoke(null, player, crossbow);
+            var charged = crossbow.get(DataComponents.CHARGED_PROJECTILES);
+            List<ItemStack> projectiles = charged != null ? charged.itemCopies() : List.of();
+            helper.assertTrue(projectiles.size() == 5,
+                "Multishot II (per_level=2) should charge 5 projectiles (got " + projectiles.size() + ")");
+            // arrow power without fireworks; null target matches a player-fired shot
+            ((CrossbowItem) crossbow.getItem()).performShooting(world, player, InteractionHand.MAIN_HAND, crossbow,
+                3.15f, 1.0f, null);
             int spawned = world.getEntitiesOfClass(AbstractArrow.class, search, e -> true).size() - before;
             helper.assertTrue(spawned == 5,
                 "Multishot II (per_level=2) should fire 5 arrow entities (got " + spawned + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
         }
@@ -2148,9 +2205,11 @@ public class EnhancedGameTest {
     @GameTest(
         structure = "fabric-gametest-api-v1:empty")
     public void moreMultishotRealFireDisabled(GameTestHelper helper) {
-        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("more_multishot", "capmod_enabled",
-            "multishot");
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("more_multishot", "more_multishot_per_level",
+            "capmod_enabled", "multishot");
         ETTestHelper.setFeature("more_multishot", false);
+        // per_level is ignored while gated off: it would give 7 if the mixin applied
+        ETTestHelper.setConfigValue("more_multishot_per_level", "3");
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("multishot", 2);
         ServerLevel world = helper.getLevel();
@@ -2164,12 +2223,18 @@ public class EnhancedGameTest {
         AABB search = player.getBoundingBox().inflate(64.0);
         try {
             int before = world.getEntitiesOfClass(AbstractArrow.class, search, e -> true).size();
-            crossbow.getItem().use(world, player, InteractionHand.MAIN_HAND);
-            crossbow.getItem().releaseUsing(crossbow, world, player, 0);
-            crossbow.getItem().use(world, player, InteractionHand.MAIN_HAND);
+            Method loadProjectiles = CrossbowItem.class.getDeclaredMethod("tryLoadProjectiles", LivingEntity.class,
+                ItemStack.class);
+            loadProjectiles.setAccessible(true);
+            loadProjectiles.invoke(null, player, crossbow);
+            ((CrossbowItem) crossbow.getItem()).performShooting(world, player, InteractionHand.MAIN_HAND, crossbow,
+                3.15f, 1.0f, null);
             int spawned = world.getEntitiesOfClass(AbstractArrow.class, search, e -> true).size() - before;
-            helper.assertTrue(spawned == 3,
-                "Vanilla Multishot should fire 3 arrow entities when more_multishot disabled (got " + spawned + ")");
+            // 26.2 vanilla MULTISHOT scales past 3: 1 + linear(2, +2/level) = 5 at level 2
+            helper.assertTrue(spawned == 5,
+                "Vanilla Multishot II should fire 5 arrow entities when more_multishot disabled (got " + spawned + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
         }
@@ -2299,8 +2364,10 @@ public class EnhancedGameTest {
         ETTestHelper.setConfigValue("more_flame_per_level", "2");
         ServerLevel world = helper.getLevel();
         BlockPos spawnPos = helper.absolutePos(new BlockPos(0, 3, 0));
+        // 26.2 rejects an empty (non-null) weapon stack, so pass null for ownerless
+        // arrows
         Arrow arrow = new Arrow(world, (double) spawnPos.getX(), (double) spawnPos.getY(), (double) spawnPos.getZ(),
-            new ItemStack(Items.ARROW), ItemStack.EMPTY);
+            new ItemStack(Items.ARROW), null);
         // no owner set
         arrow.igniteForSeconds(10);
         world.addFreshEntity(arrow);
@@ -2330,7 +2397,7 @@ public class EnhancedGameTest {
         ETTestHelper.setFeature("more_fire_protection", true);
         ETTestHelper.setConfigValue("more_fire_protection_base", "0.85");
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
-        entity.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS)); // no fire protection
+        equipWithAttributes(entity, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS)); // no fire protection
         try {
             int result = fireDuration(entity, 200);
             helper.assertTrue(result == 200,
@@ -2351,7 +2418,7 @@ public class EnhancedGameTest {
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.FIRE_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
         try {
             int result = fireDuration(entity, 200);
             helper.assertTrue(result == 0, "Negative base clamps to 0 -> duration 0 (got " + result + ")");
@@ -2371,7 +2438,7 @@ public class EnhancedGameTest {
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.FIRE_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
         try {
             int result = fireDuration(entity, 200);
             helper.assertTrue(result == 200, "base > 1 clamps to 1 -> duration unchanged at 200 (got " + result + ")");
@@ -2391,7 +2458,7 @@ public class EnhancedGameTest {
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.FIRE_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
         try {
             int result = fireDuration(entity, 200);
             int expected = (int) Math.ceil(200 * Math.pow(0.85, 4)); // falls back to default 0.85 -> 105
@@ -2417,7 +2484,7 @@ public class EnhancedGameTest {
                 Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(2 * i, 2, 0));
                 ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
                 enchant(helper, boots, Enchantments.FIRE_PROTECTION, levels[i]);
-                entity.setItemSlot(EquipmentSlot.FEET, boots);
+                equipWithAttributes(entity, EquipmentSlot.FEET, boots);
                 int result = fireDuration(entity, 200);
                 helper.assertTrue(result == expected[i],
                     "Fire Protection " + levels[i] + " should give " + expected[i] + " (got " + result + ")");
@@ -2438,12 +2505,15 @@ public class EnhancedGameTest {
         ETTestHelper.setFeature("more_blast_protection", true);
         ETTestHelper.setConfigValue("more_blast_protection_base", "5.0");
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+        Zombie control = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(3, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.BLAST_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
+        equipWithAttributes(control, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
         try {
-            double result = explosionKnockback(helper, entity);
-            helper.assertTrue(Math.abs(result - 1.0) < 0.001,
+            helper.assertTrue(ADUtils.blastKnockbackResistance(4, 5.0) == 0.0, "base > 1 clamps to 1 -> resistance 0");
+            double result = explosionPushRatio(helper, entity, control);
+            helper.assertTrue(Math.abs(result - 1.0) < 0.05,
                 "base > 1 clamps to 1 -> knockback unchanged ~1.0 (got " + result + ")");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
@@ -2458,15 +2528,18 @@ public class EnhancedGameTest {
             "more_blast_protection_base");
         ETTestHelper.setFeature("more_blast_protection", true);
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+        Zombie control = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(3, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.BLAST_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
+        equipWithAttributes(control, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
         try {
             for (String base : new String[]{"0.0", "-1"}) {
                 ETTestHelper.setConfigValue("more_blast_protection_base", base);
-                double result = explosionKnockback(helper, entity);
-                helper.assertFalse(Double.isNaN(result), "base=" + base + " must not produce NaN knockback");
-                helper.assertTrue(Math.abs(result - 0.0) < 0.001,
+                helper.assertTrue(ADUtils.blastKnockbackResistance(4, Double.parseDouble(base)) == 1.0,
+                    "base=" + base + " clamps to 0 -> resistance 1");
+                double result = explosionPushRatio(helper, entity, control);
+                helper.assertTrue(result < 0.05,
                     "base <= 0 clamps to 0 -> knockback ~0.0 (base=" + base + ", got " + result + ")");
             }
         } finally {
@@ -2485,14 +2558,18 @@ public class EnhancedGameTest {
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("blast_protection", 8);
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+        Zombie control = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(3, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.BLAST_PROTECTION, 8);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
+        equipWithAttributes(control, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
         try {
-            double result = explosionKnockback(helper, entity);
             double expected = Math.pow(0.85, 8);
+            helper.assertTrue(Math.abs(ADUtils.blastKnockbackResistance(8, 0.85) - (1.0 - expected)) < 1e-9,
+                "helper should give resistance " + (1.0 - expected));
+            double result = explosionPushRatio(helper, entity, control);
             helper.assertTrue(result > 0.0, "Multiplicative blast protection never reaches 0 (got " + result + ")");
-            helper.assertTrue(Math.abs(result - expected) < 0.001,
+            helper.assertTrue(Math.abs(result - expected) < 0.05,
                 "Blast Protection 8 should give ~" + expected + " (got " + result + ")");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
@@ -2508,10 +2585,13 @@ public class EnhancedGameTest {
         ETTestHelper.setFeature("more_blast_protection", true);
         ETTestHelper.setConfigValue("more_blast_protection_base", "0.85");
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
-        entity.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS)); // no blast protection
+        Zombie control = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(3, 2, 0));
+        // no blast protection on either zombie: the mixin passes through to vanilla
+        equipWithAttributes(entity, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
+        equipWithAttributes(control, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
         try {
-            double result = explosionKnockback(helper, entity);
-            helper.assertTrue(Math.abs(result - 1.0) < 0.001,
+            double result = explosionPushRatio(helper, entity, control);
+            helper.assertTrue(Math.abs(result - 1.0) < 0.05,
                 "Blast protection level 0 falls through to vanilla -> knockback 1.0 (got " + result + ")");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
@@ -2527,13 +2607,15 @@ public class EnhancedGameTest {
         ETTestHelper.setFeature("more_blast_protection", true);
         ETTestHelper.setConfigValue("more_blast_protection_base", "not-a-number");
         Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+        Zombie control = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(3, 2, 0));
         ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
         enchant(helper, boots, Enchantments.BLAST_PROTECTION, 4);
-        entity.setItemSlot(EquipmentSlot.FEET, boots);
+        equipWithAttributes(entity, EquipmentSlot.FEET, boots);
+        equipWithAttributes(control, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
         try {
-            double result = explosionKnockback(helper, entity);
             double expected = Math.pow(0.85, 4); // falls back to default 0.85
-            helper.assertTrue(Math.abs(result - expected) < 0.001,
+            double result = explosionPushRatio(helper, entity, control);
+            helper.assertTrue(Math.abs(result - expected) < 0.05,
                 "Malformed base falls back to 0.85 -> ~" + expected + " (got " + result + ")");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
@@ -2759,22 +2841,21 @@ public class EnhancedGameTest {
             ItemStack head = respawned.getItemBySlot(EquipmentSlot.HEAD);
             ItemStack feet = respawned.getItemBySlot(EquipmentSlot.FEET);
             helper.assertTrue(
-                head.getItem() == Items.DIAMOND_HELMET
-                    && EnchantmentHelper.getItemEnchantmentLevel(
-                        enchantment(helper, Enchantments.BINDING_CURSE), head) == 5,
+                head.getItem() == Items.DIAMOND_HELMET && EnchantmentHelper
+                    .getItemEnchantmentLevel(enchantment(helper, Enchantments.BINDING_CURSE), head) == 5,
                 "AFTER_RESPAWN should restore the helmet to head slot 3 (got " + head + ")");
             helper.assertTrue(
-                feet.getItem() == Items.DIAMOND_BOOTS
-                    && EnchantmentHelper.getItemEnchantmentLevel(
-                        enchantment(helper, Enchantments.BINDING_CURSE), feet) == 5,
+                feet.getItem() == Items.DIAMOND_BOOTS && EnchantmentHelper
+                    .getItemEnchantmentLevel(enchantment(helper, Enchantments.BINDING_CURSE), feet) == 5,
                 "AFTER_RESPAWN should restore the boots to feet slot 0 (got " + feet + ")");
 
             // a second respawn finds no remaining stash entry
             respawned.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
             respawned.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
             ServerPlayerEvents.AFTER_RESPAWN.invoker().afterRespawn(old, respawned, false);
-            helper.assertTrue(respawned.getItemBySlot(EquipmentSlot.HEAD).isEmpty()
-                && respawned.getItemBySlot(EquipmentSlot.FEET).isEmpty(),
+            helper.assertTrue(
+                respawned.getItemBySlot(EquipmentSlot.HEAD).isEmpty()
+                    && respawned.getItemBySlot(EquipmentSlot.FEET).isEmpty(),
                 "A second AFTER_RESPAWN should restore nothing (stash entry already consumed)");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);

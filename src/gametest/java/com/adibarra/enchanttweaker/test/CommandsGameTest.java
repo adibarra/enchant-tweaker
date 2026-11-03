@@ -538,8 +538,8 @@ public class CommandsGameTest {
         List<String> enchants = ValueSuggestion.candidatesFor("disable_enchantments", rm);
         helper.assertTrue(enchants.contains("sharpness"), "enchantment candidates should contain 'sharpness'");
         List<String> expectedEnchantments = rm.lookupOrThrow(Registries.ENCHANTMENT).keySet().stream()
-            .map(id -> Identifier.DEFAULT_NAMESPACE.equals(id.getNamespace()) ? id.getPath() : id.toString())
-            .sorted().toList();
+            .map(id -> Identifier.DEFAULT_NAMESPACE.equals(id.getNamespace()) ? id.getPath() : id.toString()).sorted()
+            .toList();
         helper.assertTrue(enchants.equals(expectedEnchantments),
             "enchantment candidates should mirror the active dynamic registry");
 

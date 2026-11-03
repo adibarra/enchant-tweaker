@@ -2,8 +2,8 @@ package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -18,7 +18,7 @@ import com.adibarra.utils.ADUtils;
  * @environment server
  */
 @Mixin(
-    value = ExperienceOrb.class)
+    value = EnchantmentHelper.class)
 public abstract class MoreMendingMixin implements MendingLevelAccess {
 
     @Unique
@@ -33,15 +33,16 @@ public abstract class MoreMendingMixin implements MendingLevelAccess {
     }
 
     @ModifyExpressionValue(
-        method = "repairPlayerItems(Lnet/minecraft/server/level/ServerPlayer;I)I",
+        method = "modifyDurabilityToRepairFromXp(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;I)I",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;modifyDurabilityToRepairFromXp(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;I)I"))
-    private int enchanttweaker$moreMending$modifyRepairAmount(int orig, @Local ItemStack itemStack) {
+            target = "Ljava/lang/Math;max(II)I"))
+    private static int enchanttweaker$moreMending$modifyRepairAmount(int orig, @Local(
+        argsOnly = true) ItemStack itemStack) {
         if (!ETMixinPlugin.getMixinConfig("MoreMendingMixin"))
             return orig;
-        mendingLevel = ADUtils.getEnchantmentLevel(itemStack, Enchantments.MENDING);
-        if (mendingLevel <= 0 || orig <= 0)
+        int level = ADUtils.getEnchantmentLevel(itemStack, Enchantments.MENDING);
+        if (level <= 0 || orig <= 0)
             return orig;
         double step = ETMixinPlugin.getConfig().getOrDefault("more_mending_step", 0.05);
         // clamps the floor before calculating the repair amount
@@ -49,7 +50,7 @@ public abstract class MoreMendingMixin implements MendingLevelAccess {
         // vanilla repairs 2 durability per xp (cost factor 0.5); rescale so the
         // effective xp cost matches repairAmount * clamp(0.6 - step * level, floor,
         // 0.6)
-        double factor = Math.clamp(0.6 - step * mendingLevel, floor, 0.6);
+        double factor = Math.clamp(0.6 - step * level, floor, 0.6);
         double scaled = orig * (0.5 / factor);
         double nearestInteger = Math.rint(scaled);
         if (Math.abs(scaled - nearestInteger) <= Math.ulp(scaled) * 4)

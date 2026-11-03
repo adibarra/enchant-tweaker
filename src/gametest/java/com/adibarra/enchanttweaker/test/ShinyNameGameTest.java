@@ -47,9 +47,7 @@ public class ShinyNameGameTest {
     @GameTest(
         structure = "fabric-gametest-api-v1:empty")
     public void cursedNeverColored(GameTestHelper helper) {
-        Holder<Enchantment> curse = helper.getLevel()
-            .registryAccess()
-            .lookupOrThrow(Registries.ENCHANTMENT)
+        Holder<Enchantment> curse = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
             .getOrThrow(Enchantments.BINDING_CURSE);
         boolean cursed = curse.is(EnchantmentTags.CURSE);
         int maxLevel = curse.value().getMaxLevel();
@@ -121,8 +119,8 @@ public class ShinyNameGameTest {
         MutableComponent text = Component.literal("Sharpness IV").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD);
         ADShiny.applyNameStyle(text, 4, 5, false, 0.0f);
         helper.assertTrue(
-            text.getStyle().getColor() != null
-                && text.getStyle().getColor().getValue() == net.minecraft.network.chat.TextColor.fromLegacyFormat(ChatFormatting.AQUA).getValue(),
+            text.getStyle().getColor() != null && text.getStyle().getColor()
+                .getValue() == net.minecraft.network.chat.TextColor.fromLegacyFormat(ChatFormatting.AQUA).getValue(),
             "below-max name should preserve its existing color");
         helper.assertTrue(text.getStyle().isBold(), "below-max name should preserve its existing bold style");
         helper.assertFalse(text.getStyle().isObfuscated(), "below-max name should never become obfuscated");
@@ -135,8 +133,8 @@ public class ShinyNameGameTest {
         MutableComponent text = Component.literal("Sharpness V");
         ADShiny.applyNameStyle(text, 5, 5, false, 0.005f);
         helper.assertTrue(
-            text.getStyle().getColor() != null
-                && text.getStyle().getColor().getValue() == net.minecraft.network.chat.TextColor.fromLegacyFormat(ChatFormatting.YELLOW).getValue(),
+            text.getStyle().getColor() != null && text.getStyle().getColor()
+                .getValue() == net.minecraft.network.chat.TextColor.fromLegacyFormat(ChatFormatting.YELLOW).getValue(),
             "max-level name should be yellow");
         helper.assertFalse(text.getStyle().isObfuscated(), "the exact 0.005 charged boundary should not be obfuscated");
         helper.succeed();
@@ -148,8 +146,8 @@ public class ShinyNameGameTest {
         MutableComponent charged = Component.literal("Sharpness V");
         ADShiny.applyNameStyle(charged, 5, 5, false, Math.nextDown(0.005f));
         helper.assertTrue(
-            charged.getStyle().getColor() != null
-                && charged.getStyle().getColor().getValue() == net.minecraft.network.chat.TextColor.fromLegacyFormat(ChatFormatting.YELLOW).getValue(),
+            charged.getStyle().getColor() != null && charged.getStyle().getColor()
+                .getValue() == net.minecraft.network.chat.TextColor.fromLegacyFormat(ChatFormatting.YELLOW).getValue(),
             "charged max-level name should remain yellow");
         helper.assertTrue(charged.getStyle().isObfuscated(), "roll immediately below 0.005 should be obfuscated");
 
