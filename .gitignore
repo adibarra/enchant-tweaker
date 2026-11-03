@@ -39,3 +39,6 @@ replay_*.log
 *.jfr
 
 releases/
+
+# planning artefacts
+.plan/
