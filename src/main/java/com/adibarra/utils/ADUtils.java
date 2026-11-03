@@ -2,8 +2,6 @@ package com.adibarra.utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 
@@ -14,6 +12,8 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -22,8 +22,6 @@ import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ADUtils {
-
-    private static final Map<Enchantment, String> ENCHANTMENT_PATH_CACHE = new ConcurrentHashMap<>();
 
     private ADUtils() {
         throw new IllegalStateException("Utility class. Do not instantiate.");
@@ -48,15 +46,10 @@ public class ADUtils {
     public static @Nullable String getEnchantmentPath(Enchantment enchantment) {
         if (enchantment == null)
             return null;
-        String cached = ENCHANTMENT_PATH_CACHE.get(enchantment);
-        if (cached != null)
-            return cached;
         if (enchantment.description().getContents() instanceof TranslatableContents translatable) {
             String key = translatable.getKey();
             int lastDot = key.lastIndexOf('.');
-            String path = lastDot >= 0 ? key.substring(lastDot + 1) : key;
-            ENCHANTMENT_PATH_CACHE.put(enchantment, path);
-            return path;
+            return lastDot >= 0 ? key.substring(lastDot + 1) : key;
         }
         return null;
     }
@@ -82,11 +75,14 @@ public class ADUtils {
      *            the enchantment
      * @param key
      *            the expected enchantment key
-     * @return true when the path matches
+     * @return true when the namespace and path match
      */
     public static boolean isEnchantment(Enchantment enchantment, ResourceKey<Enchantment> key) {
-        String path = getEnchantmentPath(enchantment);
-        return path != null && path.equals(key.identifier().getPath());
+        if (enchantment == null
+            || !(enchantment.description().getContents() instanceof TranslatableContents translatable))
+            return false;
+        return translatable.getKey()
+            .equals("enchantment." + key.identifier().getNamespace() + "." + key.identifier().getPath());
     }
 
     /**
@@ -119,6 +115,24 @@ public class ADUtils {
                 return entry.getIntValue();
         }
         return 0;
+    }
+
+    /**
+     * gets the highest level of an enchantment across an entity's armor
+     *
+     * @param entity
+     *            the entity
+     * @param key
+     *            the enchantment key
+     * @return the highest level, or 0 when absent
+     */
+    public static int getHighestArmorEnchantmentLevel(LivingEntity entity, ResourceKey<Enchantment> key) {
+        int highest = 0;
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST,
+                EquipmentSlot.HEAD}) {
+            highest = Math.max(highest, getEnchantmentLevel(entity.getItemBySlot(slot), key));
+        }
+        return highest;
     }
 
     /**

@@ -16,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.MendingLevelAccess;
 import com.adibarra.utils.ADUtils;
 
 /**
@@ -63,10 +62,6 @@ public abstract class BetterMendingMixin {
         }
         int repaired = Math.min(durability, repairItem.getDamageValue());
         repairItem.setDamageValue(repairItem.getDamageValue() - repaired);
-        // pass the repaired item's mending level to moremending
-        if ((Object) this instanceof MendingLevelAccess access) {
-            access.enchanttweaker$setMendingLevel(ADUtils.getEnchantmentLevel(repairItem, Enchantments.MENDING));
-        }
         int experience = amount - repaired * amount / durability;
         if (experience > 0) {
             cir.setReturnValue(this.repairPlayerItems(player, experience));

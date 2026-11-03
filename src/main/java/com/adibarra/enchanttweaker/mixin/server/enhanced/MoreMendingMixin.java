@@ -6,11 +6,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.MendingLevelAccess;
 import com.adibarra.utils.ADUtils;
 
 /**
@@ -19,18 +17,7 @@ import com.adibarra.utils.ADUtils;
  */
 @Mixin(
     value = EnchantmentHelper.class)
-public abstract class MoreMendingMixin implements MendingLevelAccess {
-
-    @Unique
-    private int mendingLevel = 0;
-
-    /**
-     * lets the mending mixin provide its level during repair
-     */
-    @Unique
-    public void enchanttweaker$setMendingLevel(int level) {
-        this.mendingLevel = level;
-    }
+public abstract class MoreMendingMixin {
 
     @ModifyExpressionValue(
         method = "modifyDurabilityToRepairFromXp(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;I)I",

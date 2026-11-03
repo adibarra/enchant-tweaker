@@ -38,6 +38,8 @@ public abstract class MoreMultishotMixin {
             return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_multishot_per_level", 2);
         int multishotLevel = ADUtils.getEnchantmentLevel(weaponStack, Enchantments.MULTISHOT);
+        if (multishotLevel <= 0)
+            return orig;
         return enchanttweaker$moreMultishot$projectileCount(multishotLevel, perLevel);
     }
 }

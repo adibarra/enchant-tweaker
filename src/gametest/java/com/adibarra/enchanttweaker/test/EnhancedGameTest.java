@@ -14,6 +14,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -2492,6 +2493,101 @@ public class EnhancedGameTest {
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
         }
+        helper.succeed();
+    }
+
+    // 1.6.0 scaled by the highest armor piece, 26.2's attributes would sum them
+
+    @GameTest(
+        structure = "fabric-gametest-api-v1:empty")
+    public void moreFireProtectionUsesHighestArmorPiece(GameTestHelper helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("more_fire_protection",
+            "more_fire_protection_base");
+        ETTestHelper.setFeature("more_fire_protection", true);
+        ETTestHelper.setConfigValue("more_fire_protection_base", "0.85");
+        Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+        equipArmorSet(helper, entity, Enchantments.FIRE_PROTECTION);
+        int expected = (int) Math.ceil(200 * Math.pow(0.85, 4));
+        try {
+            int result = fireDuration(entity, 200);
+            helper.assertTrue(result == expected,
+                "Mixed armor should scale by the highest piece: " + expected + " (got " + result + ")");
+        } finally {
+            ETTestHelper.restoreConfig(originalConfig);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(
+        structure = "fabric-gametest-api-v1:empty")
+    public void moreBlastProtectionUsesHighestArmorPiece(GameTestHelper helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("more_blast_protection",
+            "more_blast_protection_base");
+        ETTestHelper.setFeature("more_blast_protection", true);
+        ETTestHelper.setConfigValue("more_blast_protection_base", "0.85");
+        Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+        Zombie control = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(3, 2, 0));
+        equipArmorSet(helper, entity, Enchantments.BLAST_PROTECTION);
+        equipWithAttributes(control, EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
+        double expected = Math.pow(0.85, 4);
+        try {
+            double result = explosionPushRatio(helper, entity, control);
+            helper.assertTrue(Math.abs(result - expected) < 0.05,
+                "Mixed armor should scale by the highest piece: ~" + expected + " (got " + result + ")");
+        } finally {
+            ETTestHelper.restoreConfig(originalConfig);
+        }
+        helper.succeed();
+    }
+
+    private static void equipArmorSet(GameTestHelper helper, Zombie entity, ResourceKey<Enchantment> key) {
+        EquipmentSlot[] slots = {EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD};
+        ItemStack[] armor = {new ItemStack(Items.DIAMOND_BOOTS), new ItemStack(Items.DIAMOND_LEGGINGS),
+                new ItemStack(Items.DIAMOND_CHESTPLATE), new ItemStack(Items.DIAMOND_HELMET)};
+        int[] levels = {1, 4, 2, 3};
+        for (int i = 0; i < slots.length; i++) {
+            enchant(helper, armor[i], key, levels[i]);
+            equipWithAttributes(entity, slots[i], armor[i]);
+        }
+    }
+
+    @GameTest(
+        structure = "fabric-gametest-api-v1:empty")
+    public void moreFlameWeaponlessArrowKeepsLevel(GameTestHelper helper) {
+        Map<String, String> originalConfig = ETTestHelper.snapshotConfig("more_flame", "more_flame_per_level");
+        ETTestHelper.setFeature("more_flame", true);
+        ETTestHelper.setConfigValue("more_flame_per_level", "2");
+        ServerLevel world = helper.getLevel();
+        BlockPos spawnPos = helper.absolutePos(new BlockPos(0, 3, 0));
+        Arrow arrow = new Arrow(world, (double) spawnPos.getX(), (double) spawnPos.getY(), (double) spawnPos.getZ(),
+            new ItemStack(Items.ARROW), null);
+        ((FlameLevelAccess) arrow).enchanttweaker$setFlameLevel(2);
+        arrow.igniteForSeconds(10);
+        world.addFreshEntity(arrow);
+        Zombie target = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(2, 2, 0));
+        try {
+            Method onEntityHit = AbstractArrow.class.getDeclaredMethod("onHitEntity", EntityHitResult.class);
+            onEntityHit.setAccessible(true);
+            onEntityHit.invoke(arrow, new EntityHitResult(target));
+            helper.assertTrue(target.getRemainingFireTicks() == 140,
+                "Weaponless Flame II arrow should burn 140 ticks (got " + target.getRemainingFireTicks() + ")");
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ETTestHelper.restoreConfig(originalConfig);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(
+        structure = "fabric-gametest-api-v1:empty")
+    public void isEnchantmentRespectsNamespace(GameTestHelper helper) {
+        Enchantment looting = enchantment(helper, Enchantments.LOOTING).value();
+        Enchantment modded = new Enchantment(Component.translatable("enchantment.examplemod.looting"),
+            looting.definition(), looting.exclusiveSet(), looting.effects());
+        helper.assertTrue(ADUtils.isEnchantment(looting, Enchantments.LOOTING), "vanilla looting should match");
+        helper.assertTrue(!ADUtils.isEnchantment(modded, Enchantments.LOOTING),
+            "examplemod:looting should not match minecraft:looting");
         helper.succeed();
     }
 

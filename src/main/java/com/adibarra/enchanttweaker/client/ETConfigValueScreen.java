@@ -61,7 +61,7 @@ final class ETConfigValueScreen extends Screen {
 
     private void updateValidity() {
         applyButton.active = ETConfigSchema.isValid(key, normalizedInput());
-        input.setTextColor(applyButton.active ? EditBox.DEFAULT_TEXT_COLOR : 0xFF5555);
+        input.setTextColor(applyButton.active ? EditBox.DEFAULT_TEXT_COLOR : 0xFFFF5555);
     }
 
     private String normalizedInput() {

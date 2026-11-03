@@ -1,6 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -48,8 +49,11 @@ public abstract class MoreFlameMixin implements FlameLevelAccess {
         method = "onHitEntity(Lnet/minecraft/world/phys/EntityHitResult;)V",
         at = @At("HEAD"))
     private void enchanttweaker$moreFlame$captureWeaponLevel(EntityHitResult result, CallbackInfo ci) {
-        enchanttweaker$setFlameLevel(
-            ADUtils.getEnchantmentLevel(((AbstractArrow) (Object) this).getWeaponItem(), Enchantments.FLAME));
+        // weaponless arrows keep the level captured at firing or restored from nbt
+        ItemStack weapon = ((AbstractArrow) (Object) this).getWeaponItem();
+        if (weapon != null) {
+            enchanttweaker$setFlameLevel(ADUtils.getEnchantmentLevel(weapon, Enchantments.FLAME));
+        }
     }
 
     @Inject(
@@ -77,6 +81,7 @@ public abstract class MoreFlameMixin implements FlameLevelAccess {
         if (!ETMixinPlugin.getMixinConfig("MoreFlameMixin"))
             return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_flame_per_level", 2);
-        return orig + (float) Math.max(0, perLevel) * Math.max(0, enchanttweaker$flameLevel - 1);
+        float seconds = orig + (float) Math.max(0, perLevel) * Math.max(0, enchanttweaker$flameLevel - 1);
+        return Math.clamp(seconds, orig, Integer.MAX_VALUE / 20f);
     }
 }
