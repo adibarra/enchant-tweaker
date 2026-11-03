@@ -1,10 +1,10 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import net.minecraft.enchantment.DamageEnchantment;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.TridentItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.item.enchantment.DamageEnchantment;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,7 +22,7 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 public abstract class TridentWeaponsMixin {
 
     @Inject(
-        method = "isAcceptableItem(Lnet/minecraft/item/ItemStack;)Z",
+        method = "canEnchant(Lnet/minecraft/world/item/ItemStack;)Z",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$tridentWeapons$allowFireAspectKnockbackLooting(ItemStack stack,
@@ -41,7 +41,7 @@ public abstract class TridentWeaponsMixin {
     }
 
     @Inject(
-        method = "isPrimaryItem(Lnet/minecraft/item/ItemStack;)Z",
+        method = "isPrimaryItem(Lnet/minecraft/world/item/ItemStack;)Z",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$tridentWeapons$allowDamageEnchantmentsAtEnchantingTable(ItemStack stack,

@@ -1,16 +1,16 @@
 package com.adibarra.enchanttweaker.mixin.server.grindstone;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.screen.GrindstoneScreenHandler;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.GrindstoneMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,18 +26,18 @@ import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
  * @environment server
  */
 @Mixin(
-    targets = "net.minecraft.screen.GrindstoneScreenHandler$4")
+    targets = "net.minecraft.world.inventory.GrindstoneMenu$4")
 public abstract class GrindstoneOutputSlotMixin {
 
     @Shadow
     @Final
-    GrindstoneScreenHandler field_16780; // parent handler reference
+    GrindstoneMenu field_16780; // parent handler reference
 
     @Inject(
-        method = "onTakeItem(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)V",
+        method = "onTakeItem(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)V",
         at = @At("HEAD"),
         cancellable = true)
-    private void enchanttweaker$grindstoneDisenchant$onTakeItem(PlayerEntity player, ItemStack stack, CallbackInfo ci) {
+    private void enchanttweaker$grindstoneDisenchant$onTakeItem(Player player, ItemStack stack, CallbackInfo ci) {
         if (!ETMixinPlugin.getMixinConfig("GrindstoneDisenchantMixin"))
             return;
 
@@ -45,57 +45,57 @@ public abstract class GrindstoneOutputSlotMixin {
         if (bookSlot < 0)
             return; // not a disenchant operation, let vanilla handle
 
-        Inventory input = ((GrindstoneDisenchantAccess) field_16780).enchanttweaker$getInput();
+        Container input = ((GrindstoneDisenchantAccess) field_16780).enchanttweaker$getInput();
         int enchantedSlot = bookSlot == 0 ? 1 : 0;
-        ItemStack enchantedItem = input.getStack(enchantedSlot);
+        ItemStack enchantedItem = input.getItem(enchantedSlot);
         boolean keepItem = ETMixinPlugin.getConfig().getOrDefault("grindstone_disenchant_keep_item", true);
 
         if (keepItem && !enchantedItem.isEmpty()) {
             // create a clean enchanted item
             ItemStack cleanItem;
-            if (enchantedItem.isOf(Items.ENCHANTED_BOOK)) {
+            if (enchantedItem.is(Items.ENCHANTED_BOOK)) {
                 // split books by removing the extracted enchantment
-                ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(enchantedItem);
+                ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(enchantedItem);
                 Enchantment extracted = null;
-                for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchants.getEnchantmentsMap()) {
-                    if (!entry.getKey().value().isCursed()) {
+                for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
+                    if (!entry.getKey().value().isCurse()) {
                         extracted = entry.getKey().value();
                         break;
                     }
                 }
-                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(enchants);
+                ItemEnchantments.Mutable builder = new ItemEnchantments.Mutable(enchants);
                 if (extracted != null) {
                     Enchantment extractedEnchantment = extracted;
-                    builder.remove(enchantment -> enchantment.value() == extractedEnchantment);
+                    builder.removeIf(enchantment -> enchantment.value() == extractedEnchantment);
                 }
-                ItemEnchantmentsComponent remaining = builder.build();
+                ItemEnchantments remaining = builder.toImmutable();
                 if (remaining.isEmpty()) {
-                    cleanItem = enchantedItem.copyComponentsToNewStack(Items.BOOK, enchantedItem.getCount());
-                    cleanItem.remove(DataComponentTypes.REPAIR_COST);
-                    cleanItem.remove(DataComponentTypes.STORED_ENCHANTMENTS);
-                    cleanItem.remove(DataComponentTypes.ENCHANTMENTS);
+                    cleanItem = enchantedItem.transmuteCopy(Items.BOOK, enchantedItem.getCount());
+                    cleanItem.remove(DataComponents.REPAIR_COST);
+                    cleanItem.remove(DataComponents.STORED_ENCHANTMENTS);
+                    cleanItem.remove(DataComponents.ENCHANTMENTS);
                 } else {
                     cleanItem = enchantedItem.copy();
-                    EnchantmentHelper.set(cleanItem, remaining);
+                    EnchantmentHelper.setEnchantments(cleanItem, remaining);
                 }
             } else {
                 // regular items lose all non-curse enchantments
                 cleanItem = enchantedItem.copy();
-                cleanItem.remove(DataComponentTypes.REPAIR_COST);
-                ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(cleanItem);
-                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(enchants);
-                builder.remove(enchantment -> !enchantment.value().isCursed());
-                EnchantmentHelper.set(cleanItem, builder.build());
+                cleanItem.remove(DataComponents.REPAIR_COST);
+                ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(cleanItem);
+                ItemEnchantments.Mutable builder = new ItemEnchantments.Mutable(enchants);
+                builder.removeIf(enchantment -> !enchantment.value().isCurse());
+                EnchantmentHelper.setEnchantments(cleanItem, builder.toImmutable());
             }
 
             // return the clean item to the player
-            if (!player.getInventory().insertStack(cleanItem)) {
-                player.dropItem(cleanItem, false);
+            if (!player.getInventory().add(cleanItem)) {
+                player.drop(cleanItem, false);
             }
         }
 
-        input.removeStack(bookSlot, 1);
-        input.setStack(enchantedSlot, ItemStack.EMPTY);
+        input.removeItem(bookSlot, 1);
+        input.setItem(enchantedSlot, ItemStack.EMPTY);
 
         // skip vanilla take behavior without spawning experience
         ci.cancel();

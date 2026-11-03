@@ -1,6 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -17,7 +17,7 @@ public abstract class NoSoulSpeedBacklashMixin {
 
     @SuppressWarnings("SameReturnValue")
     @ModifyConstant(
-        method = "addSoulSpeedBoostIfNeeded()V",
+        method = "tryAddSoulSpeed()V",
         constant = @Constant(
             intValue = 1,
             ordinal = 0))

@@ -7,15 +7,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
@@ -47,7 +46,8 @@ public class ADUtils {
         String cached = ENCHANTMENT_PATH_CACHE.get(enchantment);
         if (cached != null)
             return cached;
-        String path = Registries.ENCHANTMENT.getKey(enchantment).map(key -> key.getValue().getPath()).orElse(null);
+        String path = BuiltInRegistries.ENCHANTMENT.getResourceKey(enchantment).map(key -> key.location().getPath())
+            .orElse(null);
         if (path != null)
             ENCHANTMENT_PATH_CACHE.put(enchantment, path);
         return path;
@@ -61,10 +61,10 @@ public class ADUtils {
      * @param msg
      *            the message to broadcast
      */
-    public static void broadcastOps(MinecraftServer server, MutableText msg) {
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            if (server.getPlayerManager().isOperator(player.getGameProfile())) {
-                player.sendMessage(msg);
+    public static void broadcastOps(MinecraftServer server, MutableComponent msg) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (server.getPlayerList().isOp(player.getGameProfile())) {
+                player.sendSystemMessage(msg);
             }
         }
     }
@@ -76,11 +76,11 @@ public class ADUtils {
      *            the player
      * @return the hotbar inventory
      */
-    public static Inventory getPlayerHotbar(PlayerEntity player) {
-        int size = PlayerInventory.getHotbarSize();
-        List<ItemStack> list = DefaultedList.ofSize(size, ItemStack.EMPTY);
+    public static Inventory getPlayerHotbar(Player player) {
+        int size = net.minecraft.world.entity.player.Inventory.getSelectionSize();
+        List<ItemStack> list = NonNullList.withSize(size, ItemStack.EMPTY);
         for (int i = 0; i < size; i++) {
-            list.set(i, player.getInventory().getStack(i));
+            list.set(i, player.getInventory().getItem(i));
         }
         return new Inventory(list);
     }

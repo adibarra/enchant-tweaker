@@ -1,7 +1,7 @@
 package com.adibarra.utils;
 
-import net.minecraft.text.MutableText;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.MutableComponent;
 
 /** decides whether enchantment names should use the shiny color */
 @SuppressWarnings("unused")
@@ -19,12 +19,13 @@ public class ADShiny {
     }
 
     /** applies the complete shiny-name style decision for an enchantment name */
-    public static void applyNameStyle(MutableText text, int level, int maxLevel, boolean cursed, float chargedRoll) {
+    public static void applyNameStyle(MutableComponent text, int level, int maxLevel, boolean cursed,
+        float chargedRoll) {
         if (!shouldColorGold(level, maxLevel, cursed))
             return;
-        text.formatted(Formatting.YELLOW);
+        text.withStyle(ChatFormatting.YELLOW);
         if (chargedRoll < 0.005f) {
-            text.formatted(Formatting.OBFUSCATED);
+            text.withStyle(ChatFormatting.OBFUSCATED);
         }
     }
 }

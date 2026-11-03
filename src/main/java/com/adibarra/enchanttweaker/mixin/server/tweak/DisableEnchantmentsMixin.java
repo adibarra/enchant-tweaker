@@ -4,9 +4,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.enchantment.Enchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,21 +28,21 @@ public abstract class DisableEnchantmentsMixin {
     // reads
     // possible with two independently-published static fields
     @Unique
-    private static volatile Map.Entry<String, Set<Identifier>> enchanttweaker$disableCache;
+    private static volatile Map.Entry<String, Set<ResourceLocation>> enchanttweaker$disableCache;
 
     @Unique
-    private static Set<Identifier> enchanttweaker$parseDisabledEnchants(String config) {
-        Map.Entry<String, Set<Identifier>> cached = enchanttweaker$disableCache;
+    private static Set<ResourceLocation> enchanttweaker$parseDisabledEnchants(String config) {
+        Map.Entry<String, Set<ResourceLocation>> cached = enchanttweaker$disableCache;
         if (cached != null && cached.getKey().equals(config))
             return cached.getValue();
 
-        Set<Identifier> ids = new HashSet<>();
+        Set<ResourceLocation> ids = new HashSet<>();
         for (String entry : config.split(",")) {
-            Identifier id = Identifier.tryParse(entry.trim());
+            ResourceLocation id = ResourceLocation.tryParse(entry.trim());
             if (id != null)
                 ids.add(id);
         }
-        Set<Identifier> parsed = Set.copyOf(ids);
+        Set<ResourceLocation> parsed = Set.copyOf(ids);
         enchanttweaker$disableCache = Map.entry(config, parsed);
         return parsed;
     }
@@ -52,15 +52,15 @@ public abstract class DisableEnchantmentsMixin {
         if (!ETMixinPlugin.getMixinConfig("DisableEnchantmentsMixin"))
             return false;
         String config = ETMixinPlugin.getConfig().getOrDefault("disable_enchantments", "");
-        Set<Identifier> disabled = enchanttweaker$parseDisabledEnchants(config);
+        Set<ResourceLocation> disabled = enchanttweaker$parseDisabledEnchants(config);
         if (disabled.isEmpty())
             return false;
-        Identifier id = Registries.ENCHANTMENT.getId((Enchantment) (Object) this);
+        ResourceLocation id = BuiltInRegistries.ENCHANTMENT.getKey((Enchantment) (Object) this);
         return id != null && disabled.contains(id);
     }
 
     @Inject(
-        method = "isAvailableForRandomSelection()Z",
+        method = "isDiscoverable()Z",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$disableEnchantments$blockRandomSelection(CallbackInfoReturnable<Boolean> cir) {
@@ -69,7 +69,7 @@ public abstract class DisableEnchantmentsMixin {
     }
 
     @Inject(
-        method = "isAvailableForEnchantedBookOffer()Z",
+        method = "isTradeable()Z",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$disableEnchantments$blockBookOffer(CallbackInfoReturnable<Boolean> cir) {

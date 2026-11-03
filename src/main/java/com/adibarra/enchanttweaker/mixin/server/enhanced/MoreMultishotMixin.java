@@ -1,10 +1,10 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.RangedWeaponItem;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ProjectileWeaponItem;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -17,7 +17,7 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = RangedWeaponItem.class)
+    value = ProjectileWeaponItem.class)
 public abstract class MoreMultishotMixin {
 
     @Unique
@@ -27,7 +27,7 @@ public abstract class MoreMultishotMixin {
     }
 
     @ModifyConstant(
-        method = "load(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;)Ljava/util/List;",
+        method = "draw(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/List;",
         constant = @Constant(
             intValue = 3,
             ordinal = 0))
@@ -36,7 +36,7 @@ public abstract class MoreMultishotMixin {
         if (!ETMixinPlugin.getMixinConfig("MoreMultishotMixin"))
             return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_multishot_per_level", 2);
-        int multishotLevel = EnchantmentHelper.getLevel(Enchantments.MULTISHOT, weaponStack);
+        int multishotLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MULTISHOT, weaponStack);
         return enchanttweaker$moreMultishot$projectileCount(multishotLevel, perLevel);
     }
 }

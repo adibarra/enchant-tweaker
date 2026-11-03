@@ -1,7 +1,11 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.screen.*;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AnvilMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.DataSlot;
+import net.minecraft.world.inventory.ItemCombinerMenu;
+import net.minecraft.world.inventory.MenuType;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,27 +21,27 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = AnvilScreenHandler.class)
-public abstract class CheapNamesMixin extends ForgingScreenHandler {
+    value = AnvilMenu.class)
+public abstract class CheapNamesMixin extends ItemCombinerMenu {
 
     @Shadow
     @Final
-    private Property levelCost;
+    private DataSlot cost;
 
     @SuppressWarnings("unused")
-    private CheapNamesMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory,
-        ScreenHandlerContext context) {
+    private CheapNamesMixin(@Nullable MenuType<?> type, int syncId, Inventory playerInventory,
+        ContainerLevelAccess context) {
         super(type, syncId, playerInventory, context);
     }
 
     @Inject(
-        method = "updateResult()V",
+        method = "createResult()V",
         at = @At("TAIL"))
     private void enchanttweaker$cheapNames$modifyLevelCost(CallbackInfo ci) {
         if (!ETMixinPlugin.getMixinConfig("CheapNamesMixin"))
             return;
-        if (this.input.getStack(1).isEmpty() && !this.output.getStack(0).isEmpty()) {
-            levelCost.set(1);
+        if (this.inputSlots.getItem(1).isEmpty() && !this.resultSlots.getItem(0).isEmpty()) {
+            cost.set(1);
         }
     }
 }

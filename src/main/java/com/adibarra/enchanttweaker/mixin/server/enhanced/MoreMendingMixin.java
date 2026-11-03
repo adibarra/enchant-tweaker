@@ -3,12 +3,12 @@ package com.adibarra.enchanttweaker.mixin.server.enhanced;
 import java.util.Map;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,7 +23,7 @@ import com.adibarra.enchanttweaker.MendingLevelAccess;
  * @environment server
  */
 @Mixin(
-    value = ExperienceOrbEntity.class)
+    value = ExperienceOrb.class)
 public abstract class MoreMendingMixin implements MendingLevelAccess {
 
     @Unique
@@ -38,24 +38,24 @@ public abstract class MoreMendingMixin implements MendingLevelAccess {
     }
 
     @Inject(
-        method = "repairPlayerGears(Lnet/minecraft/entity/player/PlayerEntity;I)I",
+        method = "repairPlayerItems(Lnet/minecraft/world/entity/player/Player;I)I",
         at = @At(
             ordinal = 0,
             value = "INVOKE_ASSIGN",
-            target = "Lnet/minecraft/enchantment/EnchantmentHelper;chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;"))
-    private void enchanttweaker$moreMending$captureMendingLevel(PlayerEntity player, int amount,
+            target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;getRandomItemWith(Lnet/minecraft/world/item/enchantment/Enchantment;Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;"))
+    private void enchanttweaker$moreMending$captureMendingLevel(Player player, int amount,
         CallbackInfoReturnable<Integer> cir, @Local Map.Entry<EquipmentSlot, ItemStack> entry) {
         if (!ETMixinPlugin.getMixinConfig("MoreMendingMixin"))
             return;
         if (entry != null) {
-            mendingLevel = EnchantmentHelper.getLevel(Enchantments.MENDING, entry.getValue());
+            mendingLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, entry.getValue());
         } else {
             mendingLevel = 0; // clears stale levels when no gear is found
         }
     }
 
     @Inject(
-        method = "getMendingRepairCost(I)I",
+        method = "durabilityToXp(I)I",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$moreMending$modifyRepairCost(int repairAmount, CallbackInfoReturnable<Integer> cir) {

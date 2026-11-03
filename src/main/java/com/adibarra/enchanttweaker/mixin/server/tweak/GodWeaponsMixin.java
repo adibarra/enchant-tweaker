@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import net.minecraft.enchantment.DamageEnchantment;
-import net.minecraft.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.DamageEnchantment;
+import net.minecraft.world.item.enchantment.Enchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,7 +18,7 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 public abstract class GodWeaponsMixin {
 
     @Inject(
-        method = "canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
+        method = "checkCompatibility(Lnet/minecraft/world/item/enchantment/Enchantment;)Z",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$godWeapons$allowAllDamageEnchants(Enchantment other,

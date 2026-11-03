@@ -9,7 +9,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.commands.CommandSourceStack;
 
 public class ListSuggestion {
 
@@ -34,8 +34,8 @@ public class ListSuggestion {
         return builder.buildFuture();
     }
 
-    public static SuggestionProvider<ServerCommandSource> of(Supplier<Collection<String>> options) {
-        return (CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) -> buildSuggestions(builder,
+    public static SuggestionProvider<CommandSourceStack> of(Supplier<Collection<String>> options) {
+        return (CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) -> buildSuggestions(builder,
             options == null ? null : options.get());
     }
 }

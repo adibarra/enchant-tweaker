@@ -2,12 +2,12 @@ package com.adibarra.enchanttweaker.mixin.server.tweak;
 
 import java.util.List;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,31 +25,31 @@ import com.adibarra.utils.ADUtils;
  * @environment server
  */
 @Mixin(
-    value = ExperienceOrbEntity.class)
+    value = ExperienceOrb.class)
 public abstract class BetterMendingMixin {
 
     @Shadow
-    protected abstract int getMendingRepairAmount(int i);
+    protected abstract int xpToDurability(int i);
 
     @Shadow
-    protected abstract int getMendingRepairCost(int i);
+    protected abstract int durabilityToXp(int i);
 
     @Shadow
-    protected abstract int repairPlayerGears(PlayerEntity player, int amount);
+    protected abstract int repairPlayerItems(Player player, int amount);
 
     @Inject(
-        method = "repairPlayerGears(Lnet/minecraft/entity/player/PlayerEntity;I)I",
+        method = "repairPlayerItems(Lnet/minecraft/world/entity/player/Player;I)I",
         at = @At("HEAD"),
         cancellable = true)
-    private void enchanttweaker$betterMending$modifyRepairPlayerGears(PlayerEntity player, int amount,
+    private void enchanttweaker$betterMending$modifyRepairPlayerGears(Player player, int amount,
         CallbackInfoReturnable<Integer> cir) {
         if (!ETMixinPlugin.getMixinConfig("BetterMendingMixin"))
             return;
-        PlayerInventory inv = player.getInventory();
+        Inventory inv = player.getInventory();
         ItemStack repairItem = ADUtils.getMatchingItem(
-            List.of(new ADUtils.Inventory(inv.getMainHandStack()), new ADUtils.Inventory(inv.offHand),
-                new ADUtils.Inventory(inv.armor), ADUtils.getPlayerHotbar(player), new ADUtils.Inventory(inv.main)),
-            (stack) -> EnchantmentHelper.getLevel(Enchantments.MENDING, stack) > 0 && stack.isDamaged());
+            List.of(new ADUtils.Inventory(inv.getSelected()), new ADUtils.Inventory(inv.offhand),
+                new ADUtils.Inventory(inv.armor), ADUtils.getPlayerHotbar(player), new ADUtils.Inventory(inv.items)),
+            (stack) -> EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, stack) > 0 && stack.isDamaged());
 
         if (repairItem == null) {
             cir.setReturnValue(amount);
@@ -58,15 +58,16 @@ public abstract class BetterMendingMixin {
 
         // use the running `amount` (xp still available on this call), not the orb's
         // original this.amount
-        int i = Math.min(this.getMendingRepairAmount(amount), repairItem.getDamage());
-        repairItem.setDamage(repairItem.getDamage() - i);
+        int i = Math.min(this.xpToDurability(amount), repairItem.getDamageValue());
+        repairItem.setDamageValue(repairItem.getDamageValue() - i);
         // pass the repaired item's mending level to moremending
         if ((Object) this instanceof MendingLevelAccess access) {
-            access.enchanttweaker$setMendingLevel(EnchantmentHelper.getLevel(Enchantments.MENDING, repairItem));
+            access.enchanttweaker$setMendingLevel(
+                EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, repairItem));
         }
-        int experience = amount - this.getMendingRepairCost(i);
+        int experience = amount - this.durabilityToXp(i);
         if (experience > 0) {
-            cir.setReturnValue(this.repairPlayerGears(player, experience));
+            cir.setReturnValue(this.repairPlayerItems(player, experience));
             return;
         }
         cir.setReturnValue(0);

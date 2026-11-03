@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.adibarra.utils.ADText;
@@ -22,27 +22,27 @@ public final class CommandFeedback {
     /**
      * builds the mod prefix and joins text parts
      */
-    private static MutableText build(List<Text> parts) {
-        List<Text> msg = new ArrayList<>();
-        msg.add(Text.literal(EnchantTweaker.PREFIX).formatted(Formatting.GREEN));
+    private static MutableComponent build(List<Component> parts) {
+        List<Component> msg = new ArrayList<>();
+        msg.add(Component.literal(EnchantTweaker.PREFIX).withStyle(ChatFormatting.GREEN));
         msg.addAll(parts);
         return ADText.joinTextMutable(msg);
     }
 
-    public static void feedback(ServerCommandSource source, List<Text> parts) {
-        MutableText out = build(parts);
-        source.sendFeedback(() -> out, false);
+    public static void feedback(CommandSourceStack source, List<Component> parts) {
+        MutableComponent out = build(parts);
+        source.sendSuccess(() -> out, false);
     }
 
-    public static void feedback(ServerCommandSource source, Text... parts) {
+    public static void feedback(CommandSourceStack source, Component... parts) {
         feedback(source, Arrays.asList(parts));
     }
 
-    public static void error(ServerCommandSource source, List<Text> parts) {
-        source.sendError(build(parts));
+    public static void error(CommandSourceStack source, List<Component> parts) {
+        source.sendFailure(build(parts));
     }
 
-    public static void error(ServerCommandSource source, Text... parts) {
+    public static void error(CommandSourceStack source, Component... parts) {
         error(source, Arrays.asList(parts));
     }
 }

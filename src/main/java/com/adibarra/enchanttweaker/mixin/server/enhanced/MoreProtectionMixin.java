@@ -2,7 +2,7 @@ package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -17,10 +17,10 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 public abstract class MoreProtectionMixin {
 
     @WrapOperation(
-        method = "modifyAppliedDamage(Lnet/minecraft/entity/damage/DamageSource;F)F",
+        method = "getDamageAfterMagicAbsorb(Lnet/minecraft/world/damagesource/DamageSource;F)F",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/entity/DamageUtil;getInflictedDamage(FF)F"))
+            target = "Lnet/minecraft/world/damagesource/CombatRules;getDamageAfterMagicAbsorb(FF)F"))
     private float enchanttweaker$moreProtection$multiplicative(float damage, float epf, Operation<Float> original) {
         if (!ETMixinPlugin.getMixinConfig("MoreProtectionMixin")) {
             return original.call(damage, epf);

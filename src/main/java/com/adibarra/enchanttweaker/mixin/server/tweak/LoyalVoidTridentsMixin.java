@@ -1,10 +1,10 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.entity.projectile.TridentEntity;
-import net.minecraft.world.World;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.ThrownTrident;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,18 +20,18 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = TridentEntity.class)
-public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
+    value = ThrownTrident.class)
+public abstract class LoyalVoidTridentsMixin extends Projectile {
 
     @Shadow
     @Final
-    private static TrackedData<Byte> LOYALTY;
+    private static EntityDataAccessor<Byte> ID_LOYALTY;
 
     @Shadow
     private boolean dealtDamage;
 
     @SuppressWarnings("unused")
-    protected LoyalVoidTridentsMixin(EntityType<ProjectileEntity> entityType, World world) {
+    protected LoyalVoidTridentsMixin(EntityType<Projectile> entityType, Level world) {
         super(entityType, world);
     }
 
@@ -41,15 +41,15 @@ public abstract class LoyalVoidTridentsMixin extends ProjectileEntity {
     private void enchanttweaker$loyalVoidTridents$returnFromVoid(CallbackInfo ci) {
         if (!ETMixinPlugin.getMixinConfig("LoyalVoidTridentsMixin"))
             return;
-        if (dataTracker.get(LOYALTY) == 0)
+        if (entityData.get(ID_LOYALTY) == 0)
             return;
         if (this.getOwner() == null)
             return;
 
-        if (this.getY() <= this.getWorld().getBottomY()) {
-            this.setPosition(this.getX(), this.getWorld().getBottomY(), this.getZ());
+        if (this.getY() <= this.level().getMinBuildHeight()) {
+            this.setPos(this.getX(), this.level().getMinBuildHeight(), this.getZ());
             this.dealtDamage = true;
-            this.setVelocity(0, 0, 0);
+            this.setDeltaMovement(0, 0, 0);
         }
     }
 }

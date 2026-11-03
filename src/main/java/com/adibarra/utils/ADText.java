@@ -4,8 +4,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 
 @SuppressWarnings("unused")
 public class ADText {
@@ -23,9 +27,9 @@ public class ADText {
      * @param list
      * @return the joined mutable text object
      */
-    public static MutableText joinTextMutable(List<Text> list) {
-        MutableText out = Text.empty();
-        for (Text text : list) {
+    public static MutableComponent joinTextMutable(List<Component> list) {
+        MutableComponent out = Component.empty();
+        for (Component text : list) {
             out.append(text);
         }
         return out;
@@ -37,7 +41,7 @@ public class ADText {
      * @param list
      * @return the joined text object
      */
-    public static Text joinText(List<Text> list) {
+    public static Component joinText(List<Component> list) {
         return joinTextMutable(list);
     }
 
@@ -47,12 +51,12 @@ public class ADText {
      * @param literal
      * @return the built command link as a mutable text object
      */
-    public static MutableText buildCmdLink(String base, String literal) {
+    public static MutableComponent buildCmdLink(String base, String literal) {
         String cmd = "/" + base + " " + literal;
-        return Text.literal(cmd)
-            .setStyle(Style.EMPTY.withColor(Formatting.AQUA)
+        return Component.literal(cmd)
+            .setStyle(Style.EMPTY.withColor(ChatFormatting.AQUA)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Click to run " + cmd))));
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to run " + cmd))));
     }
 
     /**
@@ -61,15 +65,15 @@ public class ADText {
      * @param value
      * @return the colored value as a mutable text object
      */
-    public static MutableText colorValue(String value) {
+    public static MutableComponent colorValue(String value) {
         String normalized = value.toLowerCase(Locale.ROOT);
         if (TRUE_VALUES.contains(normalized)) {
-            return Text.literal(value).formatted(Formatting.GREEN);
+            return Component.literal(value).withStyle(ChatFormatting.GREEN);
         } else if (FALSE_VALUES.contains(normalized)) {
-            return Text.literal(value).formatted(Formatting.RED);
+            return Component.literal(value).withStyle(ChatFormatting.RED);
         } else if (ADMisc.isDouble(normalized)) {
-            return Text.literal(value).formatted(Formatting.BLUE);
+            return Component.literal(value).withStyle(ChatFormatting.BLUE);
         }
-        return Text.literal(value).formatted(Formatting.GOLD);
+        return Component.literal(value).withStyle(ChatFormatting.GOLD);
     }
 }

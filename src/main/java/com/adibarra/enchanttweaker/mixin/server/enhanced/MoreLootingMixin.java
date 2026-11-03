@@ -1,8 +1,8 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,20 +19,20 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 public abstract class MoreLootingMixin {
 
     @Shadow
-    protected PlayerEntity attackingPlayer;
+    protected Player lastHurtByPlayer;
 
     @ModifyArg(
-        method = "dropXp()V",
+        method = "dropExperience()V",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/entity/ExperienceOrbEntity;spawn(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/Vec3d;I)V"),
+            target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"),
         index = 2)
     private int enchanttweaker$moreLooting$modifyXp(int xp) {
         if (!ETMixinPlugin.getMixinConfig("MoreLootingMixin"))
             return xp;
-        if (attackingPlayer == null)
+        if (lastHurtByPlayer == null)
             return xp;
-        int lootingLevel = EnchantmentHelper.getLooting(attackingPlayer);
+        int lootingLevel = EnchantmentHelper.getMobLooting(lastHurtByPlayer);
         if (lootingLevel <= 0)
             return xp;
         double multiplier = Math.max(0.0, ETMixinPlugin.getConfig().getOrDefault("more_looting_multiplier", 0.5));

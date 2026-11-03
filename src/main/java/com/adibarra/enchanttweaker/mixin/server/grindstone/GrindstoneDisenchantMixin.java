@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.screen.GrindstoneScreenHandler;
+import net.minecraft.core.Holder;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.GrindstoneMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,16 +28,16 @@ import com.adibarra.enchanttweaker.GrindstoneDisenchantAccess;
  * @environment server
  */
 @Mixin(
-    value = GrindstoneScreenHandler.class)
+    value = GrindstoneMenu.class)
 public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantAccess {
 
     @Shadow
     @Final
-    private Inventory result;
+    private Container resultSlots;
 
     @Shadow
     @Final
-    Inventory input;
+    Container repairSlots;
 
     /**
      * input slot holding the book, or -1 when not disenchanting
@@ -46,19 +46,19 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
     private int enchanttweaker$bookSlot = -1;
 
     @Inject(
-        method = "updateResult()V",
+        method = "createResult()V",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$grindstoneDisenchant$updateResult(CallbackInfo ci) {
         enchanttweaker$bookSlot = -1;
-        result.setStack(0, ItemStack.EMPTY);
+        resultSlots.setItem(0, ItemStack.EMPTY);
         if (!ETMixinPlugin.getMixinConfig("GrindstoneDisenchantMixin")) {
             enchanttweaker$bookSlot = -1;
             return;
         }
 
-        ItemStack stack0 = input.getStack(0);
-        ItemStack stack1 = input.getStack(1);
+        ItemStack stack0 = repairSlots.getItem(0);
+        ItemStack stack1 = repairSlots.getItem(1);
 
         // reject stacked inputs because grindstones process one item
         if (stack0.getCount() > 1 || stack1.getCount() > 1) {
@@ -68,10 +68,10 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
 
         int bookSlot = -1;
         int enchantedSlot = -1;
-        if (stack0.isOf(Items.BOOK) && !stack1.isEmpty() && EnchantmentHelper.hasEnchantments(stack1)) {
+        if (stack0.is(Items.BOOK) && !stack1.isEmpty() && EnchantmentHelper.hasAnyEnchantments(stack1)) {
             bookSlot = 0;
             enchantedSlot = 1;
-        } else if (stack1.isOf(Items.BOOK) && !stack0.isEmpty() && EnchantmentHelper.hasEnchantments(stack0)) {
+        } else if (stack1.is(Items.BOOK) && !stack0.isEmpty() && EnchantmentHelper.hasAnyEnchantments(stack0)) {
             bookSlot = 1;
             enchantedSlot = 0;
         }
@@ -82,12 +82,12 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
         }
 
         enchanttweaker$bookSlot = bookSlot;
-        ItemStack enchantedItem = input.getStack(enchantedSlot);
-        ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(enchantedItem);
+        ItemStack enchantedItem = repairSlots.getItem(enchantedSlot);
+        ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(enchantedItem);
 
-        List<Object2IntMap.Entry<RegistryEntry<Enchantment>>> nonCurse = new ArrayList<>();
-        for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchants.getEnchantmentsMap()) {
-            if (!entry.getKey().value().isCursed()) {
+        List<Object2IntMap.Entry<Holder<Enchantment>>> nonCurse = new ArrayList<>();
+        for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
+            if (!entry.getKey().value().isCurse()) {
                 nonCurse.add(entry);
             }
         }
@@ -99,17 +99,17 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
 
         ItemStack outputBook = new ItemStack(Items.ENCHANTED_BOOK);
 
-        if (enchantedItem.isOf(Items.ENCHANTED_BOOK) && nonCurse.size() > 1) {
-            Object2IntMap.Entry<RegistryEntry<Enchantment>> picked = nonCurse.getFirst();
-            outputBook.addEnchantment(picked.getKey().value(), picked.getIntValue());
+        if (enchantedItem.is(Items.ENCHANTED_BOOK) && nonCurse.size() > 1) {
+            Object2IntMap.Entry<Holder<Enchantment>> picked = nonCurse.getFirst();
+            outputBook.enchant(picked.getKey().value(), picked.getIntValue());
         } else {
-            for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : nonCurse) {
-                outputBook.addEnchantment(entry.getKey().value(), entry.getIntValue());
+            for (Object2IntMap.Entry<Holder<Enchantment>> entry : nonCurse) {
+                outputBook.enchant(entry.getKey().value(), entry.getIntValue());
             }
         }
 
-        result.setStack(0, outputBook);
-        ((GrindstoneScreenHandler) (Object) this).sendContentUpdates();
+        resultSlots.setItem(0, outputBook);
+        ((GrindstoneMenu) (Object) this).broadcastChanges();
         ci.cancel();
     }
 
@@ -123,7 +123,7 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
 
     /** exposes the input inventory for the output slot mixin */
     @Unique
-    public Inventory enchanttweaker$getInput() {
-        return input;
+    public Container enchanttweaker$getInput() {
+        return repairSlots;
     }
 }

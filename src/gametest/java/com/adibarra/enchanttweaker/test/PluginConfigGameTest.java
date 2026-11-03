@@ -11,9 +11,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.test.GameTest;
-import net.minecraft.test.TestContext;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.EnchantTweaker;
@@ -22,8 +22,8 @@ import com.adibarra.utils.ADConfig;
 public class PluginConfigGameTest implements FabricGameTest {
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void modDisabledGatesFeatureMixins(TestContext helper) {
+        template = EMPTY_STRUCTURE)
+    public void modDisabledGatesFeatureMixins(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("cheap_names", "more_protection",
             "capmod_enabled", "sharpness", "mod_enabled");
         try {
@@ -57,12 +57,12 @@ public class PluginConfigGameTest implements FabricGameTest {
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void setAllAndPersistWritesToDisk(TestContext helper) {
+        template = EMPTY_STRUCTURE)
+    public void setAllAndPersistWritesToDisk(GameTestHelper helper) {
         String path = ETMixinPlugin.getConfig().getConfigPath();
         helper.assertTrue(path != null, "config path should be resolvable");
         helper.assertTrue(ETMixinPlugin.getConfig().getKeys().contains("cheap_names"),
@@ -84,12 +84,12 @@ public class PluginConfigGameTest implements FabricGameTest {
             ETMixinPlugin.getConfig().setAllAndPersist(Map.of("cheap_names", originalCheapNames));
             ETMixinPlugin.clearCaches();
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void setAllAndPersistAppendsUnwrittenKey(TestContext helper) {
+        template = EMPTY_STRUCTURE)
+    public void setAllAndPersistAppendsUnwrittenKey(GameTestHelper helper) {
         String path = ETMixinPlugin.getConfig().getConfigPath();
         helper.assertTrue(path != null, "config path should be resolvable");
         Path configPath = Path.of(path);
@@ -138,12 +138,12 @@ public class PluginConfigGameTest implements FabricGameTest {
             ETMixinPlugin.getConfig().setAll(Map.of("sturdy_anvils", originalSturdyValue));
             ETMixinPlugin.clearCaches();
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void reloadClearsCaches(TestContext helper) {
+        template = EMPTY_STRUCTURE)
+    public void reloadClearsCaches(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper
             .snapshotConfig(ETMixinPlugin.getConfig().getKeys().toArray(new String[0]));
         String configPath = ETMixinPlugin.getConfig().getConfigPath();
@@ -186,12 +186,12 @@ public class PluginConfigGameTest implements FabricGameTest {
             ETMixinPlugin.reloadConfig();
             ETTestHelper.restoreConfig(originalConfig);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void setAllAndPersistEdgeCases(TestContext helper) {
+        template = EMPTY_STRUCTURE)
+    public void setAllAndPersistEdgeCases(GameTestHelper helper) {
         Path tmp = null;
         try {
             tmp = Files.createTempFile(configDir(), "et-persist-edge-test-", ".properties");
@@ -271,12 +271,12 @@ public class PluginConfigGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void setAllAndPersistSerializesConcurrentUpdates(TestContext helper) {
+        template = EMPTY_STRUCTURE)
+    public void setAllAndPersistSerializesConcurrentUpdates(GameTestHelper helper) {
         Path tmp = null;
         Thread left = null;
         Thread right = null;
@@ -320,7 +320,7 @@ public class PluginConfigGameTest implements FabricGameTest {
             cleanupWorkers(left, right);
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     private static Thread concurrentUpdate(CountDownLatch start, AtomicReference<Throwable> failure, Runnable update) {

@@ -2,7 +2,7 @@ package com.adibarra.enchanttweaker.mixin.client.anvil;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.screen.ingame.AnvilScreen;
+import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -19,7 +19,7 @@ import com.adibarra.enchanttweaker.AnvilCost;
 public abstract class NotTooExpensiveMixin {
 
     @ModifyConstant(
-        method = "drawForeground(Lnet/minecraft/client/gui/DrawContext;II)V",
+        method = "renderLabels(Lnet/minecraft/client/gui/GuiGraphics;II)V",
         constant = @Constant(
             intValue = 40,
             ordinal = 0))

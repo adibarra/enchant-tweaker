@@ -5,9 +5,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.item.enchantment.Enchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -31,15 +31,15 @@ public abstract class ShinyNameMixin {
     public abstract int getMaxLevel();
 
     @Shadow
-    public abstract boolean isCursed();
+    public abstract boolean isCurse();
 
     @Inject(
-        method = "getName(I)Lnet/minecraft/text/Text;",
+        method = "getFullname(I)Lnet/minecraft/network/chat/Component;",
         at = @At("TAIL"))
-    private void getName(int level, CallbackInfoReturnable<Text> cir, @Local MutableText mutableText) {
+    private void getName(int level, CallbackInfoReturnable<Component> cir, @Local MutableComponent mutableText) {
         if (!ETMixinPlugin.getMixinConfig("ShinyNameMixin"))
             return;
-        ADShiny.applyNameStyle(mutableText, level, this.getMaxLevel(), this.isCursed(),
+        ADShiny.applyNameStyle(mutableText, level, this.getMaxLevel(), this.isCurse(),
             ThreadLocalRandom.current().nextFloat());
     }
 }

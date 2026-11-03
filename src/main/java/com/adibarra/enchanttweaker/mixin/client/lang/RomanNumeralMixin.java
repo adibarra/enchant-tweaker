@@ -2,7 +2,7 @@ package com.adibarra.enchanttweaker.mixin.client.lang;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.resource.language.TranslationStorage;
+import net.minecraft.client.resources.language.ClientLanguage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,11 +16,11 @@ import com.adibarra.utils.ADRoman;
  * @environment client
  */
 @Environment(EnvType.CLIENT)
-@Mixin(TranslationStorage.class)
+@Mixin(ClientLanguage.class)
 public abstract class RomanNumeralMixin {
 
     @Inject(
-        method = "get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+        method = "getOrDefault(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$romanNumeral$get(String key, String fallback, CallbackInfoReturnable<String> cir) {
@@ -33,7 +33,7 @@ public abstract class RomanNumeralMixin {
     }
 
     @Inject(
-        method = "hasTranslation(Ljava/lang/String;)Z",
+        method = "has(Ljava/lang/String;)Z",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$romanNumeral$hasTranslation(String key, CallbackInfoReturnable<Boolean> cir) {

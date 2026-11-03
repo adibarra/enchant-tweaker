@@ -6,7 +6,7 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.commands.CommandSourceStack;
 
 @SuppressWarnings("unused")
 public class ADBrigadier {
@@ -23,7 +23,7 @@ public class ADBrigadier {
      * @param node
      *            the command node
      */
-    public record Command(String description, Supplier<LiteralCommandNode<ServerCommandSource>> node) {
+    public record Command(String description, Supplier<LiteralCommandNode<CommandSourceStack>> node) {
     }
 
     /**

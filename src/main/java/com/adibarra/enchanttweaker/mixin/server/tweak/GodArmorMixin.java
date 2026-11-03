@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.ProtectionEnchantment;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.ProtectionEnchantment;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,10 +22,10 @@ public abstract class GodArmorMixin {
 
     @Shadow
     @Final
-    public ProtectionEnchantment.Type protectionType;
+    public ProtectionEnchantment.Type type;
 
     @Inject(
-        method = "canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
+        method = "checkCompatibility(Lnet/minecraft/world/item/enchantment/Enchantment;)Z",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$godArmor$allowAllProtectionEnchants(Enchantment other,
@@ -33,7 +33,7 @@ public abstract class GodArmorMixin {
         if (!ETMixinPlugin.getMixinConfig("GodArmorMixin"))
             return;
         if (other instanceof ProtectionEnchantment protectionEnchantment) {
-            cir.setReturnValue(this.protectionType != protectionEnchantment.protectionType);
+            cir.setReturnValue(this.type != protectionEnchantment.type);
         }
     }
 }

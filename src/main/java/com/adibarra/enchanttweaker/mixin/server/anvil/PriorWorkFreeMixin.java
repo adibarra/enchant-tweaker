@@ -1,7 +1,7 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.screen.AnvilScreenHandler;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.inventory.AnvilMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -13,11 +13,11 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = AnvilScreenHandler.class)
+    value = AnvilMenu.class)
 public abstract class PriorWorkFreeMixin {
 
     @ModifyConstant(
-        method = "updateResult()V",
+        method = "createResult()V",
         constant = @Constant(
             longValue = 0L,
             ordinal = 0),
@@ -25,9 +25,8 @@ public abstract class PriorWorkFreeMixin {
     private long enchanttweaker$priorWorkFree$removeRepairCostPenalty(long cost) {
         if (!ETMixinPlugin.getMixinConfig("PriorWorkFreeMixin"))
             return cost;
-        AnvilScreenHandler self = (AnvilScreenHandler) (Object) this;
-        return -(long) self.getSlot(AnvilScreenHandler.INPUT_1_ID).getStack()
-            .getOrDefault(DataComponentTypes.REPAIR_COST, 0)
-            - self.getSlot(AnvilScreenHandler.INPUT_2_ID).getStack().getOrDefault(DataComponentTypes.REPAIR_COST, 0);
+        AnvilMenu self = (AnvilMenu) (Object) this;
+        return -(long) self.getSlot(AnvilMenu.INPUT_SLOT).getItem().getOrDefault(DataComponents.REPAIR_COST, 0)
+            - self.getSlot(AnvilMenu.ADDITIONAL_SLOT).getItem().getOrDefault(DataComponents.REPAIR_COST, 0);
     }
 }
