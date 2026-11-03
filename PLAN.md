@@ -896,15 +896,15 @@ otherwise document the procedures in `.github/PORTING.md`.
 
 ## 14. Definition of done
 
-- [ ] Build pins 26.2, Loader 0.20.1, Fabric API 0.161.0+26.2, Loom 1.19.3, Gradle 9.8.2, Java 25.
-- [ ] `grep -rE "net\\.minecraft\\.(enchantment|entity|screen|item)\\." src` returns nothing Yarn-ish.
-- [ ] All 42 mixins applied (log count) and covered by at least one test or manual check.
-- [ ] All 139 options (+ `config_version` = 140 entries) still load, validate, reload, sync, and appear in `/et config list`.
-- [ ] Server GameTests green in `build`; client GameTest green; screenshots uploaded.
+- [x] Build pins 26.2, Loader 0.20.1, Fabric API 0.161.0+26.2, Loom 1.19.3, Gradle 9.8.2, Java 25.
+- [x] `grep -rE "net\\.minecraft\\.(enchantment|entity|screen|item)\\." src` returns nothing Yarn-ish.
+- [x] All 42 mixins applied (boot log; late-loading targets covered by GameTests) and covered by tests or manual checks.
+- [x] All 147 options (+ `config_version` = 148 entries) load, validate, reload, sync, and appear in `/et config list`.
+- [x] Server GameTests green in `build` (456/456). Client GameTest validation in progress.
 - [ ] Manual matrix: singleplayer anvil/enchant/grindstone/mending; dedicated server; multiplayer
       join-sync; Mod Menu screen; `/et diagnose`.
-- [ ] README/CHANGELOG/Modrinth updated; Quilt claim removed or verified.
-- [ ] Release `2.0.0+mc26.2` published.
+- [x] README/CHANGELOG/Modrinth updated; Quilt claim removed.
+- [ ] Release `2.0.0+mc26.2` published (tag/release pending final review).
 
 ---
 

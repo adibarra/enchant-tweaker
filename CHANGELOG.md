@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.0
+
+### Changed
+
+- Port to Minecraft 26.2 on Fabric Loader (unobfuscated Mojang names, Java 25)
+- Drop Quilt support
+- Update to Loom 1.19.3, Gradle 9.8.2, and Fabric API 0.161.0+26.2
+- Rework enchantment compatibility and level scaling for the data-driven enchantment system
+- Config surface grows from 139 to 147 options
+
+### Added
+
+- Capmod and villager-trade settings for the 26.2-era enchantments: Density, Breach, Wind Burst, and Lunge
+
 ## 1.6.0
 
 ### Added

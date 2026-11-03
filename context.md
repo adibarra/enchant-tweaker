@@ -4,9 +4,10 @@
 > can pick up this work without redoing research. Read only the section(s) you need; each is
 > self-contained and cross-references others by ID.
 >
-> **Status snapshot:** 2026-11-03 19:00 (Asia/Calcutta).
-> Research + plan are complete and written (`PLAN.md`, 1,052 lines). No port code has been written yet.
-> Working tree is clean except for the new untracked `PLAN.md`, `context.md` and `.plan/`.
+> **Status snapshot:** 2026-11-03 20:40 (Asia/Calcutta).
+> Port complete on branch `port/26.2`: M0-M5 done, `./gradlew build` green with all 456 server
+> GameTests passing; client GameTest task is being validated. Remaining: final review, docs/version
+> tag, and release. Working tree has only the final doc/config-key changes uncommitted.
 
 ## Index — read what you need
 
@@ -29,15 +30,16 @@
 
 ## C0. TL;DR and next actions
 
-1. The port target is **Minecraft 26.2** on Fabric Loader (Java 25, no mappings, Mojang names).
-2. Research is done; `PLAN.md` at the repo root is the authoritative plan (phases M0–M6, 42-mixin
-   matrix, test strategy, risk register).
-3. Nothing has been ported yet. Start at **PLAN.md §5 M0**:
-   `git tag pre-26.2`, add `.plan/` to `.gitignore`, confirm baseline build.
-4. Then **M1** (Yarn → Mojang at 1.20.5 via `migrateMappings`), then **M2** (bump to 26.2).
-5. Do not skip the ordering: migrating names first keeps the diff reviewable and is the only way to
-   use Loom's migrator (Yarn does not exist for 26.x).
-6. Delegation is currently blocked (agy quota exhausted, see C8). Work directly until it resets.
+1. Port target is **Minecraft 26.2** on Fabric Loader (Java 25, unobfuscated Mojang names).
+2. M0-M5 are complete: mappings migrated, toolchain bumped, main and gametest sources compile,
+   and all 456 server GameTests pass.
+3. Key commits: `944178b` M1 mappings, `b91f91f` M2 toolchain, `d1000db` M3 main, `e25c2ad` M5
+   tests, `630c566` behavior fixes.
+4. Remaining: validate `runClientGameTest`, finish the final Argon review, commit docs/config keys,
+   then tag `v2.0.0+mc26.2` and release.
+5. Config surface is now 148 entries (147 options + `config_version`), including Density, Breach,
+   Wind Burst, and Lunge capmod/trade keys.
+6. Quilt support was dropped (26.2 loader support is beta-only); README/CI/release metadata updated.
 
 ---
 
