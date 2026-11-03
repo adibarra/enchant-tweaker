@@ -4,9 +4,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,23 +30,39 @@ public abstract class DisableEnchantmentsMixin {
     // reads
     // possible with two independently-published static fields
     @Unique
-    private static volatile Map.Entry<String, Set<ResourceLocation>> enchanttweaker$disableCache;
+    private static volatile Map.Entry<String, Set<Identifier>> enchanttweaker$disableCache;
 
     @Unique
-    private static Set<ResourceLocation> enchanttweaker$parseDisabledEnchants(String config) {
-        Map.Entry<String, Set<ResourceLocation>> cached = enchanttweaker$disableCache;
+    private static Set<Identifier> enchanttweaker$parseDisabledEnchants(String config) {
+        Map.Entry<String, Set<Identifier>> cached = enchanttweaker$disableCache;
         if (cached != null && cached.getKey().equals(config))
             return cached.getValue();
 
-        Set<ResourceLocation> ids = new HashSet<>();
+        Set<Identifier> ids = new HashSet<>();
         for (String entry : config.split(",")) {
-            ResourceLocation id = ResourceLocation.tryParse(entry.trim());
+            Identifier id = Identifier.tryParse(entry.trim());
             if (id != null)
                 ids.add(id);
         }
-        Set<ResourceLocation> parsed = Set.copyOf(ids);
+        Set<Identifier> parsed = Set.copyOf(ids);
         enchanttweaker$disableCache = Map.entry(config, parsed);
         return parsed;
+    }
+
+    @Unique
+    private @Nullable Identifier enchanttweaker$getIdentifier() {
+        if (((Enchantment) (Object) this).description().getContents() instanceof TranslatableContents translatable) {
+            String key = translatable.getKey();
+            // vanilla keys are "enchantment.<namespace>.<path>"
+            if (key.startsWith("enchantment.")) {
+                String rest = key.substring("enchantment.".length());
+                int dot = rest.indexOf('.');
+                if (dot > 0 && dot < rest.length() - 1) {
+                    return Identifier.fromNamespaceAndPath(rest.substring(0, dot), rest.substring(dot + 1));
+                }
+            }
+        }
+        return null;
     }
 
     @Unique
@@ -52,29 +70,11 @@ public abstract class DisableEnchantmentsMixin {
         if (!ETMixinPlugin.getMixinConfig("DisableEnchantmentsMixin"))
             return false;
         String config = ETMixinPlugin.getConfig().getOrDefault("disable_enchantments", "");
-        Set<ResourceLocation> disabled = enchanttweaker$parseDisabledEnchants(config);
+        Set<Identifier> disabled = enchanttweaker$parseDisabledEnchants(config);
         if (disabled.isEmpty())
             return false;
-        ResourceLocation id = BuiltInRegistries.ENCHANTMENT.getKey((Enchantment) (Object) this);
+        Identifier id = enchanttweaker$getIdentifier();
         return id != null && disabled.contains(id);
-    }
-
-    @Inject(
-        method = "isDiscoverable()Z",
-        at = @At("HEAD"),
-        cancellable = true)
-    private void enchanttweaker$disableEnchantments$blockRandomSelection(CallbackInfoReturnable<Boolean> cir) {
-        if (enchanttweaker$isDisabled())
-            cir.setReturnValue(false);
-    }
-
-    @Inject(
-        method = "isTradeable()Z",
-        at = @At("HEAD"),
-        cancellable = true)
-    private void enchanttweaker$disableEnchantments$blockBookOffer(CallbackInfoReturnable<Boolean> cir) {
-        if (enchanttweaker$isDisabled())
-            cir.setReturnValue(false);
     }
 
     @Inject(
@@ -84,5 +84,34 @@ public abstract class DisableEnchantmentsMixin {
     private void enchanttweaker$disableEnchantments$blockMaxLevel(CallbackInfoReturnable<Integer> cir) {
         if (enchanttweaker$isDisabled())
             cir.setReturnValue(0);
+    }
+
+    @Inject(
+        method = "canEnchant(Lnet/minecraft/world/item/ItemStack;)Z",
+        at = @At("HEAD"),
+        cancellable = true)
+    private void enchanttweaker$disableEnchantments$blockAnvil(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+        if (enchanttweaker$isDisabled())
+            cir.setReturnValue(false);
+    }
+
+    @Inject(
+        method = "isSupportedItem(Lnet/minecraft/world/item/ItemStack;)Z",
+        at = @At("HEAD"),
+        cancellable = true)
+    private void enchanttweaker$disableEnchantments$blockEnchanting(ItemStack stack,
+        CallbackInfoReturnable<Boolean> cir) {
+        if (enchanttweaker$isDisabled())
+            cir.setReturnValue(false);
+    }
+
+    @Inject(
+        method = "isPrimaryItem(Lnet/minecraft/world/item/ItemStack;)Z",
+        at = @At("HEAD"),
+        cancellable = true)
+    private void enchanttweaker$disableEnchantments$blockRandomSelection(ItemStack stack,
+        CallbackInfoReturnable<Boolean> cir) {
+        if (enchanttweaker$isDisabled())
+            cir.setReturnValue(false);
     }
 }

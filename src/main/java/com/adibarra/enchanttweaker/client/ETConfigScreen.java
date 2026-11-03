@@ -6,7 +6,7 @@ import java.util.Map;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -144,7 +144,7 @@ public final class ETConfigScreen extends Screen {
             model.toggle(key);
             rebuildWidgets();
         } else {
-            minecraft.setScreen(new ETConfigValueScreen(this, model, key));
+            minecraft.gui.setScreen(new ETConfigValueScreen(this, model, key));
         }
     }
 
@@ -182,15 +182,15 @@ public final class ETConfigScreen extends Screen {
         }
         config.setAllAndPersist(model.changes());
         ETMixinPlugin.clearCaches();
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 
     private void requestClose() {
         if (!model.isDirty()) {
-            minecraft.setScreen(parent);
+            minecraft.gui.setScreen(parent);
             return;
         }
-        minecraft.setScreen(new ConfirmScreen(discard -> minecraft.setScreen(discard ? parent : this),
+        minecraft.gui.setScreen(new ConfirmScreen(discard -> minecraft.gui.setScreen(discard ? parent : this),
             uiText("discard.title", "Discard unsaved changes?"),
             uiText("discard.message", "Your Enchant Tweaker changes have not been saved."),
             uiText("discard.confirm", "Discard"), uiText("discard.cancel", "Keep Editing")));
@@ -202,27 +202,25 @@ public final class ETConfigScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(font, title, width / 2, 10, 0xFFFFFF);
-        context.drawCenteredString(font, uiText("page", "Page %s / %s", model.pageIndex() + 1, model.pageCount()),
-            width / 2, height - 44, 0xA0A0A0);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(context, mouseX, mouseY, partialTick);
+        context.centeredText(font, title, width / 2, 10, 0xFFFFFFFF);
+        context.centeredText(font, uiText("page", "Page %s / %s", model.pageIndex() + 1, model.pageCount()), width / 2,
+            height - 44, 0xFFA0A0A0);
         if (model.hasSearchQuery() && model.visibleKeys().isEmpty()) {
-            context.drawCenteredString(font, uiText("search.empty", "No matching settings"), width / 2, 100, 0xA0A0A0);
+            context.centeredText(font, uiText("search.empty", "No matching settings"), width / 2, 100, 0xFFA0A0A0);
         }
         if (saveFailed) {
-            context.drawCenteredString(font,
-                uiText("save_failed", "Configuration is unavailable; changes were not saved")
-                    .withStyle(ChatFormatting.RED),
-                width / 2, height - 62, 0xFFFFFF);
+            context.centeredText(font, uiText("save_failed", "Configuration is unavailable; changes were not saved")
+                .withStyle(ChatFormatting.RED), width / 2, height - 62, 0xFFFFFFFF);
         } else if (minecraft.level != null) {
-            context.drawCenteredString(font,
+            context.centeredText(font,
                 uiText("read_only", "Leave the world before editing local settings").withStyle(ChatFormatting.YELLOW),
-                width / 2, height - 62, 0xFFFFFF);
+                width / 2, height - 62, 0xFFFFFFFF);
         } else if (model.hasRestartRequiredChanges()) {
-            context.drawCenteredString(font,
+            context.centeredText(font,
                 uiText("restart", "Changing Mod Enabled requires a restart").withStyle(ChatFormatting.LIGHT_PURPLE),
-                width / 2, height - 62, 0xFFFFFF);
+                width / 2, height - 62, 0xFFFFFFFF);
         }
     }
 

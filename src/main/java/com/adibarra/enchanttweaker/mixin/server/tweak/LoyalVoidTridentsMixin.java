@@ -3,7 +3,7 @@ package com.adibarra.enchanttweaker.mixin.server.tweak;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.projectile.ThrownTrident;
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -46,8 +46,8 @@ public abstract class LoyalVoidTridentsMixin extends Projectile {
         if (this.getOwner() == null)
             return;
 
-        if (this.getY() <= this.level().getMinBuildHeight()) {
-            this.setPos(this.getX(), this.level().getMinBuildHeight(), this.getZ());
+        if (this.getY() <= this.level().getMinY()) {
+            this.setPos(this.getX(), this.level().getMinY(), this.getZ());
             this.dealtDamage = true;
             this.setDeltaMovement(0, 0, 0);
         }

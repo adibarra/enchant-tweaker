@@ -19,7 +19,7 @@ import com.adibarra.enchanttweaker.AnvilCost;
 public abstract class NotTooExpensiveMixin {
 
     @ModifyConstant(
-        method = "renderLabels(Lnet/minecraft/client/gui/GuiGraphics;II)V",
+        method = "extractLabels(Lnet/minecraft/client/gui/GuiGraphicsExtractor;II)V",
         constant = @Constant(
             intValue = 40,
             ordinal = 0))

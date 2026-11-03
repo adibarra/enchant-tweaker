@@ -8,7 +8,7 @@ import io.netty.handler.codec.DecoderException;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public record ConfigSyncPayload(int version, Map<String, String> configData) implements CustomPacketPayload {
 
@@ -25,7 +25,7 @@ public record ConfigSyncPayload(int version, Map<String, String> configData) imp
     public static final int MAX_CONFIG_ENTRIES = 256;
 
     public static final CustomPacketPayload.Type<ConfigSyncPayload> ID = new CustomPacketPayload.Type<>(
-        ResourceLocation.tryBuild("enchanttweaker", "config_sync_v" + PROTOCOL_VERSION));
+        Identifier.fromNamespaceAndPath("enchanttweaker", "config_sync_v" + PROTOCOL_VERSION));
 
     /** stamps payloads with the protocol version */
     public ConfigSyncPayload(Map<String, String> configData) {

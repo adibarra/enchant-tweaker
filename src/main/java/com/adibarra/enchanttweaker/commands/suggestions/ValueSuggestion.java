@@ -14,7 +14,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.item.enchantment.Enchantment;
 
@@ -74,19 +74,19 @@ public final class ValueSuggestion {
     private static List<String> enchantmentPaths(RegistryAccess registryManager) {
         if (registryManager == null)
             return List.of();
-        Registry<Enchantment> registry = registryManager.registryOrThrow(Registries.ENCHANTMENT);
+        Registry<Enchantment> registry = registryManager.lookupOrThrow(Registries.ENCHANTMENT);
         return registry.keySet().stream()
-            .map(id -> ResourceLocation.DEFAULT_NAMESPACE.equals(id.getNamespace()) ? id.getPath() : id.toString())
-            .sorted().toList();
+            .map(id -> Identifier.DEFAULT_NAMESPACE.equals(id.getNamespace()) ? id.getPath() : id.toString()).sorted()
+            .toList();
     }
 
     private static List<String> damageTypePaths(RegistryAccess registryManager) {
         if (registryManager == null)
             return List.of();
-        Registry<DamageType> registry = registryManager.registryOrThrow(Registries.DAMAGE_TYPE);
+        Registry<DamageType> registry = registryManager.lookupOrThrow(Registries.DAMAGE_TYPE);
         return registry.keySet().stream()
-            .map(id -> ResourceLocation.DEFAULT_NAMESPACE.equals(id.getNamespace()) ? id.getPath() : id.toString())
-            .sorted().toList();
+            .map(id -> Identifier.DEFAULT_NAMESPACE.equals(id.getNamespace()) ? id.getPath() : id.toString()).sorted()
+            .toList();
     }
 
     private static CompletableFuture<Suggestions> buildSuggestions(SuggestionsBuilder builder, String key,

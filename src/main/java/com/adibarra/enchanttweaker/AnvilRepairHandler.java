@@ -2,6 +2,7 @@ package com.adibarra.enchanttweaker;
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -67,7 +68,7 @@ public final class AnvilRepairHandler {
         }
 
         // swing client-side, repair server-side
-        if (world.isClientSide)
+        if (world.isClientSide())
             return InteractionResult.SUCCESS;
 
         BlockState repaired;
@@ -79,7 +80,8 @@ public final class AnvilRepairHandler {
         }
 
         world.setBlock(pos, repaired, Block.UPDATE_ALL);
-        world.levelEvent(LevelEvent.SOUND_ANVIL_USED, pos, 0);
+        if (world instanceof ServerLevel serverLevel)
+            serverLevel.levelEvent(null, LevelEvent.SOUND_ANVIL_USED, pos, 0);
 
         if (!player.hasInfiniteMaterials()) {
             held.shrink(consumeCount);

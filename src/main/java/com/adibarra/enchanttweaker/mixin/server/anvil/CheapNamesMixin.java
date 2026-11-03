@@ -5,6 +5,7 @@ import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.ItemCombinerMenu;
+import net.minecraft.world.inventory.ItemCombinerMenuSlotDefinition;
 import net.minecraft.world.inventory.MenuType;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -30,8 +31,8 @@ public abstract class CheapNamesMixin extends ItemCombinerMenu {
 
     @SuppressWarnings("unused")
     private CheapNamesMixin(@Nullable MenuType<?> type, int syncId, Inventory playerInventory,
-        ContainerLevelAccess context) {
-        super(type, syncId, playerInventory, context);
+        ContainerLevelAccess context, ItemCombinerMenuSlotDefinition slotDefinition) {
+        super(type, syncId, playerInventory, context, slotDefinition);
     }
 
     @Inject(

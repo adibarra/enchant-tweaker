@@ -3,6 +3,7 @@ package com.adibarra.enchanttweaker.mixin.server.grindstone;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.GrindstoneMenu;
@@ -31,21 +32,21 @@ public abstract class GrindstoneOutputSlotMixin {
 
     @Shadow
     @Final
-    GrindstoneMenu field_16780; // parent handler reference
+    GrindstoneMenu this$0;
 
     @Inject(
-        method = "onTakeItem(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)V",
+        method = "onTake(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)V",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$grindstoneDisenchant$onTakeItem(Player player, ItemStack stack, CallbackInfo ci) {
         if (!ETMixinPlugin.getMixinConfig("GrindstoneDisenchantMixin"))
             return;
 
-        int bookSlot = ((GrindstoneDisenchantAccess) field_16780).enchanttweaker$getBookSlot();
+        int bookSlot = ((GrindstoneDisenchantAccess) this$0).enchanttweaker$getBookSlot();
         if (bookSlot < 0)
             return; // not a disenchant operation, let vanilla handle
 
-        Container input = ((GrindstoneDisenchantAccess) field_16780).enchanttweaker$getInput();
+        Container input = ((GrindstoneDisenchantAccess) this$0).enchanttweaker$getInput();
         int enchantedSlot = bookSlot == 0 ? 1 : 0;
         ItemStack enchantedItem = input.getItem(enchantedSlot);
         boolean keepItem = ETMixinPlugin.getConfig().getOrDefault("grindstone_disenchant_keep_item", true);
@@ -56,17 +57,17 @@ public abstract class GrindstoneOutputSlotMixin {
             if (enchantedItem.is(Items.ENCHANTED_BOOK)) {
                 // split books by removing the extracted enchantment
                 ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(enchantedItem);
-                Enchantment extracted = null;
+                Holder<Enchantment> extracted = null;
                 for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
-                    if (!entry.getKey().value().isCurse()) {
-                        extracted = entry.getKey().value();
+                    if (!entry.getKey().is(EnchantmentTags.CURSE)) {
+                        extracted = entry.getKey();
                         break;
                     }
                 }
                 ItemEnchantments.Mutable builder = new ItemEnchantments.Mutable(enchants);
                 if (extracted != null) {
-                    Enchantment extractedEnchantment = extracted;
-                    builder.removeIf(enchantment -> enchantment.value() == extractedEnchantment);
+                    Holder<Enchantment> extractedEnchantment = extracted;
+                    builder.removeIf(enchantment -> enchantment.equals(extractedEnchantment));
                 }
                 ItemEnchantments remaining = builder.toImmutable();
                 if (remaining.isEmpty()) {
@@ -84,7 +85,7 @@ public abstract class GrindstoneOutputSlotMixin {
                 cleanItem.remove(DataComponents.REPAIR_COST);
                 ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(cleanItem);
                 ItemEnchantments.Mutable builder = new ItemEnchantments.Mutable(enchants);
-                builder.removeIf(enchantment -> !enchantment.value().isCurse());
+                builder.removeIf(enchantment -> !enchantment.is(EnchantmentTags.CURSE));
                 EnchantmentHelper.setEnchantments(cleanItem, builder.toImmutable());
             }
 

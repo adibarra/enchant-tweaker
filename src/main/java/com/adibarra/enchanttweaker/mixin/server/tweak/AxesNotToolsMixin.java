@@ -1,11 +1,10 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.At;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
@@ -14,18 +13,20 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = DiggerItem.class)
+    value = ItemStack.class)
 public abstract class AxesNotToolsMixin {
 
-    @ModifyConstant(
-        method = "hurtEnemy(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/LivingEntity;)Z",
-        constant = @Constant(
-            intValue = 2,
-            ordinal = 0))
-    private int enchanttweaker$axesNotTools$modifySelfDamage(int orig, ItemStack stack) {
+    @ModifyExpressionValue(
+        method = "postHurtEnemy(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/LivingEntity;)V",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/item/component/Weapon;itemDamagePerAttack()I"))
+    private int enchanttweaker$axesNotTools$modifySelfDamage(int orig) {
         if (!ETMixinPlugin.getMixinConfig("AxesNotToolsMixin"))
             return orig;
-        boolean isAxe = stack.getItem() instanceof AxeItem;
-        return isAxe ? 1 : orig;
+        ItemStack stack = (ItemStack) (Object) this;
+        if (!(stack.getItem() instanceof AxeItem))
+            return orig;
+        return orig == 2 ? 1 : orig;
     }
 }

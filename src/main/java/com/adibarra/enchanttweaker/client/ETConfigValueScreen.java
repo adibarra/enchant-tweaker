@@ -5,7 +5,7 @@ import java.util.Locale;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -70,29 +70,27 @@ final class ETConfigValueScreen extends Screen {
 
     private void apply() {
         if (model.setValue(key, normalizedInput())) {
-            minecraft.setScreen(parent);
+            minecraft.gui.setScreen(parent);
         }
     }
 
     @Override
     public void onClose() {
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(font, title, width / 2, 20, 0xFFFFFF);
-        context.drawCenteredString(font, Component.literal(key).withStyle(ChatFormatting.GRAY), width / 2, 38,
-            0xFFFFFF);
-        context.drawCenteredString(
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(context, mouseX, mouseY, partialTick);
+        context.centeredText(font, title, width / 2, 20, 0xFFFFFFFF);
+        context.centeredText(font, Component.literal(key).withStyle(ChatFormatting.GRAY), width / 2, 38, 0xFFFFFFFF);
+        context.centeredText(
             font, ETConfigScreen.uiText("edit.expected_default", "Expected: %s  Default: %s",
                 ETConfigSchema.expected(key), ETConfigSchema.defaultOf(key)).withStyle(ChatFormatting.DARK_GRAY),
-            width / 2, 126, 0xFFFFFF);
+            width / 2, 126, 0xFFFFFFFF);
         if (!ETConfigSchema.isValid(key, normalizedInput())) {
-            context.drawCenteredString(font, ETConfigScreen
-                .uiText("edit.invalid", "Enter %s", ETConfigSchema.expected(key)).withStyle(ChatFormatting.RED),
-                width / 2, 144, 0xFFFFFF);
+            context.centeredText(font, ETConfigScreen.uiText("edit.invalid", "Enter %s", ETConfigSchema.expected(key))
+                .withStyle(ChatFormatting.RED), width / 2, 144, 0xFFFFFFFF);
         }
     }
 }

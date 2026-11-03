@@ -1,16 +1,16 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import net.minecraft.world.entity.LivingEntity;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.At;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.utils.ADUtils;
 
 /**
  * @description scales multishot arrows fired according to enchantment level
@@ -26,17 +26,18 @@ public abstract class MoreMultishotMixin {
         return (int) Math.clamp(projectileCount, 1, 256);
     }
 
-    @ModifyConstant(
+    @ModifyExpressionValue(
         method = "draw(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/List;",
-        constant = @Constant(
-            intValue = 3,
-            ordinal = 0))
-    private static int enchanttweaker$moreMultishot$modifyNumProjectiles(int orig, ItemStack weaponStack,
-        ItemStack projectileStack, LivingEntity shooter) {
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;processProjectileCount(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/Entity;I)I"))
+    private static int enchanttweaker$moreMultishot$modifyNumProjectiles(int orig, @Local(
+        argsOnly = true,
+        ordinal = 0) ItemStack weaponStack) {
         if (!ETMixinPlugin.getMixinConfig("MoreMultishotMixin"))
             return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_multishot_per_level", 2);
-        int multishotLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MULTISHOT, weaponStack);
+        int multishotLevel = ADUtils.getEnchantmentLevel(weaponStack, Enchantments.MULTISHOT);
         return enchanttweaker$moreMultishot$projectileCount(multishotLevel, perLevel);
     }
 }

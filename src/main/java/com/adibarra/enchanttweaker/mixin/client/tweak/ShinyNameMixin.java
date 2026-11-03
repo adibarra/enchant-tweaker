@@ -5,11 +5,12 @@ import java.util.concurrent.ThreadLocalRandom;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.item.enchantment.Enchantment;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -27,19 +28,14 @@ import com.adibarra.utils.ADShiny;
     value = Enchantment.class)
 public abstract class ShinyNameMixin {
 
-    @Shadow
-    public abstract int getMaxLevel();
-
-    @Shadow
-    public abstract boolean isCurse();
-
     @Inject(
-        method = "getFullname(I)Lnet/minecraft/network/chat/Component;",
+        method = "getFullname(Lnet/minecraft/core/Holder;I)Lnet/minecraft/network/chat/Component;",
         at = @At("TAIL"))
-    private void getName(int level, CallbackInfoReturnable<Component> cir, @Local MutableComponent mutableText) {
+    private static void getName(Holder<Enchantment> holder, int level, CallbackInfoReturnable<Component> cir,
+        @Local MutableComponent mutableText) {
         if (!ETMixinPlugin.getMixinConfig("ShinyNameMixin"))
             return;
-        ADShiny.applyNameStyle(mutableText, level, this.getMaxLevel(), this.isCurse(),
+        ADShiny.applyNameStyle(mutableText, level, holder.value().getMaxLevel(), holder.is(EnchantmentTags.CURSE),
             ThreadLocalRandom.current().nextFloat());
     }
 }

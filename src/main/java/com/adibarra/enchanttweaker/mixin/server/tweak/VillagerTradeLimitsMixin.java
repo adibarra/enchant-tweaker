@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
@@ -38,7 +38,7 @@ public abstract class VillagerTradeLimitsMixin {
     // reads
     // possible with two independently-published static fields
     @Unique
-    private static volatile Map.Entry<String, Set<ResourceLocation>> enchanttweaker$noRestockCache;
+    private static volatile Map.Entry<String, Set<Identifier>> enchanttweaker$noRestockCache;
 
     @Inject(
         method = "isOutOfStock()Z",
@@ -74,7 +74,7 @@ public abstract class VillagerTradeLimitsMixin {
         int globalMax = ETMixinPlugin.getConfig().getOrDefault("enchant_trade_max_uses", -1);
         int effectiveMax = -1;
         for (var entry : enchants.entrySet()) {
-            ResourceLocation id = entry.getKey().unwrapKey().map(k -> k.location()).orElse(null);
+            Identifier id = entry.getKey().unwrapKey().map(k -> k.identifier()).orElse(null);
             int candidate = id == null ? globalMax : enchanttweaker$getPerEnchantMax(id, globalMax);
             if (candidate >= 0)
                 effectiveMax = effectiveMax < 0 ? candidate : Math.min(effectiveMax, candidate);
@@ -84,11 +84,11 @@ public abstract class VillagerTradeLimitsMixin {
     }
 
     @Unique
-    private static int enchanttweaker$getPerEnchantMax(ResourceLocation id, int globalMax) {
+    private static int enchanttweaker$getPerEnchantMax(Identifier id, int globalMax) {
         int namespacedMax = ETMixinPlugin.getConfig().getOrDefault("trade_" + id, -1);
         if (namespacedMax >= 0)
             return namespacedMax;
-        if (ResourceLocation.DEFAULT_NAMESPACE.equals(id.getNamespace())) {
+        if (Identifier.DEFAULT_NAMESPACE.equals(id.getNamespace())) {
             int legacyMax = ETMixinPlugin.getConfig().getOrDefault("trade_" + id.getPath(), -1);
             if (legacyMax >= 0)
                 return legacyMax;
@@ -97,20 +97,20 @@ public abstract class VillagerTradeLimitsMixin {
     }
 
     @Unique
-    private static Set<ResourceLocation> enchanttweaker$parseNoRestockList(String config) {
-        Map.Entry<String, Set<ResourceLocation>> cached = enchanttweaker$noRestockCache;
+    private static Set<Identifier> enchanttweaker$parseNoRestockList(String config) {
+        Map.Entry<String, Set<Identifier>> cached = enchanttweaker$noRestockCache;
         if (cached != null && cached.getKey().equals(config)) {
             return cached.getValue();
         }
-        Set<ResourceLocation> names = new HashSet<>();
+        Set<Identifier> names = new HashSet<>();
         if (!config.isEmpty()) {
             for (String entry : config.split(",")) {
-                ResourceLocation id = ResourceLocation.tryParse(entry.trim());
+                Identifier id = Identifier.tryParse(entry.trim());
                 if (id != null)
                     names.add(id);
             }
         }
-        Set<ResourceLocation> parsed = Set.copyOf(names);
+        Set<Identifier> parsed = Set.copyOf(names);
         enchanttweaker$noRestockCache = new AbstractMap.SimpleImmutableEntry<>(config, parsed);
         return parsed;
     }
@@ -129,9 +129,9 @@ public abstract class VillagerTradeLimitsMixin {
         if (noRestockConfig.isEmpty())
             return true;
 
-        Set<ResourceLocation> noRestock = enchanttweaker$parseNoRestockList(noRestockConfig);
+        Set<Identifier> noRestock = enchanttweaker$parseNoRestockList(noRestockConfig);
         for (var entry : enchants.entrySet()) {
-            ResourceLocation id = entry.getKey().unwrapKey().map(k -> k.location()).orElse(null);
+            Identifier id = entry.getKey().unwrapKey().map(k -> k.identifier()).orElse(null);
             if (id != null && noRestock.contains(id))
                 return false;
         }

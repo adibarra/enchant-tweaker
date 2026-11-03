@@ -1,37 +1,50 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.core.Holder;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.item.enchantment.ProtectionEnchantment;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
+import com.adibarra.utils.ADUtils;
 
 /**
  * @description scale fire protection duration multiplicatively
  * @environment server
  */
 @Mixin(
-    value = ProtectionEnchantment.class)
+    value = LivingEntity.class)
 public abstract class MoreFireProtectionMixin {
 
-    @Inject(
-        method = "getFireAfterDampener(Lnet/minecraft/world/entity/LivingEntity;I)I",
-        at = @At("HEAD"),
-        cancellable = true)
-    private static void enchanttweaker$moreFireProtection$multiplicative(LivingEntity entity, int duration,
-        CallbackInfoReturnable<Integer> cir) {
-        if (!ETMixinPlugin.getMixinConfig("MoreFireProtectionMixin"))
-            return;
-        int level = EnchantmentHelper.getEnchantmentLevel(Enchantments.FIRE_PROTECTION, entity);
-        if (level > 0) {
-            double base = Math.clamp(ETMixinPlugin.getConfig().getOrDefault("more_fire_protection_base", 0.85), 0.0,
-                1.0);
-            cir.setReturnValue((int) (duration * Math.pow(base, level)));
+    @Unique
+    private static int enchanttweaker$moreFireProtection$totalLevel(LivingEntity entity) {
+        int total = 0;
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST,
+                EquipmentSlot.HEAD}) {
+            total += ADUtils.getEnchantmentLevel(entity.getItemBySlot(slot), Enchantments.FIRE_PROTECTION);
         }
+        return total;
+    }
+
+    @WrapOperation(
+        method = "igniteForTicks(I)V",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/LivingEntity;getAttributeValue(Lnet/minecraft/core/Holder;)D"))
+    private double enchanttweaker$moreFireProtection$multiplicative(LivingEntity entity, Holder<Attribute> attribute,
+        Operation<Double> original) {
+        if (!ETMixinPlugin.getMixinConfig("MoreFireProtectionMixin"))
+            return original.call(entity, attribute);
+        int level = enchanttweaker$moreFireProtection$totalLevel(entity);
+        if (level <= 0)
+            return original.call(entity, attribute);
+        double base = Math.clamp(ETMixinPlugin.getConfig().getOrDefault("more_fire_protection_base", 0.85), 0.0, 1.0);
+        return Math.pow(base, level);
     }
 }

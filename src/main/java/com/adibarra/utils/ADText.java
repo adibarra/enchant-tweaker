@@ -54,9 +54,8 @@ public class ADText {
     public static MutableComponent buildCmdLink(String base, String literal) {
         String cmd = "/" + base + " " + literal;
         return Component.literal(cmd)
-            .setStyle(Style.EMPTY.withColor(ChatFormatting.AQUA)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to run " + cmd))));
+            .setStyle(Style.EMPTY.withColor(ChatFormatting.AQUA).withClickEvent(new ClickEvent.RunCommand(cmd))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to run " + cmd))));
     }
 
     /**

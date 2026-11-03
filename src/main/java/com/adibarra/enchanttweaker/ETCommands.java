@@ -60,9 +60,9 @@ public class ETCommands {
     }
 
     public static void registerCommands() {
-        CommandRegistrationCallback.EVENT.register((commandDispatcher, registryAccess, environment) -> {
+        CommandRegistrationCallback.EVENT.register((commandDispatcher, buildContext, environment) -> {
             CommandNode<CommandSourceStack> baseNode = Commands.literal(BASE_CMD)
-                .requires(source -> source.hasPermission(2)).executes(new BaseCommand()).build();
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS)).executes(new BaseCommand()).build();
 
             for (ADBrigadier.Command command : COMMANDS) {
                 baseNode.addChild(command.node().get());

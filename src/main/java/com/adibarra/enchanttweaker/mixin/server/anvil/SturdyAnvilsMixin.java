@@ -16,7 +16,7 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
 public abstract class SturdyAnvilsMixin {
 
     @ModifyConstant(
-        method = "method_24922(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V",
+        method = "lambda$onTake$0(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V",
         constant = @Constant(
             floatValue = 0.12f,
             ordinal = 0))

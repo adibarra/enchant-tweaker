@@ -7,14 +7,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 
+import net.minecraft.core.Holder;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
@@ -43,14 +46,79 @@ public class ADUtils {
      * @return the path, or empty if not registered
      */
     public static @Nullable String getEnchantmentPath(Enchantment enchantment) {
+        if (enchantment == null)
+            return null;
         String cached = ENCHANTMENT_PATH_CACHE.get(enchantment);
         if (cached != null)
             return cached;
-        String path = BuiltInRegistries.ENCHANTMENT.getResourceKey(enchantment).map(key -> key.location().getPath())
-            .orElse(null);
-        if (path != null)
+        if (enchantment.description().getContents() instanceof TranslatableContents translatable) {
+            String key = translatable.getKey();
+            int lastDot = key.lastIndexOf('.');
+            String path = lastDot >= 0 ? key.substring(lastDot + 1) : key;
             ENCHANTMENT_PATH_CACHE.put(enchantment, path);
-        return path;
+            return path;
+        }
+        return null;
+    }
+
+    /**
+     * gets the registry path of an enchantment holder (e.g. "sharpness", "mending")
+     *
+     * @param holder
+     *            the enchantment holder
+     * @return the path, or empty if not registered
+     */
+    public static @Nullable String getEnchantmentPath(Holder<Enchantment> holder) {
+        if (holder == null)
+            return null;
+        return holder.unwrapKey().map(key -> key.identifier().getPath())
+            .orElseGet(() -> getEnchantmentPath(holder.value()));
+    }
+
+    /**
+     * checks whether an enchantment is the one identified by the given key
+     *
+     * @param enchantment
+     *            the enchantment
+     * @param key
+     *            the expected enchantment key
+     * @return true when the path matches
+     */
+    public static boolean isEnchantment(Enchantment enchantment, ResourceKey<Enchantment> key) {
+        String path = getEnchantmentPath(enchantment);
+        return path != null && path.equals(key.identifier().getPath());
+    }
+
+    /**
+     * checks whether an enchantment holder is the one identified by the given key
+     *
+     * @param holder
+     *            the enchantment holder
+     * @param key
+     *            the expected enchantment key
+     * @return true when the key matches
+     */
+    public static boolean isEnchantment(Holder<Enchantment> holder, ResourceKey<Enchantment> key) {
+        return holder != null && holder.unwrapKey().map(k -> k.equals(key)).orElse(false);
+    }
+
+    /**
+     * gets the level of an enchantment on an item stack without registry access
+     *
+     * @param stack
+     *            the item stack
+     * @param key
+     *            the enchantment key
+     * @return the level, or 0 when absent
+     */
+    public static int getEnchantmentLevel(ItemStack stack, ResourceKey<Enchantment> key) {
+        if (stack == null || stack.isEmpty() || key == null)
+            return 0;
+        for (var entry : EnchantmentHelper.getEnchantmentsForCrafting(stack).entrySet()) {
+            if (entry.getKey().unwrapKey().map(k -> k.equals(key)).orElse(false))
+                return entry.getIntValue();
+        }
+        return 0;
     }
 
     /**
@@ -63,7 +131,7 @@ public class ADUtils {
      */
     public static void broadcastOps(MinecraftServer server, MutableComponent msg) {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (server.getPlayerList().isOp(player.getGameProfile())) {
+            if (server.getPlayerList().isOp(player.nameAndId())) {
                 player.sendSystemMessage(msg);
             }
         }

@@ -2,9 +2,10 @@ package com.adibarra.enchanttweaker.mixin.server.tweak;
 
 import java.util.List;
 
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -29,27 +30,24 @@ import com.adibarra.utils.ADUtils;
 public abstract class BetterMendingMixin {
 
     @Shadow
-    protected abstract int xpToDurability(int i);
-
-    @Shadow
-    protected abstract int durabilityToXp(int i);
-
-    @Shadow
-    protected abstract int repairPlayerItems(Player player, int amount);
+    protected abstract int repairPlayerItems(ServerPlayer player, int amount);
 
     @Inject(
-        method = "repairPlayerItems(Lnet/minecraft/world/entity/player/Player;I)I",
+        method = "repairPlayerItems(Lnet/minecraft/server/level/ServerPlayer;I)I",
         at = @At("HEAD"),
         cancellable = true)
-    private void enchanttweaker$betterMending$modifyRepairPlayerGears(Player player, int amount,
+    private void enchanttweaker$betterMending$modifyRepairPlayerGears(ServerPlayer player, int amount,
         CallbackInfoReturnable<Integer> cir) {
         if (!ETMixinPlugin.getMixinConfig("BetterMendingMixin"))
             return;
         Inventory inv = player.getInventory();
         ItemStack repairItem = ADUtils.getMatchingItem(
-            List.of(new ADUtils.Inventory(inv.getSelected()), new ADUtils.Inventory(inv.offhand),
-                new ADUtils.Inventory(inv.armor), ADUtils.getPlayerHotbar(player), new ADUtils.Inventory(inv.items)),
-            (stack) -> EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, stack) > 0 && stack.isDamaged());
+            List.of(new ADUtils.Inventory(player.getMainHandItem()), new ADUtils.Inventory(player.getOffhandItem()),
+                new ADUtils.Inventory(
+                    List.of(player.getItemBySlot(EquipmentSlot.FEET), player.getItemBySlot(EquipmentSlot.LEGS),
+                        player.getItemBySlot(EquipmentSlot.CHEST), player.getItemBySlot(EquipmentSlot.HEAD))),
+                ADUtils.getPlayerHotbar(player), new ADUtils.Inventory(inv.getNonEquipmentItems())),
+            (stack) -> ADUtils.getEnchantmentLevel(stack, Enchantments.MENDING) > 0 && stack.isDamaged());
 
         if (repairItem == null) {
             cir.setReturnValue(amount);
@@ -58,14 +56,18 @@ public abstract class BetterMendingMixin {
 
         // use the running `amount` (xp still available on this call), not the orb's
         // original this.amount
-        int i = Math.min(this.xpToDurability(amount), repairItem.getDamageValue());
-        repairItem.setDamageValue(repairItem.getDamageValue() - i);
+        int durability = EnchantmentHelper.modifyDurabilityToRepairFromXp(player.level(), repairItem, amount);
+        if (durability <= 0) {
+            cir.setReturnValue(amount);
+            return;
+        }
+        int repaired = Math.min(durability, repairItem.getDamageValue());
+        repairItem.setDamageValue(repairItem.getDamageValue() - repaired);
         // pass the repaired item's mending level to moremending
         if ((Object) this instanceof MendingLevelAccess access) {
-            access.enchanttweaker$setMendingLevel(
-                EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, repairItem));
+            access.enchanttweaker$setMendingLevel(ADUtils.getEnchantmentLevel(repairItem, Enchantments.MENDING));
         }
-        int experience = amount - this.durabilityToXp(i);
+        int experience = amount - repaired * amount / durability;
         if (experience > 0) {
             cir.setReturnValue(this.repairPlayerItems(player, experience));
             return;

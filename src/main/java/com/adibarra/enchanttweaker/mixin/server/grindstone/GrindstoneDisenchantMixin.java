@@ -5,6 +5,7 @@ import java.util.List;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.Holder;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.inventory.GrindstoneMenu;
 import net.minecraft.world.item.ItemStack;
@@ -87,7 +88,7 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
 
         List<Object2IntMap.Entry<Holder<Enchantment>>> nonCurse = new ArrayList<>();
         for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
-            if (!entry.getKey().value().isCurse()) {
+            if (!entry.getKey().is(EnchantmentTags.CURSE)) {
                 nonCurse.add(entry);
             }
         }
@@ -101,10 +102,10 @@ public abstract class GrindstoneDisenchantMixin implements GrindstoneDisenchantA
 
         if (enchantedItem.is(Items.ENCHANTED_BOOK) && nonCurse.size() > 1) {
             Object2IntMap.Entry<Holder<Enchantment>> picked = nonCurse.getFirst();
-            outputBook.enchant(picked.getKey().value(), picked.getIntValue());
+            outputBook.enchant(picked.getKey(), picked.getIntValue());
         } else {
             for (Object2IntMap.Entry<Holder<Enchantment>> entry : nonCurse) {
-                outputBook.enchant(entry.getKey().value(), entry.getIntValue());
+                outputBook.enchant(entry.getKey(), entry.getIntValue());
             }
         }
 

@@ -9,8 +9,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
@@ -47,7 +47,7 @@ public abstract class ProtectionBypassMixin {
                 if (trimmed.isEmpty())
                     continue;
                 String normalized = trimmed.contains(":") ? trimmed : "minecraft:" + trimmed;
-                ResourceLocation id = ResourceLocation.tryParse(normalized);
+                Identifier id = Identifier.tryParse(normalized);
                 if (id != null) {
                     keys.add(ResourceKey.create(Registries.DAMAGE_TYPE, id));
                 }

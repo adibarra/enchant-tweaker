@@ -27,7 +27,7 @@ public abstract class GrindstoneInputSlotMixin extends Slot {
     }
 
     @Inject(
-        method = "canInsert(Lnet/minecraft/world/item/ItemStack;)Z",
+        method = "mayPlace(Lnet/minecraft/world/item/ItemStack;)Z",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$grindstoneDisenchant$canInsert(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
