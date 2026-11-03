@@ -1,6 +1,6 @@
 plugins {
     id 'maven-publish'
-    id 'fabric-loom' version '1.15.3'
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
     id "com.modrinth.minotaur" version "2.9.0"
     id 'com.diffplug.spotless' version '8.8.0'
 }
@@ -24,11 +24,20 @@ repositories {
 dependencies {
     // to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modCompileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
-    modLocalRuntime "maven.modrinth:modmenu:${project.modmenu_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    compileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
+    runtimeOnly "maven.modrinth:modmenu:${project.modmenu_version}"
+}
+
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "enchanttweaker-test"
+        enableGameTests = true
+        enableClientGameTests = true
+        eula = true
+    }
 }
 
 processResources {
@@ -40,20 +49,21 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release.set(21)
+    it.options.release.set(25)
     it.options.encoding = "UTF-8"
+    it.options.compilerArgs += ['-Xmaxerrs', '10000']
 }
 
 java {
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 spotless {
     java {
         target 'src/**/*.java'
-        eclipse('4.35').configFile('config/eclipse-formatter.xml')
+        eclipse('4.39').configFile('config/eclipse-formatter.xml')
         importOrder('java|javax', '', 'com.adibarra')
     }
 }
@@ -61,28 +71,6 @@ spotless {
 jar {
     from "LICENSE"
     exclude "**/*.pdn"
-}
-
-sourceSets {
-    gametest {
-        compileClasspath += main.compileClasspath
-        runtimeClasspath += main.runtimeClasspath
-        compileClasspath += main.output
-        runtimeClasspath += main.output
-    }
-}
-
-loom {
-    runs {
-        gametest {
-            server()
-            name "Game Tests"
-            source sourceSets.gametest
-            property "fabric-api.gametest"
-            property "fabric-api.gametest.report-file", "${layout.buildDirectory.get().asFile}/junit.xml"
-            runDir "run/gametest"
-        }
-    }
 }
 
 publishing {
@@ -132,9 +120,9 @@ modrinth {
     gameVersions = supportedVersionsArray
     changelog = changelogEntry
     versionType = "release"
-    uploadFile = remapJar
+    uploadFile = jar
     additionalFiles = [sourcesJar]
-    loaders = ["fabric", "quilt"]
+    loaders = ["fabric"]
     dependencies {
         required.project "fabric-api"
         optional.project "modmenu"
