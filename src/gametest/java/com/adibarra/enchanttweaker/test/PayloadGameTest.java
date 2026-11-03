@@ -5,15 +5,14 @@ import java.util.Map;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
-import net.minecraft.gametest.framework.GameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.network.ConfigSyncPayload;
 
-public class PayloadGameTest implements FabricGameTest {
+public class PayloadGameTest {
 
     /** creates a registry-aware buffer for CODEC operations */
     private static RegistryFriendlyByteBuf newBuf(GameTestHelper helper) {
@@ -27,7 +26,7 @@ public class PayloadGameTest implements FabricGameTest {
     // round-trip encode/decode
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void payloadRoundTrip(GameTestHelper helper) {
         Map<String, String> sample = Map.of("cheap_names", "true", "nte_max_cost", "100", "disable_enchantments",
             "sharpness,mending");
@@ -49,7 +48,7 @@ public class PayloadGameTest implements FabricGameTest {
     // version mismatch is consumed and ignored
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void payloadVersionMismatchGraceful(GameTestHelper helper) {
         RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
@@ -73,7 +72,7 @@ public class PayloadGameTest implements FabricGameTest {
     // convenience constructor stamps PROTOCOL_VERSION
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void payloadConvenienceConstructor(GameTestHelper helper) {
         ConfigSyncPayload payload = new ConfigSyncPayload(Map.of("cheap_names", "true"));
         helper.assertTrue(payload.version() == ConfigSyncPayload.PROTOCOL_VERSION,
@@ -84,7 +83,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void payloadRejectsNullMap(GameTestHelper helper) {
         boolean rejected = false;
         try {
@@ -97,7 +96,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void payloadRejectsNullEntries(GameTestHelper helper) {
         Map<String, String> nullKey = new HashMap<>();
         nullKey.put(null, "true");
@@ -123,7 +122,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void payloadSnapshotsConfigMap(GameTestHelper helper) {
         Map<String, String> source = new HashMap<>();
         source.put("cheap_names", "true");
@@ -169,7 +168,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void getConfigMapStripsClientLocalKeys(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("roman_numerals", "shiny_name", "cheap_names");
         try {
@@ -192,7 +191,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void syncConfigFromAppliesAndClearsFeatureCache(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("mod_enabled", "cheap_names");
         try {
@@ -214,7 +213,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void syncConfigFromPreservesClientLocalKeys(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("roman_numerals", "shiny_name", "cheap_names");
         try {
@@ -236,7 +235,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void realWirePayloadRoundTrip(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("roman_numerals", "shiny_name");
         try {
@@ -275,7 +274,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void encoderWritesRecordVersion(GameTestHelper helper) {
         RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
@@ -299,7 +298,7 @@ public class PayloadGameTest implements FabricGameTest {
     // synced sharpness caps replace cached caps
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void syncConfigFromClearsCapmodCache(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         try {
@@ -323,7 +322,7 @@ public class PayloadGameTest implements FabricGameTest {
     // cheap_names reverts to the disk default
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void restoreLocalConfigReloadsDisk(GameTestHelper helper) {
         try {
             ETMixinPlugin.syncConfigFrom(Map.of("cheap_names", "true"));
@@ -344,7 +343,7 @@ public class PayloadGameTest implements FabricGameTest {
     // empty-map round trip
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void emptyMapRoundTrip(GameTestHelper helper) {
         RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
@@ -362,7 +361,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void decodeRejectsTrailingBytes(GameTestHelper helper) {
         RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
@@ -388,7 +387,7 @@ public class PayloadGameTest implements FabricGameTest {
     // decode robustness: duplicate keys are rejected
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void decodeRejectsDuplicateKey(GameTestHelper helper) {
         RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
@@ -414,7 +413,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void decodeTruncatedThrows(GameTestHelper helper) {
         RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
@@ -437,7 +436,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void decodeRejectsExcessiveEntryCount(GameTestHelper helper) {
         RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
@@ -458,7 +457,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void decodeRejectsNegativeEntryCount(GameTestHelper helper) {
         RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
@@ -478,7 +477,7 @@ public class PayloadGameTest implements FabricGameTest {
         helper.succeed();
     }
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void payloadUnicodeAndEmptyValues(GameTestHelper helper) {
         Map<String, String> sample = new HashMap<>();
         sample.put("accented", "café");
@@ -509,7 +508,7 @@ public class PayloadGameTest implements FabricGameTest {
     // decoding preserves every entry and consumes all bytes
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void payloadMaximumMap(GameTestHelper helper) {
         Map<String, String> big = new HashMap<>();
         for (int i = 0; i < ConfigSyncPayload.MAX_CONFIG_ENTRIES; i++) {
@@ -532,7 +531,7 @@ public class PayloadGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void encoderRejectsExcessiveEntryCount(GameTestHelper helper) {
         Map<String, String> oversized = new HashMap<>();
         for (int i = 0; i <= ConfigSyncPayload.MAX_CONFIG_ENTRIES; i++)
@@ -555,7 +554,7 @@ public class PayloadGameTest implements FabricGameTest {
         helper.succeed();
     }
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void payloadVersionMismatchEmptyBody(GameTestHelper helper) {
         RegistryFriendlyByteBuf buf = newBuf(helper);
         try {

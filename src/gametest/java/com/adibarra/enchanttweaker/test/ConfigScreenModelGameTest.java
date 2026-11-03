@@ -4,19 +4,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
-import net.minecraft.gametest.framework.GameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 
 import com.adibarra.enchanttweaker.ETConfigSchema;
 import com.adibarra.enchanttweaker.config.ETConfigScreenModel;
 
-public class ConfigScreenModelGameTest implements FabricGameTest {
-
-    private static final String EMPTY_STRUCTURE = "fabric-gametest-api-v1:empty";
+public class ConfigScreenModelGameTest {
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void screenModelPaginatesCategories(GameTestHelper helper) {
         ETConfigScreenModel model = modelWithDefaults();
         helper.assertTrue(model.categories().equals(ETConfigSchema.categories()),
@@ -37,7 +34,7 @@ public class ConfigScreenModelGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void screenModelValidatesAndTracksChanges(GameTestHelper helper) {
         ETConfigScreenModel model = modelWithDefaults();
         helper.assertFalse(model.isDirty(), "fresh screen model should not be dirty");
@@ -56,7 +53,7 @@ public class ConfigScreenModelGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void screenModelTogglesAndResetsCategory(GameTestHelper helper) {
         Map<String, String> values = new LinkedHashMap<>(ETConfigSchema.defaults());
         values.put("mod_enabled", "true");
@@ -75,7 +72,7 @@ public class ConfigScreenModelGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void screenModelCanonicalizesLoadedValues(GameTestHelper helper) {
         Map<String, String> values = new LinkedHashMap<>(ETConfigSchema.defaults());
         values.put("mod_enabled", "TRUE");
@@ -92,7 +89,7 @@ public class ConfigScreenModelGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void screenModelSearchesKeysAndDescriptions(GameTestHelper helper) {
         ETConfigScreenModel model = modelWithDefaults();
         model.nextCategory();

@@ -18,7 +18,8 @@
       "com.adibarra.enchanttweaker.test.PayloadGameTest",
       "com.adibarra.enchanttweaker.test.RomanNumeralGameTest",
       "com.adibarra.enchanttweaker.test.ShinyNameGameTest",
-      "com.adibarra.enchanttweaker.test.ConfigScreenModelGameTest"
+      "com.adibarra.enchanttweaker.test.ConfigScreenModelGameTest",
+      "com.adibarra.utils.ADConfigGameTest"
     ]
   }
 }

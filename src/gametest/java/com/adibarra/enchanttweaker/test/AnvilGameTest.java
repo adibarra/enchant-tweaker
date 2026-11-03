@@ -1,16 +1,20 @@
 package com.adibarra.enchanttweaker.test;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -18,12 +22,11 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.item.EnchantedBookItem;
+import net.minecraft.world.inventory.ItemCombinerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.AnvilBlock;
@@ -34,21 +37,21 @@ import net.minecraft.world.phys.Vec3;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
-public class AnvilGameTest implements FabricGameTest {
+public class AnvilGameTest {
 
     // cheap names applies to single-input renames
     // repair cost ten normally raises rename cost
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void cheapNamesEnabled(GameTestHelper helper) {
         ETTestHelper.setFeature("cheap_names", true);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
         sword.set(DataComponents.REPAIR_COST, 10);
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, sword, ItemStack.EMPTY);
-        ETTestHelper.setAnvilNewName(handler, "Test Sword");
+        setAnvilInputs(handler, sword, ItemStack.EMPTY);
+        setAnvilNewName(handler, "Test Sword");
         handler.createResult();
         try {
             helper.assertFalse(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
@@ -62,15 +65,15 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void cheapNamesDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("cheap_names", false);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
         sword.set(DataComponents.REPAIR_COST, 10);
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, sword, ItemStack.EMPTY);
-        ETTestHelper.setAnvilNewName(handler, "Test Sword");
+        setAnvilInputs(handler, sword, ItemStack.EMPTY);
+        setAnvilNewName(handler, "Test Sword");
         handler.createResult();
         try {
             helper.assertFalse(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
@@ -84,14 +87,14 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void cheapNamesEmptyOperationStaysEmpty(GameTestHelper helper) {
         ETTestHelper.setFeature("cheap_names", true);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
         sword.set(DataComponents.REPAIR_COST, 10);
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, sword, ItemStack.EMPTY);
+        setAnvilInputs(handler, sword, ItemStack.EMPTY);
         handler.createResult();
         try {
             helper.assertTrue(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
@@ -109,7 +112,7 @@ public class AnvilGameTest implements FabricGameTest {
     // repair cost fifty exceeds forty levels
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void notTooExpensiveEnabled(GameTestHelper helper) {
         ETTestHelper.setFeature("not_too_expensive", true);
         ETTestHelper.setConfigValue("nte_max_cost", String.valueOf(Integer.MAX_VALUE));
@@ -118,7 +121,7 @@ public class AnvilGameTest implements FabricGameTest {
         sword.setDamageValue(100);
         sword.set(DataComponents.REPAIR_COST, 50);
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+        setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
         handler.createResult();
         try {
             helper.assertFalse(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
@@ -130,7 +133,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void notTooExpensiveDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("not_too_expensive", false);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -138,7 +141,7 @@ public class AnvilGameTest implements FabricGameTest {
         sword.setDamageValue(100);
         sword.set(DataComponents.REPAIR_COST, 50);
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+        setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
         handler.createResult();
         try {
             helper.assertTrue(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
@@ -154,7 +157,7 @@ public class AnvilGameTest implements FabricGameTest {
     // the context runs the take-output lambda
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void sturdyAnvilsNeverBreaks(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("sturdy_anvils", "anvil_damage_chance");
         try {
@@ -171,12 +174,12 @@ public class AnvilGameTest implements FabricGameTest {
             for (int i = 0; i < 10; i++) {
                 ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
                 sword.setDamageValue(100);
-                ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+                setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
                 handler.createResult();
                 ItemStack result = handler.getSlot(AnvilMenu.RESULT_SLOT).getItem();
                 helper.assertFalse(result.isEmpty(),
                     "A sturdy-anvil repair setup must produce an output before onTakeOutput");
-                ETTestHelper.invokeOnTakeOutput(handler, player, result);
+                invokeOnTake(handler, player, result);
             }
             helper.assertBlockPresent(Blocks.ANVIL, anvilPos);
         } finally {
@@ -186,7 +189,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void sturdyAnvilsDisabled(GameTestHelper helper) {
         // vanilla damage chance is twelve percent per use
         // a seeded random roll deterministically exercises the damage branch
@@ -203,7 +206,7 @@ public class AnvilGameTest implements FabricGameTest {
             AnvilMenu handler = new AnvilMenu(0, player.getInventory(), ctx);
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.setDamageValue(100);
-            ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
             handler.createResult();
             ItemStack result = handler.getSlot(AnvilMenu.RESULT_SLOT).getItem();
             helper.assertFalse(result.isEmpty(),
@@ -220,7 +223,7 @@ public class AnvilGameTest implements FabricGameTest {
                 "the selected deterministic seed must exercise the vanilla damage branch (sample=" + sampledChance
                     + ")");
             player.getRandom().setSeed(damageSeed);
-            ETTestHelper.invokeOnTakeOutput(handler, player, result);
+            invokeOnTake(handler, player, result);
             helper.assertTrue(world.getBlockState(absPos).is(Blocks.CHIPPED_ANVIL),
                 "vanilla anvil use with a deterministic damage roll should produce a chipped anvil");
         } finally {
@@ -232,7 +235,7 @@ public class AnvilGameTest implements FabricGameTest {
     // prior work free
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkFreeEnabled(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_free", true);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -244,12 +247,12 @@ public class AnvilGameTest implements FabricGameTest {
         swordWithPenalty.set(DataComponents.REPAIR_COST, 4);
         // calculate base cost without prior work
         AnvilMenu base = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(base, swordNoPenalty, new ItemStack(Items.DIAMOND));
+        setAnvilInputs(base, swordNoPenalty, new ItemStack(Items.DIAMOND));
         base.createResult();
         int baseCost = base.getCost();
         // enabled prior work free removes the penalty
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, swordWithPenalty, new ItemStack(Items.DIAMOND));
+        setAnvilInputs(handler, swordWithPenalty, new ItemStack(Items.DIAMOND));
         handler.createResult();
         int penaltyCost = handler.getCost();
         try {
@@ -262,7 +265,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkFreeDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_free", false);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -274,12 +277,12 @@ public class AnvilGameTest implements FabricGameTest {
         swordWithPenalty.set(DataComponents.REPAIR_COST, 4);
         // calculate base cost without prior work
         AnvilMenu base = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(base, swordNoPenalty, new ItemStack(Items.DIAMOND));
+        setAnvilInputs(base, swordNoPenalty, new ItemStack(Items.DIAMOND));
         base.createResult();
         int baseCost = base.getCost();
         // disabled prior work free retains the penalty
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, swordWithPenalty, new ItemStack(Items.DIAMOND));
+        setAnvilInputs(handler, swordWithPenalty, new ItemStack(Items.DIAMOND));
         handler.createResult();
         int penaltyCost = handler.getCost();
         try {
@@ -294,12 +297,12 @@ public class AnvilGameTest implements FabricGameTest {
     // prior work cheaper
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperEnabled(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_cheaper", true);
         ETTestHelper.setConfigValue("pw_cost_multiplier", "1.0");
         try {
-            int result = ETTestHelper.getNextAnvilCost(4);
+            int result = getNextAnvilCost(4);
             // multiplier one yields five
             helper.assertTrue(result == 5, "getNextCost(4) with multiplier 1.0 should be 5 (got " + result + ")");
         } finally {
@@ -310,11 +313,11 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_cheaper", false);
         try {
-            int result = ETTestHelper.getNextAnvilCost(4);
+            int result = getNextAnvilCost(4);
             // vanilla multiplier yields nine
             helper.assertTrue(result == 9, "getNextCost(4) should be vanilla 9 when disabled (got " + result + ")");
         } finally {
@@ -324,13 +327,13 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperZeroMultiplier(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_cheaper", true);
         ETTestHelper.setConfigValue("pw_cost_multiplier", "0.0");
         ETMixinPlugin.clearCaches();
         try {
-            int result = ETTestHelper.getNextAnvilCost(4);
+            int result = getNextAnvilCost(4);
             // zero multiplier yields one
             helper.assertTrue(result == 1, "getNextCost(4) with multiplier 0.0 should be 1 (got " + result + ")");
         } finally {
@@ -342,13 +345,13 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperHighMultiplier(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_cheaper", true);
         ETTestHelper.setConfigValue("pw_cost_multiplier", "3.0");
         ETMixinPlugin.clearCaches();
         try {
-            int result = ETTestHelper.getNextAnvilCost(4);
+            int result = getNextAnvilCost(4);
             // multiplier three yields thirteen
             helper.assertTrue(result == 13, "getNextCost(4) with multiplier 3.0 should be 13 (got " + result + ")");
         } finally {
@@ -360,13 +363,13 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperNegativeMultiplier(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_cheaper", true);
         ETTestHelper.setConfigValue("pw_cost_multiplier", "-1.0");
         ETMixinPlugin.clearCaches();
         try {
-            int result = ETTestHelper.getNextAnvilCost(4);
+            int result = getNextAnvilCost(4);
             // negative multipliers clamp to zero
             // rounding then returns one
             helper.assertTrue(result == 1,
@@ -382,7 +385,7 @@ public class AnvilGameTest implements FabricGameTest {
     // not too expensive custom maximum cost
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void notTooExpensiveCustomMaxCost(GameTestHelper helper) {
         ETTestHelper.setFeature("not_too_expensive", true);
         ETTestHelper.setConfigValue("nte_max_cost", "50");
@@ -393,7 +396,7 @@ public class AnvilGameTest implements FabricGameTest {
         sword.setDamageValue(100);
         sword.set(DataComponents.REPAIR_COST, 60);
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+        setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
         handler.createResult();
         try {
             helper.assertTrue(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
@@ -409,7 +412,7 @@ public class AnvilGameTest implements FabricGameTest {
     // sturdy anvils can always break
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void sturdyAnvilsAlwaysBreaks(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("sturdy_anvils", "anvil_damage_chance");
         try {
@@ -425,12 +428,12 @@ public class AnvilGameTest implements FabricGameTest {
             AnvilMenu handler = new AnvilMenu(0, player.getInventory(), ctx);
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.setDamageValue(100);
-            ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
             handler.createResult();
             ItemStack result = handler.getSlot(AnvilMenu.RESULT_SLOT).getItem();
             helper.assertFalse(result.isEmpty(),
                 "A full-damage anvil repair setup must produce an output before onTakeOutput");
-            ETTestHelper.invokeOnTakeOutput(handler, player, result);
+            invokeOnTake(handler, player, result);
             // full damage chance degrades the pristine anvil
             helper.assertFalse(world.getBlockState(absPos).is(Blocks.ANVIL),
                 "Anvil with damage_chance=1.0 should degrade on first use");
@@ -443,7 +446,7 @@ public class AnvilGameTest implements FabricGameTest {
     // cheap names with material
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void cheapNamesWithMaterial(GameTestHelper helper) {
         ETTestHelper.setFeature("cheap_names", true);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -452,8 +455,8 @@ public class AnvilGameTest implements FabricGameTest {
         sword.set(DataComponents.REPAIR_COST, 10);
         // slot one contains material, not only a rename
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
-        ETTestHelper.setAnvilNewName(handler, "Test Sword");
+        setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+        setAnvilNewName(handler, "Test Sword");
         handler.createResult();
         try {
             helper.assertFalse(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
@@ -467,7 +470,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairDamagedToChipped(GameTestHelper helper) {
         ETTestHelper.setFeature("anvil_repair", true);
         ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
@@ -478,7 +481,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 9));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 9));
         try {
             helper.assertTrue(player.isShiftKeyDown(), "repair player must be sneaking for the positive path");
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
@@ -500,7 +503,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairChippedToPristine(GameTestHelper helper) {
         // cost nine allows one iron block
         // iron blocks contain nine ingots
@@ -513,7 +516,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_BLOCK, 1));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_BLOCK, 1));
         try {
             helper.assertTrue(player.isShiftKeyDown(), "repair player must be sneaking for the positive path");
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
@@ -537,7 +540,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairPristineNoop(GameTestHelper helper) {
         ETTestHelper.setFeature("anvil_repair", true);
         ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
@@ -547,7 +550,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 9));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 9));
         try {
             helper.assertTrue(player.isShiftKeyDown(), "repair player must be sneaking for the positive path");
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
@@ -561,7 +564,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("anvil_repair", false);
         ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
@@ -573,7 +576,7 @@ public class AnvilGameTest implements FabricGameTest {
         player.setShiftKeyDown(true);
         // iron ingots cannot be placed
         // vanilla pass leaves the anvil unchanged
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 9));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 9));
         BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
         player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
         try {
@@ -586,7 +589,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairNotSneaking(GameTestHelper helper) {
         ETTestHelper.setFeature("anvil_repair", true);
         ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
@@ -596,7 +599,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(false); // not sneaking must return pass
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 9));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 9));
         try {
             helper.assertFalse(player.isShiftKeyDown(), "negative-path player must not be sneaking");
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
@@ -612,7 +615,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairSpectatorGate(GameTestHelper helper) {
         ETTestHelper.setFeature("anvil_repair", true);
         ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
@@ -622,7 +625,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         Player player = helper.makeMockPlayer(GameType.SPECTATOR);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 9));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 9));
         try {
             helper.assertTrue(player.isSpectator(),
                 "createMockPlayer(SPECTATOR) should report isSpectator()==true (validates the mock)");
@@ -642,7 +645,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairCreativeKeepsIron(GameTestHelper helper) {
         // creative repairs do not consume iron
         ETTestHelper.setFeature("anvil_repair", true);
@@ -653,7 +656,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.CREATIVE);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 9));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 9));
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
             InteractionResult result = player.gameMode.useItemOn(player, world, player.getMainHandItem(),
@@ -671,7 +674,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairIngotNonMultipleCost(GameTestHelper helper) {
         // ingots pay nonmultiple costs directly
         // iron blocks require multiples of nine
@@ -683,7 +686,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 8));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 8));
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
             InteractionResult result = player.gameMode.useItemOn(player, world, player.getMainHandItem(),
@@ -702,7 +705,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairOffHandGate(GameTestHelper helper) {
         // only main-hand use triggers anvil repair
         // off-hand use leaves the anvil unchanged
@@ -732,7 +735,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairWrongItem(GameTestHelper helper) {
         ETTestHelper.setFeature("anvil_repair", true);
         ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "9");
@@ -743,7 +746,7 @@ public class AnvilGameTest implements FabricGameTest {
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
         // non-iron items must pass without consumption
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.DIAMOND, 5));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.DIAMOND, 5));
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
@@ -758,7 +761,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairCostZeroDisablesBoth(GameTestHelper helper) {
         // zero cost disables ingot and block repairs
         ETTestHelper.setFeature("anvil_repair", true);
@@ -776,7 +779,7 @@ public class AnvilGameTest implements FabricGameTest {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
 
             // iron ingots cannot repair at zero cost
-            player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 9));
+            player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 9));
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
             helper.assertTrue(world.getBlockState(absPos).is(Blocks.DAMAGED_ANVIL),
                 "Ingot repair should be disabled when anvil_repair_ingot_cost=0");
@@ -785,7 +788,7 @@ public class AnvilGameTest implements FabricGameTest {
                     + ")");
 
             // iron blocks cannot repair at zero cost
-            player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_BLOCK, 2));
+            player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_BLOCK, 2));
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
             helper.assertTrue(world.getBlockState(absPos).is(Blocks.DAMAGED_ANVIL),
                 "Block repair should be disabled when anvil_repair_ingot_cost=0");
@@ -800,7 +803,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairInsufficientIron(GameTestHelper helper) {
         // insufficient ingots prevent repair without consumption
         ETTestHelper.setFeature("anvil_repair", true);
@@ -811,7 +814,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 5)); // below
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 5)); // below
                                                                                                            // cost
                                                                                                            // nine
         try {
@@ -828,7 +831,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairIngotExcessConsumesExact(GameTestHelper helper) {
         // eighteen ingots repair one stage and leave nine
         ETTestHelper.setFeature("anvil_repair", true);
@@ -839,7 +842,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 18));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 18));
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
@@ -854,7 +857,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairBlockMultipleConsumesExact(GameTestHelper helper) {
         // cost eighteen requires two iron blocks
         // three blocks leave one remaining
@@ -867,7 +870,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_BLOCK, 3));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_BLOCK, 3));
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
             InteractionResult result = player.gameMode.useItemOn(player, world, player.getMainHandItem(),
@@ -893,7 +896,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairBlockCostNotMultipleNoop(GameTestHelper helper) {
         // iron blocks require costs divisible by nine
         ETTestHelper.setFeature("anvil_repair", true);
@@ -907,7 +910,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_BLOCK, 3));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_BLOCK, 3));
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
@@ -924,7 +927,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairBlockInsufficientNoop(GameTestHelper helper) {
         // cost eighteen needs two blocks
         // one block cannot repair
@@ -939,7 +942,7 @@ public class AnvilGameTest implements FabricGameTest {
         BlockPos absPos = helper.absolutePos(anvilPos);
         ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
         player.setShiftKeyDown(true);
-        player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_BLOCK, 1));
+        player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_BLOCK, 1));
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
@@ -955,7 +958,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void cheapNamesPriorWorkFreeRenameStaysOne(GameTestHelper helper) {
         ETTestHelper.setFeature("cheap_names", true);
         ETTestHelper.setFeature("prior_work_free", true);
@@ -964,8 +967,8 @@ public class AnvilGameTest implements FabricGameTest {
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
         sword.set(DataComponents.REPAIR_COST, 4);
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, sword, ItemStack.EMPTY);
-        ETTestHelper.setAnvilNewName(handler, "Renamed Sword");
+        setAnvilInputs(handler, sword, ItemStack.EMPTY);
+        setAnvilNewName(handler, "Renamed Sword");
         handler.createResult();
         try {
             helper.assertFalse(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
@@ -981,7 +984,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperOutputRepairCostEnabled(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_cheaper", true);
         ETTestHelper.setConfigValue("pw_cost_multiplier", "1.0");
@@ -990,7 +993,7 @@ public class AnvilGameTest implements FabricGameTest {
         sword.setDamageValue(200);
         sword.set(DataComponents.REPAIR_COST, 4);
         try {
-            ItemStack out = anvilMergeOutput(player, sword, new ItemStack(Items.DIAMOND));
+            ItemStack out = anvilMergeOutput(helper, player, sword, new ItemStack(Items.DIAMOND));
             helper.assertFalse(out.isEmpty(), "Repair output should be present");
             int rc = out.getOrDefault(DataComponents.REPAIR_COST, -1);
             helper.assertTrue(rc == 5, "Output REPAIR_COST should be round(1.0*4+1)=5 (got " + rc + ")");
@@ -1002,7 +1005,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperOutputRepairCostDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_cheaper", false);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -1010,7 +1013,7 @@ public class AnvilGameTest implements FabricGameTest {
         sword.setDamageValue(200);
         sword.set(DataComponents.REPAIR_COST, 4);
         try {
-            ItemStack out = anvilMergeOutput(player, sword, new ItemStack(Items.DIAMOND));
+            ItemStack out = anvilMergeOutput(helper, player, sword, new ItemStack(Items.DIAMOND));
             helper.assertFalse(out.isEmpty(), "Repair output should be present");
             int rc = out.getOrDefault(DataComponents.REPAIR_COST, -1);
             helper.assertTrue(rc == 9, "Vanilla output REPAIR_COST should be getNextCost(4)=9 (got " + rc + ")");
@@ -1021,7 +1024,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperOutputRepairCostNonNegative(GameTestHelper helper) {
         // large multipliers must clamp repair cost to integer max
         ETTestHelper.setFeature("prior_work_cheaper", true);
@@ -1031,7 +1034,7 @@ public class AnvilGameTest implements FabricGameTest {
         sword.setDamageValue(200);
         sword.set(DataComponents.REPAIR_COST, 4);
         try {
-            ItemStack out = anvilMergeOutput(player, sword, new ItemStack(Items.DIAMOND));
+            ItemStack out = anvilMergeOutput(helper, player, sword, new ItemStack(Items.DIAMOND));
             helper.assertFalse(out.isEmpty(), "Repair output should be present");
             int rc = out.getOrDefault(DataComponents.REPAIR_COST, -1);
             helper.assertTrue(rc >= 0, "Stamped REPAIR_COST must never be negative (got " + rc + ")");
@@ -1045,13 +1048,13 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperNonNumericMultiplier(GameTestHelper helper) {
         // non-numeric multipliers use vanilla coefficient two
         ETTestHelper.setFeature("prior_work_cheaper", true);
         ETTestHelper.setConfigValue("pw_cost_multiplier", "abc");
         try {
-            int result = ETTestHelper.getNextAnvilCost(4);
+            int result = getNextAnvilCost(4);
             // unparseable values use coefficient two and return nine
             helper.assertTrue(result == 9,
                 "Non-numeric multiplier should fall back to 2.0 -> getNextCost(4)=9 (got " + result + ")");
@@ -1065,7 +1068,7 @@ public class AnvilGameTest implements FabricGameTest {
     // prior work free removes both penalties
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkFreeCombineBothSlots(GameTestHelper helper) {
         // combining swords adds both prior-work penalties
         // prior work free removes both penalties
@@ -1080,7 +1083,7 @@ public class AnvilGameTest implements FabricGameTest {
             ItemStack b = new ItemStack(Items.DIAMOND_SWORD);
             b.set(DataComponents.REPAIR_COST, 8);
             AnvilMenu h = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h, a, b);
+            setAnvilInputs(h, a, b);
             h.createResult();
             fullCost = h.getCost();
         }
@@ -1094,7 +1097,7 @@ public class AnvilGameTest implements FabricGameTest {
             ItemStack b = new ItemStack(Items.DIAMOND_SWORD);
             b.set(DataComponents.REPAIR_COST, 8);
             AnvilMenu h = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h, a, b);
+            setAnvilInputs(h, a, b);
             h.createResult();
             helper.assertTrue(h.getCost() == fullCost - 12,
                 "PriorWorkFree should subtract BOTH slots' REPAIR_COST (4+8=12): expected " + (fullCost - 12) + " got "
@@ -1106,7 +1109,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkFreeRestoresHighPenaltyOutput(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_free", true);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -1118,7 +1121,7 @@ public class AnvilGameTest implements FabricGameTest {
             second.setDamageValue(500);
             second.set(DataComponents.REPAIR_COST, 31);
             AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(handler, first, second);
+            setAnvilInputs(handler, first, second);
             handler.createResult();
 
             helper.assertFalse(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
@@ -1132,7 +1135,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkFreeRenameFallThrough(GameTestHelper helper) {
         // with cheap names off, prior work free affects renames
         // the ordering guard must not block the reduction
@@ -1143,8 +1146,8 @@ public class AnvilGameTest implements FabricGameTest {
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.set(DataComponents.REPAIR_COST, 4);
             AnvilMenu h = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h, sword, ItemStack.EMPTY);
-            ETTestHelper.setAnvilNewName(h, "X");
+            setAnvilInputs(h, sword, ItemStack.EMPTY);
+            setAnvilNewName(h, "X");
             h.createResult();
             // vanilla renames cost prior work plus one
             // prior work free removes the four-level penalty
@@ -1157,8 +1160,8 @@ public class AnvilGameTest implements FabricGameTest {
             ItemStack sword2 = new ItemStack(Items.DIAMOND_SWORD);
             sword2.set(DataComponents.REPAIR_COST, 4);
             AnvilMenu h2 = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h2, sword2, ItemStack.EMPTY);
-            ETTestHelper.setAnvilNewName(h2, "X");
+            setAnvilInputs(h2, sword2, ItemStack.EMPTY);
+            setAnvilNewName(h2, "X");
             h2.createResult();
             helper.assertFalse(h2.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
                 "Vanilla rename must produce an output");
@@ -1173,7 +1176,7 @@ public class AnvilGameTest implements FabricGameTest {
     // not too expensive inclusive cap boundary
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void notTooExpensiveInclusiveBoundary(GameTestHelper helper) {
         ETTestHelper.setFeature("not_too_expensive", true);
         ETTestHelper.setConfigValue("nte_max_cost", String.valueOf(Integer.MAX_VALUE));
@@ -1184,7 +1187,7 @@ public class AnvilGameTest implements FabricGameTest {
             sword.setDamageValue(200);
             sword.set(DataComponents.REPAIR_COST, 20);
             AnvilMenu h = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
             h.createResult();
             cost = h.getCost();
         }
@@ -1197,7 +1200,7 @@ public class AnvilGameTest implements FabricGameTest {
             sword.setDamageValue(200);
             sword.set(DataComponents.REPAIR_COST, 20);
             AnvilMenu h = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
             h.createResult();
             helper.assertTrue(h.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
                 "cost==cap should block (>= is inclusive): cost=" + cost);
@@ -1208,7 +1211,7 @@ public class AnvilGameTest implements FabricGameTest {
             sword2.setDamageValue(200);
             sword2.set(DataComponents.REPAIR_COST, 20);
             AnvilMenu h2 = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h2, sword2, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(h2, sword2, new ItemStack(Items.DIAMOND));
             h2.createResult();
             helper.assertFalse(h2.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
                 "cost < cap (cap=cost+1) should allow: cost=" + cost);
@@ -1222,7 +1225,7 @@ public class AnvilGameTest implements FabricGameTest {
     // cheap names applies through take-output gameplay
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void cheapNamesRealTakeOutput(GameTestHelper helper) {
         ETTestHelper.setFeature("cheap_names", true);
         ServerLevel world = helper.getLevel();
@@ -1236,7 +1239,7 @@ public class AnvilGameTest implements FabricGameTest {
             AnvilMenu handler = new AnvilMenu(0, player.getInventory(), ctx);
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.set(DataComponents.REPAIR_COST, 10);
-            ETTestHelper.setAnvilInputs(handler, sword, ItemStack.EMPTY);
+            setAnvilInputs(handler, sword, ItemStack.EMPTY);
             boolean changed = handler.setItemName("Foo");
             handler.createResult(); // recompute explicitly after setting the new name
             helper.assertTrue(changed, "setNewItemName should report a change");
@@ -1249,7 +1252,7 @@ public class AnvilGameTest implements FabricGameTest {
                 "Output should be renamed to Foo (got " + (name == null ? "null" : name.getString()) + ")");
             helper.assertTrue(invokeCanTakeOutput(handler, player),
                 "A 5-level player should be able to take a 1-level rename");
-            ETTestHelper.invokeOnTakeOutput(handler, player, out);
+            invokeOnTake(handler, player, out);
             helper.assertTrue(player.experienceLevel == 4,
                 "Taking a 1-level rename should leave the player at level 4 (got " + player.experienceLevel + ")");
             helper.assertTrue(handler.getSlot(AnvilMenu.INPUT_SLOT).getItem().isEmpty(),
@@ -1261,7 +1264,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void cheapNamesVanillaCannotTake(GameTestHelper helper) {
         // without cheap names, this rename costs eleven levels
         // five levels cannot take the output
@@ -1272,8 +1275,8 @@ public class AnvilGameTest implements FabricGameTest {
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.set(DataComponents.REPAIR_COST, 10);
             AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(handler, sword, ItemStack.EMPTY);
-            ETTestHelper.setAnvilNewName(handler, "Foo");
+            setAnvilInputs(handler, sword, ItemStack.EMPTY);
+            setAnvilNewName(handler, "Foo");
             handler.createResult();
             helper.assertTrue(handler.getCost() == 11,
                 "Vanilla rename with REPAIR_COST=10 should cost 11 (got " + handler.getCost() + ")");
@@ -1286,7 +1289,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void cheapNamesClearNameRemovesCustomName(GameTestHelper helper) {
         // clearing a custom name still creates an operation
         // cheap names makes it cost one
@@ -1296,8 +1299,8 @@ public class AnvilGameTest implements FabricGameTest {
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.set(DataComponents.CUSTOM_NAME, Component.literal("Old"));
             AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(handler, sword, ItemStack.EMPTY);
-            ETTestHelper.setAnvilNewName(handler, "");
+            setAnvilInputs(handler, sword, ItemStack.EMPTY);
+            setAnvilNewName(handler, "");
             handler.createResult();
             helper.assertTrue(handler.getCost() == 1,
                 "CheapNames should force a clear-name to cost 1 (got " + handler.getCost() + ")");
@@ -1312,7 +1315,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void cheapNamesSlot1EmptyNoRename(GameTestHelper helper) {
         // an empty second slot without renaming has no operation
         // cheap names preserves vanilla output and cost
@@ -1321,7 +1324,7 @@ public class AnvilGameTest implements FabricGameTest {
         try {
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(handler, sword, ItemStack.EMPTY);
+            setAnvilInputs(handler, sword, ItemStack.EMPTY);
             handler.createResult();
             helper.assertTrue(handler.getSlot(AnvilMenu.RESULT_SLOT).getItem().isEmpty(),
                 "No rename and no material should produce an empty output");
@@ -1336,7 +1339,7 @@ public class AnvilGameTest implements FabricGameTest {
     // sturdy anvils damaged-anvil destroy branch
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void sturdyAnvilsDamagedDestroyed(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("sturdy_anvils", "anvil_damage_chance");
         try {
@@ -1352,12 +1355,12 @@ public class AnvilGameTest implements FabricGameTest {
             AnvilMenu handler = new AnvilMenu(0, player.getInventory(), ctx);
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.setDamageValue(100);
-            ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
             handler.createResult();
             ItemStack result = handler.getSlot(AnvilMenu.RESULT_SLOT).getItem();
             helper.assertFalse(result.isEmpty(),
                 "A damaged-anvil repair setup must produce an output before onTakeOutput");
-            ETTestHelper.invokeOnTakeOutput(handler, player, result);
+            invokeOnTake(handler, player, result);
             helper.assertTrue(world.getBlockState(absPos).isAir(),
                 "A DAMAGED_ANVIL with damage_chance=1.0 should be destroyed (air) on use");
         } finally {
@@ -1370,7 +1373,7 @@ public class AnvilGameTest implements FabricGameTest {
     // zero maximum level removes the enchantment
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsAnvilStrip(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("disable_enchantments_enabled",
             "disable_enchantments");
@@ -1378,8 +1381,8 @@ public class AnvilGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
             Player player = helper.makeMockPlayer(GameType.SURVIVAL);
-            ItemStack out = anvilMergeOutput(player, new ItemStack(Items.DIAMOND_SWORD),
-                enchantedBook(Enchantments.SHARPNESS, 3));
+            ItemStack out = anvilMergeOutput(helper, player, new ItemStack(Items.DIAMOND_SWORD),
+                enchantedBook(helper, Enchantments.SHARPNESS, 3));
             helper.assertTrue(out.isEmpty(), "A disabled enchantment merge should produce no output");
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
@@ -1388,18 +1391,18 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsAnvilStripDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("disable_enchantments_enabled", false);
         ETTestHelper.setConfigValue("disable_enchantments", "");
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
-            ItemStack out = anvilMergeOutput(player, new ItemStack(Items.DIAMOND_SWORD),
-                enchantedBook(Enchantments.SHARPNESS, 3));
+            ItemStack out = anvilMergeOutput(helper, player, new ItemStack(Items.DIAMOND_SWORD),
+                enchantedBook(helper, Enchantments.SHARPNESS, 3));
             helper.assertFalse(out.isEmpty(), "A normal enchantment merge should produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS, out) == 3,
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) == 3,
                 "Sharpness should merge normally when not disabled (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS, out) + ")");
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) + ")");
         } finally {
             ETTestHelper.setFeature("disable_enchantments_enabled", false);
         }
@@ -1409,21 +1412,21 @@ public class AnvilGameTest implements FabricGameTest {
     // god armor merges protection enchantments
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void godArmorAnvilMerge(GameTestHelper helper) {
         ETTestHelper.setFeature("god_armor", true);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
             ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
-            chest.enchant(Enchantments.PROTECTION, 4);
-            ItemStack out = anvilMergeOutput(player, chest, enchantedBook(Enchantments.BLAST_PROTECTION, 4));
+            chest.enchant(holder(helper, Enchantments.PROTECTION), 4);
+            ItemStack out = anvilMergeOutput(helper, player, chest, enchantedBook(helper, Enchantments.BLAST_PROTECTION, 4));
             helper.assertFalse(out.isEmpty(), "God Armor merge output should be present");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.PROTECTION, out) == 4,
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PROTECTION), out) == 4,
                 "Output should keep Protection IV (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.PROTECTION, out) + ")");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLAST_PROTECTION, out) == 4,
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PROTECTION), out) + ")");
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.BLAST_PROTECTION), out) == 4,
                 "Output should gain Blast Protection IV (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLAST_PROTECTION, out) + ")");
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.BLAST_PROTECTION), out) + ")");
         } finally {
             ETTestHelper.setFeature("god_armor", false);
         }
@@ -1431,14 +1434,14 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void godArmorAnvilMergeDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("god_armor", false);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
             ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
-            chest.enchant(Enchantments.PROTECTION, 4);
-            ItemStack out = anvilMergeOutput(player, chest, enchantedBook(Enchantments.BLAST_PROTECTION, 4));
+            chest.enchant(holder(helper, Enchantments.PROTECTION), 4);
+            ItemStack out = anvilMergeOutput(helper, player, chest, enchantedBook(helper, Enchantments.BLAST_PROTECTION, 4));
             helper.assertTrue(out.isEmpty(),
                 "Without God Armor, incompatible protection enchantments must not produce output");
         } finally {
@@ -1450,20 +1453,20 @@ public class AnvilGameTest implements FabricGameTest {
     // god weapons merges damage enchantments
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsAnvilMerge(GameTestHelper helper) {
         ETTestHelper.setFeature("god_weapons", true);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
-            sword.enchant(Enchantments.SHARPNESS, 3);
-            ItemStack out = anvilMergeOutput(player, sword, enchantedBook(Enchantments.SMITE, 2));
+            sword.enchant(holder(helper, Enchantments.SHARPNESS), 3);
+            ItemStack out = anvilMergeOutput(helper, player, sword, enchantedBook(helper, Enchantments.SMITE, 2));
             helper.assertFalse(out.isEmpty(), "God Weapons merge output should be present");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS, out) == 3,
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) == 3,
                 "Output should keep Sharpness III (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS, out) + ")");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SMITE, out) == 2,
-                "Output should gain Smite II (got " + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SMITE, out)
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) + ")");
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SMITE), out) == 2,
+                "Output should gain Smite II (got " + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SMITE), out)
                     + ")");
         } finally {
             ETTestHelper.setFeature("god_weapons", false);
@@ -1472,14 +1475,14 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsAnvilMergeDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("god_weapons", false);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
-            sword.enchant(Enchantments.SHARPNESS, 3);
-            ItemStack out = anvilMergeOutput(player, sword, enchantedBook(Enchantments.SMITE, 2));
+            sword.enchant(holder(helper, Enchantments.SHARPNESS), 3);
+            ItemStack out = anvilMergeOutput(helper, player, sword, enchantedBook(helper, Enchantments.SMITE, 2));
             helper.assertTrue(out.isEmpty(),
                 "Without God Weapons, incompatible damage enchantments must not produce output");
         } finally {
@@ -1489,7 +1492,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsTridentCrossTweak(GameTestHelper helper) {
         // trident weapons allows sharpness on tridents
         // god weapons permits sharpness with impaling
@@ -1498,15 +1501,15 @@ public class AnvilGameTest implements FabricGameTest {
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
             ItemStack trident = new ItemStack(Items.TRIDENT);
-            trident.enchant(Enchantments.IMPALING, 3);
-            ItemStack out = anvilMergeOutput(player, trident, enchantedBook(Enchantments.SHARPNESS, 2));
+            trident.enchant(holder(helper, Enchantments.IMPALING), 3);
+            ItemStack out = anvilMergeOutput(helper, player, trident, enchantedBook(helper, Enchantments.SHARPNESS, 2));
             helper.assertFalse(out.isEmpty(), "Cross-tweak merge output should be present");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.IMPALING, out) == 3,
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.IMPALING), out) == 3,
                 "Output should keep Impaling III (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.IMPALING, out) + ")");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS, out) == 2,
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.IMPALING), out) + ")");
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) == 2,
                 "Output should gain Sharpness II (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS, out) + ")");
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.SHARPNESS), out) + ")");
         } finally {
             ETTestHelper.setFeature("god_weapons", false);
             ETTestHelper.setFeature("trident_weapons", false);
@@ -1517,21 +1520,21 @@ public class AnvilGameTest implements FabricGameTest {
     // multishot and piercing merge through anvils
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void multishotPiercingAnvilMerge(GameTestHelper helper) {
         ETTestHelper.setFeature("multishot_piercing", true);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
             ItemStack crossbow = new ItemStack(Items.CROSSBOW);
-            crossbow.enchant(Enchantments.MULTISHOT, 1);
-            ItemStack out = anvilMergeOutput(player, crossbow, enchantedBook(Enchantments.PIERCING, 1));
+            crossbow.enchant(holder(helper, Enchantments.MULTISHOT), 1);
+            ItemStack out = anvilMergeOutput(helper, player, crossbow, enchantedBook(helper, Enchantments.PIERCING, 1));
             helper.assertFalse(out.isEmpty(), "Multishot Piercing merge output should be present");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MULTISHOT, out) == 1,
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.MULTISHOT), out) == 1,
                 "Output should keep Multishot I (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MULTISHOT, out) + ")");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.PIERCING, out) == 1,
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.MULTISHOT), out) + ")");
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PIERCING), out) == 1,
                 "Output should gain Piercing I (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.PIERCING, out) + ")");
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.PIERCING), out) + ")");
         } finally {
             ETTestHelper.setFeature("multishot_piercing", false);
         }
@@ -1539,14 +1542,14 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void multishotPiercingAnvilMergeDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("multishot_piercing", false);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
             ItemStack crossbow = new ItemStack(Items.CROSSBOW);
-            crossbow.enchant(Enchantments.MULTISHOT, 1);
-            ItemStack out = anvilMergeOutput(player, crossbow, enchantedBook(Enchantments.PIERCING, 1));
+            crossbow.enchant(holder(helper, Enchantments.MULTISHOT), 1);
+            ItemStack out = anvilMergeOutput(helper, player, crossbow, enchantedBook(helper, Enchantments.PIERCING, 1));
             helper.assertTrue(out.isEmpty(),
                 "Without Multishot Piercing, incompatible enchantments must not produce output");
         } finally {
@@ -1558,29 +1561,29 @@ public class AnvilGameTest implements FabricGameTest {
     // trident weapons merge through anvils
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void tridentWeaponsAnvilMerge(GameTestHelper helper) {
         ETTestHelper.setFeature("trident_weapons", true);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
-            ItemStack outFa = anvilMergeOutput(player, new ItemStack(Items.TRIDENT),
-                enchantedBook(Enchantments.FIRE_ASPECT, 2));
+            ItemStack outFa = anvilMergeOutput(helper, player, new ItemStack(Items.TRIDENT),
+                enchantedBook(helper, Enchantments.FIRE_ASPECT, 2));
             helper.assertFalse(outFa.isEmpty(), "Fire Aspect transfer should produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.FIRE_ASPECT, outFa) == 2,
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.FIRE_ASPECT), outFa) == 2,
                 "Fire Aspect II should transfer onto a trident (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.FIRE_ASPECT, outFa) + ")");
-            ItemStack outKb = anvilMergeOutput(player, new ItemStack(Items.TRIDENT),
-                enchantedBook(Enchantments.KNOCKBACK, 2));
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.FIRE_ASPECT), outFa) + ")");
+            ItemStack outKb = anvilMergeOutput(helper, player, new ItemStack(Items.TRIDENT),
+                enchantedBook(helper, Enchantments.KNOCKBACK, 2));
             helper.assertFalse(outKb.isEmpty(), "Knockback transfer should produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.KNOCKBACK, outKb) == 2,
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.KNOCKBACK), outKb) == 2,
                 "Knockback II should transfer onto a trident (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.KNOCKBACK, outKb) + ")");
-            ItemStack outLo = anvilMergeOutput(player, new ItemStack(Items.TRIDENT),
-                enchantedBook(Enchantments.LOOTING, 3));
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.KNOCKBACK), outKb) + ")");
+            ItemStack outLo = anvilMergeOutput(helper, player, new ItemStack(Items.TRIDENT),
+                enchantedBook(helper, Enchantments.LOOTING, 3));
             helper.assertFalse(outLo.isEmpty(), "Looting transfer should produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.LOOTING, outLo) == 3,
+            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.LOOTING), outLo) == 3,
                 "Looting III should transfer onto a trident (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.LOOTING, outLo) + ")");
+                    + EnchantmentHelper.getItemEnchantmentLevel(holder(helper, Enchantments.LOOTING), outLo) + ")");
         } finally {
             ETTestHelper.setFeature("trident_weapons", false);
         }
@@ -1588,13 +1591,13 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void tridentWeaponsAnvilMergeDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("trident_weapons", false);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
-            ItemStack out = anvilMergeOutput(player, new ItemStack(Items.TRIDENT),
-                enchantedBook(Enchantments.FIRE_ASPECT, 2));
+            ItemStack out = anvilMergeOutput(helper, player, new ItemStack(Items.TRIDENT),
+                enchantedBook(helper, Enchantments.FIRE_ASPECT, 2));
             helper.assertTrue(out.isEmpty(),
                 "Without Trident Weapons, unsupported enchantments must not produce output");
         } finally {
@@ -1606,13 +1609,13 @@ public class AnvilGameTest implements FabricGameTest {
     // axe weapons precedence with disabled enchantments
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void axeWeaponsAnvilDisabled(GameTestHelper helper) {
         ETTestHelper.setFeature("axe_weapons", false);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
-            ItemStack out = anvilMergeOutput(player, new ItemStack(Items.DIAMOND_AXE),
-                enchantedBook(Enchantments.LOOTING, 3));
+            ItemStack out = anvilMergeOutput(helper, player, new ItemStack(Items.DIAMOND_AXE),
+                enchantedBook(helper, Enchantments.LOOTING, 3));
             helper.assertTrue(out.isEmpty(), "Without Axe Weapons, unsupported enchantments must not produce output");
         } finally {
             ETTestHelper.setFeature("axe_weapons", false);
@@ -1621,7 +1624,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void axeWeaponsDisableEnchantPrecedence(GameTestHelper helper) {
         // disabled enchantments override axe weapons
         ETTestHelper.setFeature("axe_weapons", true);
@@ -1629,8 +1632,8 @@ public class AnvilGameTest implements FabricGameTest {
         ETTestHelper.setConfigValue("disable_enchantments", "looting");
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
-            ItemStack out = anvilMergeOutput(player, new ItemStack(Items.DIAMOND_AXE),
-                enchantedBook(Enchantments.LOOTING, 3));
+            ItemStack out = anvilMergeOutput(helper, player, new ItemStack(Items.DIAMOND_AXE),
+                enchantedBook(helper, Enchantments.LOOTING, 3));
             helper.assertTrue(out.isEmpty(), "Disabled enchantments must prevent the axe merge output");
         } finally {
             ETTestHelper.setFeature("axe_weapons", false);
@@ -1643,18 +1646,18 @@ public class AnvilGameTest implements FabricGameTest {
     // raised caps apply during anvil merges
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void capmodAnvilClamp(GameTestHelper helper) {
         ETTestHelper.setCapmod(true);
         ETTestHelper.setEnchantCap("sharpness", 10);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
-            ItemStack out = anvilMergeOutput(player, enchantedBook(Enchantments.SHARPNESS, 5),
-                enchantedBook(Enchantments.SHARPNESS, 5));
+            ItemStack out = anvilMergeOutput(helper, player, enchantedBook(helper, Enchantments.SHARPNESS, 5),
+                enchantedBook(helper, Enchantments.SHARPNESS, 5));
             helper.assertFalse(out.isEmpty(), "Combining two Sharpness books should produce output");
-            helper.assertTrue(bookOrItemLevel(Enchantments.SHARPNESS, out) == 6,
+            helper.assertTrue(bookOrItemLevel(holder(helper, Enchantments.SHARPNESS), out) == 6,
                 "With the cap raised to 10, two Sharpness-V books should combine to VI (got "
-                    + bookOrItemLevel(Enchantments.SHARPNESS, out) + ")");
+                    + bookOrItemLevel(holder(helper, Enchantments.SHARPNESS), out) + ")");
         } finally {
             ETTestHelper.setCapmod(false);
             ETTestHelper.setEnchantCap("sharpness", -1);
@@ -1663,20 +1666,20 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void capmodAnvilClampDisabled(GameTestHelper helper) {
         ETTestHelper.setCapmod(false);
         ETTestHelper.setEnchantCap("sharpness", -1);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         try {
-            ItemStack out = anvilMergeOutput(player, enchantedBook(Enchantments.SHARPNESS, 5),
-                enchantedBook(Enchantments.SHARPNESS, 5));
+            ItemStack out = anvilMergeOutput(helper, player, enchantedBook(helper, Enchantments.SHARPNESS, 5),
+                enchantedBook(helper, Enchantments.SHARPNESS, 5));
             helper.assertFalse(out.isEmpty(), "Vanilla Sharpness combine should produce output");
             // book outputs use stored enchantments
             // book or item level reads them
-            helper.assertTrue(bookOrItemLevel(Enchantments.SHARPNESS, out) == 5,
+            helper.assertTrue(bookOrItemLevel(holder(helper, Enchantments.SHARPNESS), out) == 5,
                 "Without capmod the anvil clamps the combine to the vanilla max of 5 (got "
-                    + bookOrItemLevel(Enchantments.SHARPNESS, out) + ")");
+                    + bookOrItemLevel(holder(helper, Enchantments.SHARPNESS), out) + ")");
         } finally {
             ETTestHelper.setCapmod(false);
         }
@@ -1686,7 +1689,7 @@ public class AnvilGameTest implements FabricGameTest {
     // edge cases
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperFractionalRounding(GameTestHelper helper) {
         ETTestHelper.setFeature("prior_work_cheaper", true);
         ETTestHelper.setConfigValue("pw_cost_multiplier", "0.5");
@@ -1697,7 +1700,7 @@ public class AnvilGameTest implements FabricGameTest {
             ItemStack sword3 = new ItemStack(Items.DIAMOND_SWORD);
             sword3.setDamageValue(200);
             sword3.set(DataComponents.REPAIR_COST, 3);
-            ItemStack out3 = anvilMergeOutput(player, sword3, new ItemStack(Items.DIAMOND));
+            ItemStack out3 = anvilMergeOutput(helper, player, sword3, new ItemStack(Items.DIAMOND));
             helper.assertFalse(out3.isEmpty(), "Fractional rounding repair should produce an output");
             int rc3 = out3.getOrDefault(DataComponents.REPAIR_COST, -1);
             helper.assertTrue(rc3 == 3, "round(0.5*3+1)=round(2.5) must be 3 (half-up), not 2 (got " + rc3 + ")");
@@ -1706,7 +1709,7 @@ public class AnvilGameTest implements FabricGameTest {
             ItemStack sword1 = new ItemStack(Items.DIAMOND_SWORD);
             sword1.setDamageValue(200);
             sword1.set(DataComponents.REPAIR_COST, 1);
-            ItemStack out1 = anvilMergeOutput(player, sword1, new ItemStack(Items.DIAMOND));
+            ItemStack out1 = anvilMergeOutput(helper, player, sword1, new ItemStack(Items.DIAMOND));
             helper.assertFalse(out1.isEmpty(), "Second fractional rounding repair should produce an output");
             int rc1 = out1.getOrDefault(DataComponents.REPAIR_COST, -1);
             helper.assertTrue(rc1 == 2, "round(0.5*1+1)=round(1.5) must be 2 (got " + rc1 + ")");
@@ -1718,7 +1721,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkFreeCheapNamesCombineStillReduced(GameTestHelper helper) {
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         ETTestHelper.setFeature("cheap_names", true);
@@ -1729,7 +1732,7 @@ public class AnvilGameTest implements FabricGameTest {
             sword.setDamageValue(500);
             sword.set(DataComponents.REPAIR_COST, 8);
             AnvilMenu h = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
             h.createResult();
             fullCost = h.getCost();
         }
@@ -1741,7 +1744,7 @@ public class AnvilGameTest implements FabricGameTest {
             sword.setDamageValue(500);
             sword.set(DataComponents.REPAIR_COST, 8);
             AnvilMenu h = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
             h.createResult();
             helper.assertTrue(h.getCost() == fullCost - 8,
                 "On a combine, PriorWorkFree must still subtract the penalty even with cheap_names on: expected "
@@ -1754,7 +1757,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void priorWorkCheaperAndFreeCompose(GameTestHelper helper) {
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         // baseline cost uses a repair without prior-work penalties
@@ -1765,7 +1768,7 @@ public class AnvilGameTest implements FabricGameTest {
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.setDamageValue(200);
             AnvilMenu h = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
             h.createResult();
             baseCost = h.getCost();
         }
@@ -1777,7 +1780,7 @@ public class AnvilGameTest implements FabricGameTest {
             sword.setDamageValue(200);
             sword.set(DataComponents.REPAIR_COST, 4);
             AnvilMenu h = new AnvilMenu(0, player.getInventory());
-            ETTestHelper.setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(h, sword, new ItemStack(Items.DIAMOND));
             h.createResult();
             // prior work free removes the four-level penalty
             // this matches the no-penalty baseline
@@ -1798,7 +1801,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void sturdyAnvilsNegativeChanceClampsToZero(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("sturdy_anvils", "anvil_damage_chance");
         try {
@@ -1815,12 +1818,12 @@ public class AnvilGameTest implements FabricGameTest {
             for (int i = 0; i < 10; i++) {
                 ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
                 sword.setDamageValue(100);
-                ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+                setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
                 handler.createResult();
                 ItemStack result = handler.getSlot(AnvilMenu.RESULT_SLOT).getItem();
                 helper.assertFalse(result.isEmpty(),
                     "A negative-chance repair setup must produce an output before onTakeOutput");
-                ETTestHelper.invokeOnTakeOutput(handler, player, result);
+                invokeOnTake(handler, player, result);
             }
             helper.assertBlockPresent(Blocks.ANVIL, anvilPos);
         } finally {
@@ -1830,7 +1833,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void sturdyAnvilsAboveOneClampsToOne(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("sturdy_anvils", "anvil_damage_chance");
         try {
@@ -1846,12 +1849,12 @@ public class AnvilGameTest implements FabricGameTest {
             AnvilMenu handler = new AnvilMenu(0, player.getInventory(), ctx);
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.setDamageValue(100);
-            ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
             handler.createResult();
             ItemStack result = handler.getSlot(AnvilMenu.RESULT_SLOT).getItem();
             helper.assertFalse(result.isEmpty(),
                 "An above-one-chance repair setup must produce an output before onTakeOutput");
-            ETTestHelper.invokeOnTakeOutput(handler, player, result);
+            invokeOnTake(handler, player, result);
             helper.assertFalse(world.getBlockState(absPos).is(Blocks.ANVIL),
                 "anvil_damage_chance=5.0 should clamp to 1.0 and degrade the anvil on first use");
         } finally {
@@ -1861,7 +1864,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void sturdyAnvilsCreativeNeverDamaged(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("sturdy_anvils", "anvil_damage_chance");
         try {
@@ -1880,12 +1883,12 @@ public class AnvilGameTest implements FabricGameTest {
                 "abilities.creativeMode must make isInCreativeMode() true (validates the setup)");
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
             sword.setDamageValue(100);
-            ETTestHelper.setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
+            setAnvilInputs(handler, sword, new ItemStack(Items.DIAMOND));
             handler.createResult();
             ItemStack result = handler.getSlot(AnvilMenu.RESULT_SLOT).getItem();
             helper.assertFalse(result.isEmpty(),
                 "A creative-anvil repair setup must produce an output before onTakeOutput");
-            ETTestHelper.invokeOnTakeOutput(handler, player, result);
+            invokeOnTake(handler, player, result);
             helper.assertTrue(world.getBlockState(absPos).is(Blocks.ANVIL),
                 "A creative player must never damage the anvil, even at damage_chance=1.0");
         } finally {
@@ -1895,7 +1898,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairNegativeCostDisables(GameTestHelper helper) {
         ETTestHelper.setFeature("anvil_repair", true);
         ETTestHelper.setConfigValue("anvil_repair_ingot_cost", "-5");
@@ -1909,14 +1912,14 @@ public class AnvilGameTest implements FabricGameTest {
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
 
-            player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 9));
+            player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 9));
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
             helper.assertTrue(world.getBlockState(absPos).is(Blocks.DAMAGED_ANVIL),
                 "Negative cost should disable ingot repair");
             helper.assertTrue(player.getMainHandItem().getCount() == 9,
                 "No ingots should be consumed with a negative cost (got " + player.getMainHandItem().getCount() + ")");
 
-            player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_BLOCK, 2));
+            player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_BLOCK, 2));
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
             helper.assertTrue(world.getBlockState(absPos).is(Blocks.DAMAGED_ANVIL),
                 "Negative cost should disable block repair");
@@ -1931,7 +1934,7 @@ public class AnvilGameTest implements FabricGameTest {
     }
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void anvilRepairHugeCostUnaffordable(GameTestHelper helper) {
         ETTestHelper.setFeature("anvil_repair", true);
         ETTestHelper.setConfigValue("anvil_repair_ingot_cost", String.valueOf(Integer.MAX_VALUE));
@@ -1945,14 +1948,14 @@ public class AnvilGameTest implements FabricGameTest {
         try {
             BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absPos), Direction.UP, absPos, false);
 
-            player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_INGOT, 64));
+            player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_INGOT, 64));
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
             helper.assertTrue(world.getBlockState(absPos).is(Blocks.DAMAGED_ANVIL),
                 "A max-int cost must be unaffordable with ingots");
             helper.assertTrue(player.getMainHandItem().getCount() == 64,
                 "No ingots consumed at an unaffordable cost (got " + player.getMainHandItem().getCount() + ")");
 
-            player.getInventory().setItem(player.getInventory().selected, new ItemStack(Items.IRON_BLOCK, 64));
+            player.getInventory().setItem(player.getInventory().getSelectedSlot(), new ItemStack(Items.IRON_BLOCK, 64));
             player.gameMode.useItemOn(player, world, player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
             helper.assertTrue(world.getBlockState(absPos).is(Blocks.DAMAGED_ANVIL),
                 "A max-int cost (not a multiple of 9) must be unaffordable with blocks");
@@ -1970,32 +1973,106 @@ public class AnvilGameTest implements FabricGameTest {
     /**
      * builds an anvil handler and updates its result returns the output stack
      */
-    private static ItemStack anvilMergeOutput(Player player, ItemStack first, ItemStack second) {
+    private static ItemStack anvilMergeOutput(GameTestHelper helper, Player player, ItemStack first,
+        ItemStack second) {
         AnvilMenu handler = new AnvilMenu(0, player.getInventory());
-        ETTestHelper.setAnvilInputs(handler, first, second);
+        setAnvilInputs(handler, first, second);
         handler.createResult();
         return handler.getSlot(AnvilMenu.RESULT_SLOT).getItem();
     }
 
-    /** creates an enchanted book with one stored enchantment */
-    private static ItemStack enchantedBook(Enchantment enchantment, int level) {
-        return EnchantedBookItem.createForEnchantment(new EnchantmentInstance(enchantment, level));
+    /** resolves an enchantment key to its holder from the test level registry */
+    private static Holder<Enchantment> holder(GameTestHelper helper, ResourceKey<Enchantment> key) {
+        return helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
     }
 
-    private static int bookOrItemLevel(Enchantment enchantment, ItemStack stack) {
+    /** creates an enchanted book with one stored enchantment */
+    private static ItemStack enchantedBook(GameTestHelper helper, ResourceKey<Enchantment> key, int level) {
+        ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
+        book.enchant(holder(helper, key), level);
+        return book;
+    }
+
+    private static int bookOrItemLevel(Holder<Enchantment> enchantment, ItemStack stack) {
         return EnchantmentHelper.getEnchantmentsForCrafting(stack).getLevel(enchantment);
     }
 
     /**
-     * uses reflection to call protected can-take-output
+     * sets the two input slots of an anvil menu by directly writing to the
+     * underlying container stacks list, bypassing the markDirty callback chain
+     * that would otherwise NPE in sendContentUpdates during tests
+     */
+    private static void setAnvilInputs(AnvilMenu handler, ItemStack first, ItemStack second) {
+        try {
+            Field inputField = ItemCombinerMenu.class.getDeclaredField("inputSlots");
+            inputField.setAccessible(true);
+            Object inv = inputField.get(handler);
+            Field stacksField = null;
+            for (Class<?> type = inv.getClass(); type != null; type = type.getSuperclass()) {
+                try {
+                    stacksField = type.getDeclaredField("items");
+                    break;
+                } catch (NoSuchFieldException ignored) {
+                    // continue through the inventory class hierarchy
+                }
+            }
+            if (stacksField == null)
+                throw new NoSuchFieldException("items");
+            stacksField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            List<ItemStack> stacks = (List<ItemStack>) stacksField.get(inv);
+            stacks.set(0, first);
+            stacks.set(1, second);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("setAnvilInputs reflection failed", e);
+        }
+    }
+
+    /**
+     * sets the itemName field on AnvilMenu via reflection (field is private)
+     */
+    private static void setAnvilNewName(AnvilMenu handler, String name) {
+        try {
+            Field field = AnvilMenu.class.getDeclaredField("itemName");
+            field.setAccessible(true);
+            field.set(handler, name);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("setAnvilNewName reflection failed", e);
+        }
+    }
+
+    /** calls static AnvilMenu.calculateIncreasedRepairCost via reflection */
+    private static int getNextAnvilCost(int cost) {
+        try {
+            Method method = AnvilMenu.class.getDeclaredMethod("calculateIncreasedRepairCost", int.class);
+            method.setAccessible(true);
+            return (int) method.invoke(null, cost);
+        } catch (Exception e) {
+            throw new RuntimeException("calculateIncreasedRepairCost reflection failed", e);
+        }
+    }
+
+    /** calls the protected AnvilMenu.onTake via reflection */
+    private static void invokeOnTake(AnvilMenu handler, Player player, ItemStack stack) {
+        try {
+            Method method = AnvilMenu.class.getDeclaredMethod("onTake", Player.class, ItemStack.class);
+            method.setAccessible(true);
+            method.invoke(handler, player, stack);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("onTake reflection failed", e);
+        }
+    }
+
+    /**
+     * uses reflection to call protected may-pickup check
      */
     private static boolean invokeCanTakeOutput(AnvilMenu handler, Player player) {
         try {
-            Method m = AnvilMenu.class.getDeclaredMethod("canTakeOutput", Player.class, boolean.class);
+            Method m = AnvilMenu.class.getDeclaredMethod("mayPickup", Player.class, boolean.class);
             m.setAccessible(true);
             return (boolean) m.invoke(handler, player, true);
         } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("canTakeOutput reflection failed", e);
+            throw new RuntimeException("mayPickup reflection failed", e);
         }
     }
 }

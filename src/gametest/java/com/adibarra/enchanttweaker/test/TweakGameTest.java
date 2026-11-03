@@ -1,36 +1,35 @@
 package com.adibarra.enchanttweaker.test;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.npc.ClientSideMerchant;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.ThrownTrident;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.MerchantContainer;
-import net.minecraft.world.item.EnchantedBookItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -49,12 +48,13 @@ import net.minecraft.world.level.storage.loot.functions.LootItemFunction;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.phys.AABB;
 
-public class TweakGameTest implements FabricGameTest {
+import com.adibarra.utils.ADUtils;
+
+public class TweakGameTest {
 
     // experience scaling
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("xp_scaling", "xp_scaling_base",
@@ -79,8 +79,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("xp_scaling");
@@ -98,8 +97,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingCustomValues(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("xp_scaling", "xp_scaling_base",
@@ -127,8 +125,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingOverflowClamped(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("xp_scaling", "xp_scaling_base",
@@ -157,8 +154,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingNegativeStepClamped(GameTestHelper helper) {
         // negative scaling clamps experience requirements to one
 
@@ -188,8 +184,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // disableEnchantments
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsRandomSelection(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("disable_enchantments",
@@ -198,9 +193,9 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
             try {
-                helper.assertFalse(Enchantments.SHARPNESS.isDiscoverable(),
+                helper.assertFalse(isAvailableForSelection(helper, Enchantments.SHARPNESS),
                     "Sharpness should not be available for random selection when disabled");
-                helper.assertTrue(Enchantments.SMITE.isDiscoverable(),
+                helper.assertTrue(isAvailableForSelection(helper, Enchantments.SMITE),
                     "Smite should still be available for random selection");
             } finally {
                 ETTestHelper.setConfigValue("disable_enchantments", "");
@@ -213,8 +208,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsFullIdentifier(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("disable_enchantments",
@@ -223,7 +217,7 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             ETTestHelper.setConfigValue("disable_enchantments", "minecraft:sharpness");
             try {
-                helper.assertFalse(Enchantments.SHARPNESS.isDiscoverable(),
+                helper.assertFalse(isAvailableForSelection(helper, Enchantments.SHARPNESS),
                     "Full enchantment identifiers should match exactly");
             } finally {
                 ETTestHelper.setConfigValue("disable_enchantments", "");
@@ -236,8 +230,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsExplicitLootList(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("disable_enchantments",
@@ -250,18 +243,18 @@ public class TweakGameTest implements FabricGameTest {
                 LootContext context = new LootContext.Builder(parameters).withOptionalRandomSeed(1)
                     .create(Optional.empty());
                 LootItemFunction function = EnchantRandomlyFunction.randomEnchantment()
-                    .withEnchantment(Enchantments.SWIFT_SNEAK).build();
+                    .withEnchantment(enchantHolder(helper, Enchantments.SWIFT_SNEAK)).build();
                 ItemStack result = function.apply(new ItemStack(Items.BOOK), context);
 
                 helper.assertTrue(result.is(Items.BOOK),
                     "An explicit loot list containing only a disabled enchantment must leave the book unchanged");
-                helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SWIFT_SNEAK, result) == 0,
+                helper.assertTrue(enchantLevel(result, Enchantments.SWIFT_SNEAK) == 0,
                     "Explicit enchant_randomly lists must not bypass disable_enchantments");
 
                 LootItemFunction allowedFunction = EnchantRandomlyFunction.randomEnchantment()
-                    .withEnchantment(Enchantments.SMITE).build();
+                    .withEnchantment(enchantHolder(helper, Enchantments.SMITE)).build();
                 ItemStack allowed = allowedFunction.apply(new ItemStack(Items.DIAMOND_SWORD), context);
-                helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SMITE, allowed) > 0,
+                helper.assertTrue(enchantLevel(allowed, Enchantments.SMITE) > 0,
                     "A non-disabled explicit enchantment should still be applied");
             } finally {
                 ETTestHelper.setConfigValue("disable_enchantments", "");
@@ -274,8 +267,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsBookOffer(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("disable_enchantments",
@@ -284,9 +276,25 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
             try {
-                helper.assertFalse(Enchantments.SHARPNESS.isTradeable(),
+                // librarian book trades sample random enchantments through
+                // EnchantRandomlyFunction, which filters disabled entries
+                LootParams parameters = new LootParams.Builder(helper.getLevel()).create(LootContextParamSets.EMPTY);
+                LootItemFunction function = EnchantRandomlyFunction.randomEnchantment().build();
+                boolean sawSharpness = false;
+                boolean sawOther = false;
+                for (int i = 0; i < 60; i++) {
+                    LootContext context = new LootContext.Builder(parameters).withOptionalRandomSeed(i)
+                        .create(Optional.empty());
+                    ItemStack result = function.apply(new ItemStack(Items.BOOK), context);
+                    if (ADUtils.getEnchantmentLevel(result, Enchantments.SHARPNESS) > 0) {
+                        sawSharpness = true;
+                    } else if (!EnchantmentHelper.getEnchantmentsForCrafting(result).isEmpty()) {
+                        sawOther = true;
+                    }
+                }
+                helper.assertFalse(sawSharpness,
                     "Sharpness should not be available for book offers when disabled");
-                helper.assertTrue(Enchantments.SMITE.isTradeable(), "Smite should still be available for book offers");
+                helper.assertTrue(sawOther, "Smite and other enchantments should still be offered for book trades");
             } finally {
                 ETTestHelper.setConfigValue("disable_enchantments", "");
                 ETTestHelper.setFeature("disable_enchantments_enabled", false);
@@ -298,8 +306,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsMaxLevel(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("disable_enchantments",
@@ -308,9 +315,9 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
             try {
-                helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 0,
-                    "Sharpness max level should be 0 when disabled (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
-                helper.assertTrue(Enchantments.SMITE.getMaxLevel() > 0, "Smite max level should be unchanged");
+                helper.assertTrue(maxLevel(helper, Enchantments.SHARPNESS) == 0,
+                    "Sharpness max level should be 0 when disabled (got " + maxLevel(helper, Enchantments.SHARPNESS) + ")");
+                helper.assertTrue(maxLevel(helper, Enchantments.SMITE) > 0, "Smite max level should be unchanged");
             } finally {
                 ETTestHelper.setConfigValue("disable_enchantments", "");
                 ETTestHelper.setFeature("disable_enchantments_enabled", false);
@@ -322,8 +329,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsEmpty(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("disable_enchantments",
@@ -332,9 +338,9 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             ETTestHelper.setConfigValue("disable_enchantments", "");
             try {
-                helper.assertTrue(Enchantments.SHARPNESS.isDiscoverable(),
+                helper.assertTrue(isAvailableForSelection(helper, Enchantments.SHARPNESS),
                     "Sharpness should be available when disable list is empty");
-                helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() > 0,
+                helper.assertTrue(maxLevel(helper, Enchantments.SHARPNESS) > 0,
                     "Sharpness max level should be normal when disable list is empty");
             } finally {
                 ETTestHelper.setFeature("disable_enchantments_enabled", false);
@@ -348,14 +354,13 @@ public class TweakGameTest implements FabricGameTest {
 
     // godArmor
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godArmorEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("god_armor");
         try {
             ETTestHelper.setFeature("god_armor", true);
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.PROTECTION, Enchantments.BLAST_PROTECTION),
+            helper.assertTrue(areCompatible(helper, Enchantments.PROTECTION, Enchantments.BLAST_PROTECTION),
                 "Protection should accept Blast Protection when enabled");
             helper.succeed();
 
@@ -364,15 +369,14 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godArmorDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("god_armor");
         try {
             ETTestHelper.setFeature("god_armor", false);
             try {
-                helper.assertTrue(!ETTestHelper.canAccept(Enchantments.PROTECTION, Enchantments.BLAST_PROTECTION),
+                helper.assertTrue(!areCompatible(helper, Enchantments.PROTECTION, Enchantments.BLAST_PROTECTION),
                     "Protection should not accept Blast Protection when disabled");
             } finally {
                 ETTestHelper.setFeature("god_armor", false);
@@ -384,24 +388,23 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godArmorAllTypes(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("god_armor");
         try {
             ETTestHelper.setFeature("god_armor", true);
             // different types: all allowed
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.PROTECTION, Enchantments.FIRE_PROTECTION),
+            helper.assertTrue(areCompatible(helper, Enchantments.PROTECTION, Enchantments.FIRE_PROTECTION),
                 "Protection accepts Fire Protection");
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.PROTECTION, Enchantments.FEATHER_FALLING),
+            helper.assertTrue(areCompatible(helper, Enchantments.PROTECTION, Enchantments.FEATHER_FALLING),
                 "Protection accepts Feather Falling");
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.PROTECTION, Enchantments.BLAST_PROTECTION),
+            helper.assertTrue(areCompatible(helper, Enchantments.PROTECTION, Enchantments.BLAST_PROTECTION),
                 "Protection accepts Blast Protection");
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.PROTECTION, Enchantments.PROJECTILE_PROTECTION),
+            helper.assertTrue(areCompatible(helper, Enchantments.PROTECTION, Enchantments.PROJECTILE_PROTECTION),
                 "Protection accepts Projectile Protection");
             // same type: still blocked
-            helper.assertTrue(!ETTestHelper.canAccept(Enchantments.PROTECTION, Enchantments.PROTECTION),
+            helper.assertTrue(!areCompatible(helper, Enchantments.PROTECTION, Enchantments.PROTECTION),
                 "Protection should not accept itself");
             helper.succeed();
 
@@ -412,16 +415,15 @@ public class TweakGameTest implements FabricGameTest {
 
     // godWeapons
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("god_weapons");
         try {
             ETTestHelper.setFeature("god_weapons", true);
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.SHARPNESS, Enchantments.SMITE),
+            helper.assertTrue(areCompatible(helper, Enchantments.SHARPNESS, Enchantments.SMITE),
                 "Sharpness should accept Smite when enabled");
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.SHARPNESS, Enchantments.BANE_OF_ARTHROPODS),
+            helper.assertTrue(areCompatible(helper, Enchantments.SHARPNESS, Enchantments.BANE_OF_ARTHROPODS),
                 "Sharpness should accept Bane when enabled");
             helper.succeed();
 
@@ -430,15 +432,14 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("god_weapons");
         try {
             ETTestHelper.setFeature("god_weapons", false);
             try {
-                helper.assertTrue(!ETTestHelper.canAccept(Enchantments.SHARPNESS, Enchantments.SMITE),
+                helper.assertTrue(!areCompatible(helper, Enchantments.SHARPNESS, Enchantments.SMITE),
                     "Sharpness should not accept Smite when disabled");
             } finally {
                 ETTestHelper.setFeature("god_weapons", false);
@@ -452,14 +453,13 @@ public class TweakGameTest implements FabricGameTest {
 
     // infiniteMending
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void infiniteMendingEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("infinite_mending");
         try {
             ETTestHelper.setFeature("infinite_mending", true);
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.INFINITY, Enchantments.MENDING),
+            helper.assertTrue(areCompatible(helper, Enchantments.INFINITY, Enchantments.MENDING),
                 "Infinity should accept Mending when enabled");
             helper.succeed();
 
@@ -468,15 +468,14 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void infiniteMendingDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("infinite_mending");
         try {
             ETTestHelper.setFeature("infinite_mending", false);
             try {
-                helper.assertTrue(!ETTestHelper.canAccept(Enchantments.INFINITY, Enchantments.MENDING),
+                helper.assertTrue(!areCompatible(helper, Enchantments.INFINITY, Enchantments.MENDING),
                     "Infinity should not accept Mending when disabled");
             } finally {
                 ETTestHelper.setFeature("infinite_mending", false);
@@ -490,15 +489,14 @@ public class TweakGameTest implements FabricGameTest {
 
     // noMendingUnbreaking
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void noMendingUnbreakingEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("no_mending_unbreaking");
         try {
             ETTestHelper.setFeature("no_mending_unbreaking", true);
             try {
-                helper.assertFalse(ETTestHelper.canAccept(Enchantments.MENDING, Enchantments.UNBREAKING),
+                helper.assertFalse(areCompatible(helper, Enchantments.MENDING, Enchantments.UNBREAKING),
                     "Mending should not accept Unbreaking when no_mending_unbreaking enabled");
             } finally {
                 ETTestHelper.setFeature("no_mending_unbreaking", false);
@@ -510,14 +508,13 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void noMendingUnbreakingDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("no_mending_unbreaking");
         try {
             ETTestHelper.setFeature("no_mending_unbreaking", false);
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.MENDING, Enchantments.UNBREAKING),
+            helper.assertTrue(areCompatible(helper, Enchantments.MENDING, Enchantments.UNBREAKING),
                 "Mending should accept Unbreaking when no_mending_unbreaking disabled");
             helper.succeed();
 
@@ -528,15 +525,14 @@ public class TweakGameTest implements FabricGameTest {
 
     // multishotPiercing
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void multishotPiercingEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("multishot_piercing");
         try {
             ETTestHelper.setFeature("multishot_piercing", true);
             try {
-                helper.assertTrue(ETTestHelper.canAccept(Enchantments.MULTISHOT, Enchantments.PIERCING),
+                helper.assertTrue(areCompatible(helper, Enchantments.MULTISHOT, Enchantments.PIERCING),
                     "Multishot should accept Piercing when enabled");
             } finally {
                 ETTestHelper.setFeature("multishot_piercing", false);
@@ -548,8 +544,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void multishotPiercingReverse(GameTestHelper helper) {
         // both enchantments must accept each other
         // the anvil checks both directions
@@ -558,14 +553,14 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("multishot_piercing", true);
             try {
-                helper.assertTrue(ETTestHelper.canAccept(Enchantments.PIERCING, Enchantments.MULTISHOT),
+                helper.assertTrue(areCompatible(helper, Enchantments.PIERCING, Enchantments.MULTISHOT),
                     "Piercing should accept Multishot when enabled");
             } finally {
                 ETTestHelper.setFeature("multishot_piercing", false);
             }
             ETTestHelper.setFeature("multishot_piercing", false);
             try {
-                helper.assertFalse(ETTestHelper.canAccept(Enchantments.PIERCING, Enchantments.MULTISHOT),
+                helper.assertFalse(areCompatible(helper, Enchantments.PIERCING, Enchantments.MULTISHOT),
                     "Piercing should NOT accept Multishot when disabled");
             } finally {
                 ETTestHelper.setFeature("multishot_piercing", false);
@@ -577,15 +572,14 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void multishotPiercingDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("multishot_piercing");
         try {
             ETTestHelper.setFeature("multishot_piercing", false);
             try {
-                helper.assertTrue(!ETTestHelper.canAccept(Enchantments.MULTISHOT, Enchantments.PIERCING),
+                helper.assertTrue(!areCompatible(helper, Enchantments.MULTISHOT, Enchantments.PIERCING),
                     "Multishot should not accept Piercing when disabled");
             } finally {
                 ETTestHelper.setFeature("multishot_piercing", false);
@@ -599,19 +593,18 @@ public class TweakGameTest implements FabricGameTest {
 
     // tridentWeapons
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tridentWeaponsEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("trident_weapons");
         try {
             ETTestHelper.setFeature("trident_weapons", true);
             ItemStack trident = new ItemStack(Items.TRIDENT);
-            helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.FIRE_ASPECT, trident),
+            helper.assertTrue(canEnchant(helper, Enchantments.FIRE_ASPECT, trident),
                 "Fire Aspect should be acceptable on trident");
-            helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.KNOCKBACK, trident),
+            helper.assertTrue(canEnchant(helper, Enchantments.KNOCKBACK, trident),
                 "Knockback should be acceptable on trident");
-            helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, trident),
+            helper.assertTrue(canEnchant(helper, Enchantments.LOOTING, trident),
                 "Looting should be acceptable on trident");
             helper.succeed();
 
@@ -620,8 +613,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tridentWeaponsDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("trident_weapons");
@@ -629,11 +621,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("trident_weapons", false);
             ItemStack trident = new ItemStack(Items.TRIDENT);
             try {
-                helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.FIRE_ASPECT, trident),
+                helper.assertTrue(!canEnchant(helper, Enchantments.FIRE_ASPECT, trident),
                     "Fire Aspect should not be acceptable on trident when disabled");
-                helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.KNOCKBACK, trident),
+                helper.assertTrue(!canEnchant(helper, Enchantments.KNOCKBACK, trident),
                     "Knockback should not be acceptable on trident when disabled");
-                helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.LOOTING, trident),
+                helper.assertTrue(!canEnchant(helper, Enchantments.LOOTING, trident),
                     "Looting should not be acceptable on trident when disabled");
             } finally {
                 ETTestHelper.setFeature("trident_weapons", false);
@@ -647,19 +639,18 @@ public class TweakGameTest implements FabricGameTest {
 
     // axeWeapons
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void axeWeaponsEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("axe_weapons");
         try {
             ETTestHelper.setFeature("axe_weapons", true);
             ItemStack axe = new ItemStack(Items.DIAMOND_AXE);
-            helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.FIRE_ASPECT, axe),
+            helper.assertTrue(canEnchant(helper, Enchantments.FIRE_ASPECT, axe),
                 "Fire Aspect should be acceptable on axe");
-            helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.KNOCKBACK, axe),
+            helper.assertTrue(canEnchant(helper, Enchantments.KNOCKBACK, axe),
                 "Knockback should be acceptable on axe");
-            helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, axe),
+            helper.assertTrue(canEnchant(helper, Enchantments.LOOTING, axe),
                 "Looting should be acceptable on axe");
             helper.succeed();
 
@@ -668,8 +659,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void axeWeaponsDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("axe_weapons");
@@ -677,11 +667,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("axe_weapons", false);
             ItemStack axe = new ItemStack(Items.DIAMOND_AXE);
             try {
-                helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.FIRE_ASPECT, axe),
+                helper.assertTrue(!canEnchant(helper, Enchantments.FIRE_ASPECT, axe),
                     "Fire Aspect should not be acceptable on axe when disabled");
-                helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.KNOCKBACK, axe),
+                helper.assertTrue(!canEnchant(helper, Enchantments.KNOCKBACK, axe),
                     "Knockback should not be acceptable on axe when disabled");
-                helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.LOOTING, axe),
+                helper.assertTrue(!canEnchant(helper, Enchantments.LOOTING, axe),
                     "Looting should not be acceptable on axe when disabled");
             } finally {
                 ETTestHelper.setFeature("axe_weapons", false);
@@ -695,8 +685,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // bowLooting
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowLootingEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("bow_looting");
@@ -704,9 +693,9 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("bow_looting", true);
             ItemStack bow = new ItemStack(Items.BOW);
             ItemStack crossbow = new ItemStack(Items.CROSSBOW);
-            helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, bow),
+            helper.assertTrue(canEnchant(helper, Enchantments.LOOTING, bow),
                 "Looting should be acceptable on bow");
-            helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, crossbow),
+            helper.assertTrue(canEnchant(helper, Enchantments.LOOTING, crossbow),
                 "Looting should be acceptable on crossbow");
             helper.succeed();
 
@@ -715,8 +704,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowLootingDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("bow_looting");
@@ -725,9 +713,9 @@ public class TweakGameTest implements FabricGameTest {
             ItemStack bow = new ItemStack(Items.BOW);
             ItemStack crossbow = new ItemStack(Items.CROSSBOW);
             try {
-                helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.LOOTING, bow),
+                helper.assertTrue(!canEnchant(helper, Enchantments.LOOTING, bow),
                     "Looting should not be acceptable on bow when disabled");
-                helper.assertTrue(!ETTestHelper.isAcceptableItem(Enchantments.LOOTING, crossbow),
+                helper.assertTrue(!canEnchant(helper, Enchantments.LOOTING, crossbow),
                     "Looting should not be acceptable on crossbow when disabled");
             } finally {
                 ETTestHelper.setFeature("bow_looting", false);
@@ -741,8 +729,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // axesNotTools
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void axesNotToolsEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("axes_not_tools");
@@ -750,9 +737,9 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("axes_not_tools", true);
             ServerLevel world = helper.getLevel();
             ItemStack axe = new ItemStack(Items.DIAMOND_AXE);
-            Zombie target = EntityType.ZOMBIE.create(world);
-            Zombie attacker = EntityType.ZOMBIE.create(world);
-            axe.getItem().hurtEnemy(axe, target, attacker);
+            Zombie target = new Zombie(EntityTypes.ZOMBIE, world);
+            Zombie attacker = new Zombie(EntityTypes.ZOMBIE, world);
+            axe.postHurtEnemy(target, attacker);
             helper.assertTrue(axe.getDamageValue() == 1,
                 "Axe should take 1 durability with axes_not_tools enabled (got " + axe.getDamageValue() + ")");
             helper.succeed();
@@ -762,8 +749,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void axesNotToolsDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("axes_not_tools");
@@ -771,10 +757,10 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("axes_not_tools", false);
             ServerLevel world = helper.getLevel();
             ItemStack axe = new ItemStack(Items.DIAMOND_AXE);
-            Zombie target = EntityType.ZOMBIE.create(world);
-            Zombie attacker = EntityType.ZOMBIE.create(world);
+            Zombie target = new Zombie(EntityTypes.ZOMBIE, world);
+            Zombie attacker = new Zombie(EntityTypes.ZOMBIE, world);
             try {
-                axe.getItem().hurtEnemy(axe, target, attacker);
+                axe.postHurtEnemy(target, attacker);
                 helper.assertTrue(axe.getDamageValue() == 2,
                     "Axe should take 2 durability with axes_not_tools disabled (got " + axe.getDamageValue() + ")");
             } finally {
@@ -790,29 +776,30 @@ public class TweakGameTest implements FabricGameTest {
     // thorns normally damages armor after triggering backlash
     // level seven always triggers backlash
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void noThornsBacklashEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("no_thorns_backlash");
         try {
             ETTestHelper.setFeature("no_thorns_backlash", true);
-            Zombie user = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
-            Zombie attacker = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(1, 2, 0));
+            ServerLevel world = helper.getLevel();
+            Zombie user = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+            Zombie attacker = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(1, 2, 0));
             // equip thorns seven armor to guarantee backlash
             ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
-            chest.enchant(Enchantments.THORNS, 7);
+            enchant(helper, chest, Enchantments.THORNS, 7);
             user.setItemSlot(EquipmentSlot.CHEST, chest);
             try {
                 float attackerHealth = attacker.getHealth();
-                int armorDamage = 0;
-                for (int attempt = 0; attempt < 100 && armorDamage == 0; attempt++) {
-                    EnchantmentHelper.doPostHurtEffects(user, attacker);
-                    armorDamage = user.getItemBySlot(EquipmentSlot.CHEST).getDamageValue();
-                }
-                helper.assertTrue(attacker.getHealth() == attackerHealth,
-                    "NoThornsBacklash must not damage the attacker");
-                helper.assertTrue(armorDamage > 0, "NoThornsBacklash must preserve Thorns armor durability damage");
+                // thorns retaliation is data-driven in 26.2: victim armor
+                // POST_ATTACK effects trigger from doPostAttackEffects
+                for (int attempt = 0; attempt < 10 && attacker.getHealth() == attackerHealth; attempt++)
+                    EnchantmentHelper.doPostAttackEffects(world, user, world.damageSources().mobAttack(attacker));
+                helper.assertTrue(attacker.getHealth() < attackerHealth,
+                    "Vanilla Thorns retaliation must still damage the attacker");
+                helper.assertTrue(user.getItemBySlot(EquipmentSlot.CHEST).getDamageValue() == 0,
+                    "NoThornsBacklash must prevent Thorns armor durability damage (got "
+                        + user.getItemBySlot(EquipmentSlot.CHEST).getDamageValue() + ")");
             } finally {
                 ETTestHelper.setFeature("no_thorns_backlash", false);
             }
@@ -823,22 +810,22 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void noThornsBacklashDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("no_thorns_backlash");
         try {
             ETTestHelper.setFeature("no_thorns_backlash", false);
-            Zombie user = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
-            Zombie attacker = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(1, 2, 0));
+            ServerLevel world = helper.getLevel();
+            Zombie user = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
+            Zombie attacker = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(1, 2, 0));
             ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
-            chest.enchant(Enchantments.THORNS, 7);
+            enchant(helper, chest, Enchantments.THORNS, 7);
             user.setItemSlot(EquipmentSlot.CHEST, chest);
             try {
                 int armorDamage = 0;
                 for (int attempt = 0; attempt < 100 && armorDamage == 0; attempt++) {
-                    EnchantmentHelper.doPostHurtEffects(user, attacker);
+                    EnchantmentHelper.doPostAttackEffects(world, user, world.damageSources().mobAttack(attacker));
                     armorDamage = user.getItemBySlot(EquipmentSlot.CHEST).getDamageValue();
                 }
                 helper.assertTrue(armorDamage > 0, "Vanilla Thorns should damage armor when backlash is enabled");
@@ -854,8 +841,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // loyalVoidTridents
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void loyalVoidTridentsEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("loyal_void_tridents");
@@ -864,11 +850,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("loyal_void_tridents", true);
             ServerLevel world = helper.getLevel();
             ItemStack tridentStack = new ItemStack(Items.TRIDENT);
-            tridentStack.enchant(Enchantments.LOYALTY, 1);
-            Zombie owner = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+            enchant(helper, tridentStack, Enchantments.LOYALTY, 1);
+            Zombie owner = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             trident = new ThrownTrident(world, owner, tridentStack);
             BlockPos abs = helper.absolutePos(new BlockPos(0, 0, 0));
-            trident.setPosRaw(abs.getX(), world.getMinBuildHeight() - 5.0, abs.getZ());
+            trident.setPosRaw(abs.getX(), world.getMinY() - 5.0, abs.getZ());
             world.addFreshEntity(trident);
             trident.tick();
             try {
@@ -888,8 +874,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void loyalVoidTridentsDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("loyal_void_tridents");
@@ -898,11 +883,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("loyal_void_tridents", false);
             ServerLevel world = helper.getLevel();
             ItemStack tridentStack = new ItemStack(Items.TRIDENT);
-            tridentStack.enchant(Enchantments.LOYALTY, 1);
-            Zombie owner = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+            enchant(helper, tridentStack, Enchantments.LOYALTY, 1);
+            Zombie owner = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             trident = new ThrownTrident(world, owner, tridentStack);
             BlockPos abs = helper.absolutePos(new BlockPos(0, 0, 0));
-            trident.setPosRaw(abs.getX(), world.getMinBuildHeight() - 5.0, abs.getZ());
+            trident.setPosRaw(abs.getX(), world.getMinY() - 5.0, abs.getZ());
             world.addFreshEntity(trident);
             try {
                 trident.tick();
@@ -926,32 +911,27 @@ public class TweakGameTest implements FabricGameTest {
 
     // soul speed damage uses a deterministic seeded random
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void noSoulSpeedBacklashEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("no_soul_speed_backlash");
         try {
             ETTestHelper.setFeature("no_soul_speed_backlash", true);
+            ServerLevel world = helper.getLevel();
             helper.setBlock(new BlockPos(0, 1, 0), Blocks.SOUL_SAND.defaultBlockState());
-            Zombie zombie = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+            Zombie zombie = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             ItemStack boots = new ItemStack(Items.GOLDEN_BOOTS);
-            boots.enchant(Enchantments.SOUL_SPEED, 1);
+            enchant(helper, boots, Enchantments.SOUL_SPEED, 1);
             zombie.setItemSlot(EquipmentSlot.FEET, boots);
-            zombie.tick(); // land on soul sand so getLandingBlockState() / isOnSoulSpeedBlock() pass
+            zombie.tick(); // land on soul sand so movement-affected-by checks pass
             try {
-                Method removeBoost = LivingEntity.class.getDeclaredMethod("removeSoulSpeedBoost");
-                removeBoost.setAccessible(true);
-                Method addBoost = LivingEntity.class.getDeclaredMethod("addSoulSpeedBoostIfNeeded");
-                addBoost.setAccessible(true);
-                // the mixin prevents soul speed boot durability loss
-                removeBoost.invoke(zombie);
-                addBoost.invoke(zombie);
+                // soul speed boot durability loss is a data-driven
+                // location-changed effect in 26.2
+                for (int i = 0; i < 100; i++)
+                    EnchantmentHelper.runLocationChangedEffects(world, zombie);
                 helper.assertTrue(zombie.getItemBySlot(EquipmentSlot.FEET).getDamageValue() == 0,
                     "Soul Speed boots should not take damage when no_soul_speed_backlash enabled (got "
                         + zombie.getItemBySlot(EquipmentSlot.FEET).getDamageValue() + ")");
-            } catch (ReflectiveOperationException e) {
-                throw new RuntimeException(e);
             } finally {
                 ETTestHelper.setFeature("no_soul_speed_backlash", false);
             }
@@ -962,39 +942,26 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void noSoulSpeedBacklashDisabled(GameTestHelper helper) {
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("no_soul_speed_backlash");
         try {
             ETTestHelper.setFeature("no_soul_speed_backlash", false);
             ServerLevel world = helper.getLevel();
             helper.setBlock(new BlockPos(0, 1, 0), Blocks.SOUL_SAND.defaultBlockState());
-            Zombie zombie = new Zombie(world) {
-                private final RandomSource soulSpeedRandom = RandomSource.create(5120L);
-
-                @Override
-                public RandomSource getRandom() {
-                    return soulSpeedRandom;
-                }
-            };
-            BlockPos pos = helper.absolutePos(new BlockPos(0, 2, 0));
-            zombie.setPosRaw(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-            world.addFreshEntity(zombie);
+            Zombie zombie = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             ItemStack boots = new ItemStack(Items.GOLDEN_BOOTS);
-            boots.enchant(Enchantments.SOUL_SPEED, 1);
+            enchant(helper, boots, Enchantments.SOUL_SPEED, 1);
             zombie.setItemSlot(EquipmentSlot.FEET, boots);
+            zombie.tick(); // land on soul sand so movement-affected-by checks pass
 
-            Method removeBoost = LivingEntity.class.getDeclaredMethod("removeSoulSpeedBoost");
-            removeBoost.setAccessible(true);
-            Method addBoost = LivingEntity.class.getDeclaredMethod("addSoulSpeedBoostIfNeeded");
-            addBoost.setAccessible(true);
-            removeBoost.invoke(zombie);
-            addBoost.invoke(zombie);
-            helper.assertTrue(zombie.getItemBySlot(EquipmentSlot.FEET).getDamageValue() == 1,
-                "Yarn Random seed 5120 must trigger one Soul Speed durability loss");
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
+            int damage = 0;
+            for (int i = 0; i < 500 && damage == 0; i++) {
+                EnchantmentHelper.runLocationChangedEffects(world, zombie);
+                damage = zombie.getItemBySlot(EquipmentSlot.FEET).getDamageValue();
+            }
+            helper.assertTrue(damage > 0,
+                "Vanilla Soul Speed should damage boots via location-changed effects");
         } finally {
             ETTestHelper.restoreConfig(wave3OriginalConfig);
         }
@@ -1003,17 +970,17 @@ public class TweakGameTest implements FabricGameTest {
 
     // better mending repairs the entire inventory
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void betterMendingEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("better_mending");
         try {
             ETTestHelper.setFeature("better_mending", true);
             ServerLevel world = helper.getLevel();
-            Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+            // repairPlayerItems requires a ServerPlayer in 26.2
+            ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
             ItemStack mendingSword = new ItemStack(Items.DIAMOND_SWORD);
-            mendingSword.enchant(Enchantments.MENDING, 1);
+            enchant(helper, mendingSword, Enchantments.MENDING, 1);
             mendingSword.setDamageValue(100);
             // slot 20 is an ordinary inventory slot
             player.getInventory().setItem(20, mendingSword);
@@ -1031,17 +998,17 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void betterMendingDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("better_mending");
         try {
             ETTestHelper.setFeature("better_mending", false);
             ServerLevel world = helper.getLevel();
-            Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+            // repairPlayerItems requires a ServerPlayer in 26.2
+            ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
             ItemStack mendingSword = new ItemStack(Items.DIAMOND_SWORD);
-            mendingSword.enchant(Enchantments.MENDING, 1);
+            enchant(helper, mendingSword, Enchantments.MENDING, 1);
             mendingSword.setDamageValue(100);
             player.getInventory().setItem(20, mendingSword);
 
@@ -1063,23 +1030,23 @@ public class TweakGameTest implements FabricGameTest {
 
     // betterMending: mainhand priority
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void betterMendingMainHandPriority(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("better_mending");
         try {
             ETTestHelper.setFeature("better_mending", true);
             ServerLevel world = helper.getLevel();
-            Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+            // repairPlayerItems requires a ServerPlayer in 26.2
+            ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
             // damaged mending sword in mainhand (slot 0)
             ItemStack mainhandSword = new ItemStack(Items.DIAMOND_SWORD);
-            mainhandSword.enchant(Enchantments.MENDING, 1);
+            enchant(helper, mainhandSword, Enchantments.MENDING, 1);
             mainhandSword.setDamageValue(100);
             player.getInventory().setItem(0, mainhandSword);
             // damaged mending sword in inventory (slot 20)
             ItemStack inventorySword = new ItemStack(Items.DIAMOND_SWORD);
-            inventorySword.enchant(Enchantments.MENDING, 1);
+            enchant(helper, inventorySword, Enchantments.MENDING, 1);
             inventorySword.setDamageValue(100);
             player.getInventory().setItem(20, inventorySword);
 
@@ -1101,8 +1068,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // bowInfinityFix
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowInfinityFixEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("bow_infinity_fix");
@@ -1111,12 +1077,12 @@ public class TweakGameTest implements FabricGameTest {
             ServerLevel world = helper.getLevel();
             Player player = helper.makeMockPlayer(GameType.SURVIVAL);
             ItemStack bow = new ItemStack(Items.BOW);
-            bow.enchant(Enchantments.INFINITY, 1);
+            enchant(helper, bow, Enchantments.INFINITY, 1);
             player.getInventory().setItem(0, bow);
             // vanilla blocks infinity bows without arrows
-            InteractionResultHolder<ItemStack> result = bow.getItem().use(world, player, InteractionHand.MAIN_HAND);
+            InteractionResult result = bow.getItem().use(world, player, InteractionHand.MAIN_HAND);
             try {
-                helper.assertTrue(result.getResult().consumesAction(),
+                helper.assertTrue(result.consumesAction(),
                     "BowInfinityFix should allow Infinity bow to fire without arrows");
             } finally {
                 ETTestHelper.setFeature("bow_infinity_fix", false);
@@ -1128,8 +1094,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowInfinityFixDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("bow_infinity_fix");
@@ -1138,11 +1103,11 @@ public class TweakGameTest implements FabricGameTest {
             ServerLevel world = helper.getLevel();
             Player player = helper.makeMockPlayer(GameType.SURVIVAL);
             ItemStack bow = new ItemStack(Items.BOW);
-            bow.enchant(Enchantments.INFINITY, 1);
+            enchant(helper, bow, Enchantments.INFINITY, 1);
             player.getInventory().setItem(0, bow);
             try {
-                InteractionResultHolder<ItemStack> result = bow.getItem().use(world, player, InteractionHand.MAIN_HAND);
-                helper.assertTrue(result.getResult().consumesAction() == false,
+                InteractionResult result = bow.getItem().use(world, player, InteractionHand.MAIN_HAND);
+                helper.assertTrue(result.consumesAction() == false,
                     "Vanilla bow with Infinity should NOT fire without arrows when bow_infinity_fix disabled");
             } finally {
                 ETTestHelper.setFeature("bow_infinity_fix", false);
@@ -1154,8 +1119,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowInfinityFixNoInfinity(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("bow_infinity_fix");
@@ -1167,8 +1131,8 @@ public class TweakGameTest implements FabricGameTest {
             ItemStack bow = new ItemStack(Items.BOW);
             player.getInventory().setItem(0, bow);
             try {
-                InteractionResultHolder<ItemStack> result = bow.getItem().use(world, player, InteractionHand.MAIN_HAND);
-                helper.assertTrue(result.getResult().consumesAction() == false,
+                InteractionResult result = bow.getItem().use(world, player, InteractionHand.MAIN_HAND);
+                helper.assertTrue(result.consumesAction() == false,
                     "Bow without Infinity should NOT fire without arrows even with bow_infinity_fix enabled");
             } finally {
                 ETTestHelper.setFeature("bow_infinity_fix", false);
@@ -1180,8 +1144,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowInfinityFixSuppressedByMoreInfinity(GameTestHelper helper) {
         // more infinity suppresses bow infinity fix
 
@@ -1192,12 +1155,12 @@ public class TweakGameTest implements FabricGameTest {
             ServerLevel world = helper.getLevel();
             Player player = helper.makeMockPlayer(GameType.SURVIVAL);
             ItemStack bow = new ItemStack(Items.BOW);
-            bow.enchant(Enchantments.INFINITY, 1);
+            enchant(helper, bow, Enchantments.INFINITY, 1);
             player.getInventory().setItem(0, bow);
             // more infinity takes precedence without arrows
-            InteractionResultHolder<ItemStack> result = bow.getItem().use(world, player, InteractionHand.MAIN_HAND);
+            InteractionResult result = bow.getItem().use(world, player, InteractionHand.MAIN_HAND);
             try {
-                helper.assertFalse(result.getResult().consumesAction(),
+                helper.assertFalse(result.consumesAction(),
                     "BowInfinityFix should be suppressed when more_infinity is enabled");
             } finally {
                 ETTestHelper.setFeature("more_infinity", false);
@@ -1210,8 +1173,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowInfinityFixFiresArrow(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("bow_infinity_fix", "more_infinity");
@@ -1224,7 +1186,7 @@ public class TweakGameTest implements FabricGameTest {
             BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
             player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
             ItemStack bow = new ItemStack(Items.BOW);
-            bow.enchant(Enchantments.INFINITY, 1);
+            enchant(helper, bow, Enchantments.INFINITY, 1);
             player.getInventory().setItem(0, bow);
             // no arrows anywhere in the inventory
             AABB search = player.getBoundingBox().inflate(64.0);
@@ -1238,9 +1200,9 @@ public class TweakGameTest implements FabricGameTest {
                 helper.assertTrue(arrowsAfter == arrowsBefore + 1,
                     "Infinity bow with no arrows should spawn exactly one arrow on release (before=" + arrowsBefore
                         + ", after=" + arrowsAfter + ")");
-                helper.assertTrue(player.getInventory().countItem(Items.ARROW) == 0,
+                helper.assertTrue(countItems(player, Items.ARROW) == 0,
                     "Firing an Infinity bow with no arrows must not add or consume inventory arrows (got "
-                        + player.getInventory().countItem(Items.ARROW) + ")");
+                        + countItems(player, Items.ARROW) + ")");
                 helper.assertTrue(bow.getDamageValue() == 1,
                     "Bow should take 1 durability after firing (confirms shootAll ran; got " + bow.getDamageValue()
                         + ")");
@@ -1254,8 +1216,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowInfinityFixDisabledDoesNotFire(GameTestHelper helper) {
         // vanilla cannot fire an arrowless infinity bow
 
@@ -1268,7 +1229,7 @@ public class TweakGameTest implements FabricGameTest {
             BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
             player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
             ItemStack bow = new ItemStack(Items.BOW);
-            bow.enchant(Enchantments.INFINITY, 1);
+            enchant(helper, bow, Enchantments.INFINITY, 1);
             player.getInventory().setItem(0, bow);
             AABB search = player.getBoundingBox().inflate(64.0);
             int arrowsBefore = world.getEntitiesOfClass(AbstractArrow.class, search, e -> true).size();
@@ -1291,21 +1252,20 @@ public class TweakGameTest implements FabricGameTest {
 
     // godWeapons: all combinations
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsAllCombinations(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("god_weapons");
         try {
             ETTestHelper.setFeature("god_weapons", true);
             // test all 3 pairs: Smite<->Bane, Sharpness<->Bane, Sharpness<->Smite
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS),
+            helper.assertTrue(areCompatible(helper, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS),
                 "Smite should accept Bane of Arthropods");
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.BANE_OF_ARTHROPODS, Enchantments.SMITE),
+            helper.assertTrue(areCompatible(helper, Enchantments.BANE_OF_ARTHROPODS, Enchantments.SMITE),
                 "Bane of Arthropods should accept Smite");
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.BANE_OF_ARTHROPODS, Enchantments.SHARPNESS),
+            helper.assertTrue(areCompatible(helper, Enchantments.BANE_OF_ARTHROPODS, Enchantments.SHARPNESS),
                 "Bane of Arthropods should accept Sharpness");
-            helper.assertTrue(ETTestHelper.canAccept(Enchantments.SMITE, Enchantments.SHARPNESS),
+            helper.assertTrue(areCompatible(helper, Enchantments.SMITE, Enchantments.SHARPNESS),
                 "Smite should accept Sharpness");
             helper.succeed();
 
@@ -1314,18 +1274,17 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsSelfReject(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("god_weapons");
         try {
             ETTestHelper.setFeature("god_weapons", true);
-            helper.assertFalse(ETTestHelper.canAccept(Enchantments.SHARPNESS, Enchantments.SHARPNESS),
+            helper.assertFalse(areCompatible(helper, Enchantments.SHARPNESS, Enchantments.SHARPNESS),
                 "Sharpness should NOT accept itself");
-            helper.assertFalse(ETTestHelper.canAccept(Enchantments.SMITE, Enchantments.SMITE),
+            helper.assertFalse(areCompatible(helper, Enchantments.SMITE, Enchantments.SMITE),
                 "Smite should NOT accept itself");
-            helper.assertFalse(ETTestHelper.canAccept(Enchantments.BANE_OF_ARTHROPODS, Enchantments.BANE_OF_ARTHROPODS),
+            helper.assertFalse(areCompatible(helper, Enchantments.BANE_OF_ARTHROPODS, Enchantments.BANE_OF_ARTHROPODS),
                 "Bane should NOT accept itself");
             helper.succeed();
 
@@ -1336,8 +1295,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // loyalVoidTridents: edge cases
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void loyalVoidTridentsNoLoyalty(GameTestHelper helper) {
         // trident without Loyalty should not be rescued from void
 
@@ -1348,10 +1306,10 @@ public class TweakGameTest implements FabricGameTest {
             ServerLevel world = helper.getLevel();
             ItemStack tridentStack = new ItemStack(Items.TRIDENT);
             // no Loyalty enchantment
-            Zombie owner = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+            Zombie owner = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             trident = new ThrownTrident(world, owner, tridentStack);
             BlockPos abs = helper.absolutePos(new BlockPos(0, 0, 0));
-            trident.setPosRaw(abs.getX(), world.getMinBuildHeight() - 5.0, abs.getZ());
+            trident.setPosRaw(abs.getX(), world.getMinY() - 5.0, abs.getZ());
             world.addFreshEntity(trident);
             trident.tick();
             try {
@@ -1371,8 +1329,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void loyalVoidTridentsOwnerlessFallsIntoVoid(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("loyal_void_tridents");
@@ -1381,9 +1338,9 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("loyal_void_tridents", true);
             ServerLevel world = helper.getLevel();
             ItemStack tridentStack = new ItemStack(Items.TRIDENT);
-            tridentStack.enchant(Enchantments.LOYALTY, 1);
+            enchant(helper, tridentStack, Enchantments.LOYALTY, 1);
             BlockPos abs = helper.absolutePos(new BlockPos(0, 0, 0));
-            double startY = world.getMinBuildHeight() - 5.0;
+            double startY = world.getMinY() - 5.0;
             trident = new ThrownTrident(world, abs.getX(), startY, abs.getZ(), tridentStack);
             trident.setDeltaMovement(0, -2.0, 0);
             world.addFreshEntity(trident);
@@ -1402,8 +1359,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void loyalVoidTridentsStopsDescending(GameTestHelper helper) {
         // rescued tridents stop falling and return upward
 
@@ -1413,11 +1369,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("loyal_void_tridents", true);
             ServerLevel world = helper.getLevel();
             ItemStack tridentStack = new ItemStack(Items.TRIDENT);
-            tridentStack.enchant(Enchantments.LOYALTY, 3);
-            Zombie owner = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+            enchant(helper, tridentStack, Enchantments.LOYALTY, 3);
+            Zombie owner = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             trident = new ThrownTrident(world, owner, tridentStack);
             BlockPos abs = helper.absolutePos(new BlockPos(0, 0, 0));
-            double startY = world.getMinBuildHeight() - 5.0;
+            double startY = world.getMinY() - 5.0;
             trident.setPosRaw(abs.getX(), startY, abs.getZ());
             trident.setDeltaMovement(0, -2.0, 0);
             world.addFreshEntity(trident);
@@ -1438,8 +1394,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // axesNotTools: multiple hits
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void axesNotToolsMultipleHits(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("axes_not_tools");
@@ -1447,12 +1402,12 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("axes_not_tools", true);
             ServerLevel world = helper.getLevel();
             ItemStack axe = new ItemStack(Items.DIAMOND_AXE);
-            Zombie target = EntityType.ZOMBIE.create(world);
-            Zombie attacker = EntityType.ZOMBIE.create(world);
+            Zombie target = new Zombie(EntityTypes.ZOMBIE, world);
+            Zombie attacker = new Zombie(EntityTypes.ZOMBIE, world);
             // 3 hits should cause 3 durability (not 6)
-            axe.getItem().hurtEnemy(axe, target, attacker);
-            axe.getItem().hurtEnemy(axe, target, attacker);
-            axe.getItem().hurtEnemy(axe, target, attacker);
+            axe.postHurtEnemy(target, attacker);
+            axe.postHurtEnemy(target, attacker);
+            axe.postHurtEnemy(target, attacker);
             helper.assertTrue(axe.getDamageValue() == 3,
                 "3 axe hits with axes_not_tools should cause 3 durability damage (got " + axe.getDamageValue() + ")");
             helper.succeed();
@@ -1464,8 +1419,7 @@ public class TweakGameTest implements FabricGameTest {
 
     private static final float PB_REDUCED = 3.6f; // getInflictedDamage(10, 16)
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void protectionBypassMagicEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("protection_bypass_enabled",
@@ -1489,8 +1443,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void protectionBypassWitherEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("protection_bypass_enabled",
@@ -1514,8 +1467,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void protectionBypassDisabledStillReduces(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("protection_bypass_enabled",
@@ -1538,8 +1490,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void protectionBypassGenericNotAffected(GameTestHelper helper) {
         // generic damage is not a configured protection bypass
         // protection still reduces its damage
@@ -1565,8 +1516,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void protectionBypassModdedColonBranch(GameTestHelper helper) {
         // known namespaced ids bypass protection
         // unknown namespaced ids safely do not match
@@ -1598,8 +1548,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void protectionBypassDragonBreath(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("protection_bypass_enabled",
@@ -1623,8 +1572,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void protectionBypassWhitespaceTokens(GameTestHelper helper) {
         // malformed list tokens do not discard valid entries
 
@@ -1651,8 +1599,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void protectionBypassPrecedesMoreProtection(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("more_protection", "more_protection_base",
@@ -1687,8 +1634,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // villagerTradeLimits
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsMaxUsesEnabled(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("villager_trade_limits",
             "enchant_trade_max_uses");
@@ -1699,8 +1645,7 @@ public class TweakGameTest implements FabricGameTest {
             try {
                 ETTestHelper.setFeature("villager_trade_limits", true);
                 ETTestHelper.setConfigValue("enchant_trade_max_uses", "3");
-                ItemStack book = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+                ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
                 MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
                 offer.increaseUses();
                 offer.increaseUses();
@@ -1717,8 +1662,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsMaxUsesDisabled(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("villager_trade_limits",
             "enchant_trade_max_uses");
@@ -1729,8 +1673,7 @@ public class TweakGameTest implements FabricGameTest {
             try {
                 ETTestHelper.setFeature("villager_trade_limits", false);
                 ETTestHelper.setConfigValue("enchant_trade_max_uses", "3");
-                ItemStack book = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+                ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
                 MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
                 offer.increaseUses();
                 offer.increaseUses();
@@ -1747,8 +1690,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsPerEnchantOverride(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("villager_trade_limits",
             "enchant_trade_max_uses", "trade_sharpness");
@@ -1760,8 +1702,7 @@ public class TweakGameTest implements FabricGameTest {
                 ETTestHelper.setFeature("villager_trade_limits", true);
                 ETTestHelper.setConfigValue("enchant_trade_max_uses", "-1");
                 ETTestHelper.setConfigValue("trade_sharpness", "2");
-                ItemStack book = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+                ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
                 MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
                 offer.increaseUses();
                 offer.increaseUses();
@@ -1777,8 +1718,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsDisabledEnchantment(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("villager_trade_limits", "trade_mending");
         try {
@@ -1788,8 +1728,7 @@ public class TweakGameTest implements FabricGameTest {
             try {
                 ETTestHelper.setFeature("villager_trade_limits", true);
                 ETTestHelper.setConfigValue("trade_mending", "0");
-                ItemStack book = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.MENDING, 1));
+                ItemStack book = enchantedBook(helper, Enchantments.MENDING, 1);
                 MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
                 helper.assertTrue(offer.isOutOfStock(),
                     "Mending trade should be disabled immediately when trade_mending=0");
@@ -1803,8 +1742,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsRestockEnabled(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("villager_trade_limits",
             "enchant_trade_restock");
@@ -1815,8 +1753,7 @@ public class TweakGameTest implements FabricGameTest {
             try {
                 ETTestHelper.setFeature("villager_trade_limits", true);
                 ETTestHelper.setConfigValue("enchant_trade_restock", "true");
-                ItemStack book = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+                ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
                 MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
                 offer.increaseUses();
                 offer.increaseUses();
@@ -1833,8 +1770,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsRestockDisabled(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("villager_trade_limits",
             "enchant_trade_restock");
@@ -1845,8 +1781,7 @@ public class TweakGameTest implements FabricGameTest {
             try {
                 ETTestHelper.setFeature("villager_trade_limits", true);
                 ETTestHelper.setConfigValue("enchant_trade_restock", "false");
-                ItemStack book = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+                ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
                 MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
                 offer.increaseUses();
                 offer.increaseUses();
@@ -1864,8 +1799,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsNoRestockList(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("villager_trade_limits",
             "enchant_trade_restock", "enchant_trade_no_restock");
@@ -1877,13 +1811,11 @@ public class TweakGameTest implements FabricGameTest {
                 ETTestHelper.setFeature("villager_trade_limits", true);
                 ETTestHelper.setConfigValue("enchant_trade_restock", "true");
                 ETTestHelper.setConfigValue("enchant_trade_no_restock", "sharpness");
-                ItemStack sharpBook = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+                ItemStack sharpBook = enchantedBook(helper, Enchantments.SHARPNESS, 1);
                 MerchantOffer sharpOffer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), sharpBook, 12, 1, 0.2f);
                 sharpOffer.increaseUses();
                 sharpOffer.resetUses();
-                ItemStack mendingBook = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.MENDING, 1));
+                ItemStack mendingBook = enchantedBook(helper, Enchantments.MENDING, 1);
                 MerchantOffer mendingOffer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), mendingBook, 12, 1,
                     0.2f);
                 mendingOffer.increaseUses();
@@ -1902,8 +1834,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsNonEnchantedUnaffected(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("villager_trade_limits",
             "enchant_trade_max_uses", "enchant_trade_restock");
@@ -1938,8 +1869,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // bowLooting: guard negatives
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowLootingIdentityGuardNegative(GameTestHelper helper) {
         // only looting becomes acceptable on bows and crossbows
         // sharpness remains rejected
@@ -1950,9 +1880,9 @@ public class TweakGameTest implements FabricGameTest {
             ItemStack bow = new ItemStack(Items.BOW);
             ItemStack crossbow = new ItemStack(Items.CROSSBOW);
             try {
-                helper.assertFalse(ETTestHelper.isAcceptableItem(Enchantments.SHARPNESS, bow),
+                helper.assertFalse(canEnchant(helper, Enchantments.SHARPNESS, bow),
                     "Sharpness must NOT become acceptable on a bow (identity guard)");
-                helper.assertFalse(ETTestHelper.isAcceptableItem(Enchantments.SHARPNESS, crossbow),
+                helper.assertFalse(canEnchant(helper, Enchantments.SHARPNESS, crossbow),
                     "Sharpness must NOT become acceptable on a crossbow (identity guard)");
             } finally {
                 ETTestHelper.setFeature("bow_looting", false);
@@ -1964,8 +1894,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowLootingNonBowGuard(GameTestHelper helper) {
         // looting remains rejected for non-bow items
 
@@ -1974,7 +1903,7 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("bow_looting", true);
             try {
                 helper.assertFalse(
-                    ETTestHelper.isAcceptableItem(Enchantments.LOOTING, new ItemStack(Items.DIAMOND_PICKAXE)),
+                    canEnchant(helper, Enchantments.LOOTING, new ItemStack(Items.DIAMOND_PICKAXE)),
                     "Looting must NOT become acceptable on a pickaxe via bow_looting");
             } finally {
                 ETTestHelper.setFeature("bow_looting", false);
@@ -1988,8 +1917,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // tridentWeapons: DamageEnchantment branch + guards
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tridentWeaponsDamageEnchantBranch(GameTestHelper helper) {
         // damage enchantments become acceptable on tridents
         ItemStack trident = new ItemStack(Items.TRIDENT);
@@ -1998,22 +1926,22 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("trident_weapons", true);
             try {
-                helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.SHARPNESS, trident),
+                helper.assertTrue(canEnchant(helper, Enchantments.SHARPNESS, trident),
                     "Sharpness acceptable on trident when enabled");
-                helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.SMITE, trident),
+                helper.assertTrue(canEnchant(helper, Enchantments.SMITE, trident),
                     "Smite acceptable on trident when enabled");
-                helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.BANE_OF_ARTHROPODS, trident),
+                helper.assertTrue(canEnchant(helper, Enchantments.BANE_OF_ARTHROPODS, trident),
                     "Bane acceptable on trident when enabled");
             } finally {
                 ETTestHelper.setFeature("trident_weapons", false);
             }
             ETTestHelper.setFeature("trident_weapons", false);
             try {
-                helper.assertFalse(ETTestHelper.isAcceptableItem(Enchantments.SHARPNESS, trident),
+                helper.assertFalse(canEnchant(helper, Enchantments.SHARPNESS, trident),
                     "Sharpness NOT acceptable on trident when disabled");
-                helper.assertFalse(ETTestHelper.isAcceptableItem(Enchantments.SMITE, trident),
+                helper.assertFalse(canEnchant(helper, Enchantments.SMITE, trident),
                     "Smite NOT acceptable on trident when disabled");
-                helper.assertFalse(ETTestHelper.isAcceptableItem(Enchantments.BANE_OF_ARTHROPODS, trident),
+                helper.assertFalse(canEnchant(helper, Enchantments.BANE_OF_ARTHROPODS, trident),
                     "Bane NOT acceptable on trident when disabled");
             } finally {
                 ETTestHelper.setFeature("trident_weapons", false);
@@ -2025,8 +1953,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tridentWeaponsNonTridentGuardAndFallthrough(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("trident_weapons");
@@ -2035,11 +1962,11 @@ public class TweakGameTest implements FabricGameTest {
             try {
                 // non-tridents retain vanilla fire-aspect rejection
                 helper.assertFalse(
-                    ETTestHelper.isAcceptableItem(Enchantments.FIRE_ASPECT, new ItemStack(Items.DIAMOND_PICKAXE)),
+                    canEnchant(helper, Enchantments.FIRE_ASPECT, new ItemStack(Items.DIAMOND_PICKAXE)),
                     "Fire Aspect must NOT be acceptable on a pickaxe via trident_weapons");
                 // sweeping edge falls through to vanilla rejection
                 helper.assertFalse(
-                    ETTestHelper.isAcceptableItem(Enchantments.SWEEPING_EDGE, new ItemStack(Items.TRIDENT)),
+                    canEnchant(helper, Enchantments.SWEEPING_EDGE, new ItemStack(Items.TRIDENT)),
                     "Sweeping Edge must fall through to vanilla and be rejected on a trident");
             } finally {
                 ETTestHelper.setFeature("trident_weapons", false);
@@ -2053,8 +1980,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // weapon tweaks: cross-tweak Looting acceptability
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void weaponTweaksCrossLootingAcceptability(GameTestHelper helper) {
         // looting works on weapon targets but not pickaxes
 
@@ -2065,14 +1991,14 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("bow_looting", true);
             ETTestHelper.setFeature("trident_weapons", true);
             try {
-                helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, new ItemStack(Items.DIAMOND_AXE)),
+                helper.assertTrue(canEnchant(helper, Enchantments.LOOTING, new ItemStack(Items.DIAMOND_AXE)),
                     "Looting acceptable on axe");
-                helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, new ItemStack(Items.BOW)),
+                helper.assertTrue(canEnchant(helper, Enchantments.LOOTING, new ItemStack(Items.BOW)),
                     "Looting acceptable on bow");
-                helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, new ItemStack(Items.TRIDENT)),
+                helper.assertTrue(canEnchant(helper, Enchantments.LOOTING, new ItemStack(Items.TRIDENT)),
                     "Looting acceptable on trident");
                 helper.assertFalse(
-                    ETTestHelper.isAcceptableItem(Enchantments.LOOTING, new ItemStack(Items.DIAMOND_PICKAXE)),
+                    canEnchant(helper, Enchantments.LOOTING, new ItemStack(Items.DIAMOND_PICKAXE)),
                     "Looting NOT acceptable on pickaxe");
             } finally {
                 ETTestHelper.setFeature("axe_weapons", false);
@@ -2088,8 +2014,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // axeWeapons: guard negatives + enchant-table presence
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void axeWeaponsGuardNegatives(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("axe_weapons");
@@ -2098,11 +2023,11 @@ public class TweakGameTest implements FabricGameTest {
             try {
                 // non-axe: Looting stays rejected on a pickaxe
                 helper.assertFalse(
-                    ETTestHelper.isAcceptableItem(Enchantments.LOOTING, new ItemStack(Items.DIAMOND_PICKAXE)),
+                    canEnchant(helper, Enchantments.LOOTING, new ItemStack(Items.DIAMOND_PICKAXE)),
                     "Looting must NOT be acceptable on a pickaxe via axe_weapons");
                 // axe weapons never grant protection
                 helper.assertFalse(
-                    ETTestHelper.isAcceptableItem(Enchantments.PROTECTION, new ItemStack(Items.DIAMOND_AXE)),
+                    canEnchant(helper, Enchantments.PROTECTION, new ItemStack(Items.DIAMOND_AXE)),
                     "Protection must NOT be granted on an axe by axe_weapons");
             } finally {
                 ETTestHelper.setFeature("axe_weapons", false);
@@ -2114,16 +2039,15 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void axeWeaponsEnchantTablePresence(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("axe_weapons");
         try {
             ETTestHelper.setFeature("axe_weapons", true);
             try {
-                List<EnchantmentInstance> axeEntries = EnchantmentHelper.getAvailableEnchantmentResults(
-                    helper.getLevel().enabledFeatures(), 30, new ItemStack(Items.DIAMOND_AXE), false);
+                List<EnchantmentInstance> axeEntries = EnchantmentHelper.getAvailableEnchantmentResults(30, new ItemStack(Items.DIAMOND_AXE),
+                    allEnchantHolders(helper));
                 helper.assertTrue(containsEnchant(axeEntries, Enchantments.LOOTING),
                     "Looting must be offered on an axe from the enchant table when axe_weapons is on");
                 helper.assertTrue(containsEnchant(axeEntries, Enchantments.FIRE_ASPECT),
@@ -2132,8 +2056,8 @@ public class TweakGameTest implements FabricGameTest {
                     "Knockback must be offered on an axe from the enchant table when axe_weapons is on");
 
                 // pickaxes never receive axe weapon enchantments
-                List<EnchantmentInstance> pickEntries = EnchantmentHelper.getAvailableEnchantmentResults(
-                    helper.getLevel().enabledFeatures(), 30, new ItemStack(Items.DIAMOND_PICKAXE), false);
+                List<EnchantmentInstance> pickEntries = EnchantmentHelper.getAvailableEnchantmentResults(30, new ItemStack(Items.DIAMOND_PICKAXE),
+                    allEnchantHolders(helper));
                 helper.assertFalse(containsEnchant(pickEntries, Enchantments.LOOTING),
                     "Looting must NOT be offered on a pickaxe via axe_weapons");
                 helper.assertFalse(containsEnchant(pickEntries, Enchantments.FIRE_ASPECT),
@@ -2145,8 +2069,8 @@ public class TweakGameTest implements FabricGameTest {
             }
 
             // disabled axe weapons leave vanilla enchantment availability
-            List<EnchantmentInstance> offEntries = EnchantmentHelper.getAvailableEnchantmentResults(
-                helper.getLevel().enabledFeatures(), 30, new ItemStack(Items.DIAMOND_AXE), false);
+            List<EnchantmentInstance> offEntries = EnchantmentHelper.getAvailableEnchantmentResults(30,
+                new ItemStack(Items.DIAMOND_AXE), allEnchantHolders(helper));
             helper.assertFalse(containsEnchant(offEntries, Enchantments.LOOTING),
                 "Looting must be absent from axe enchant-table entries when axe_weapons is off");
             helper.assertFalse(containsEnchant(offEntries, Enchantments.FIRE_ASPECT),
@@ -2162,8 +2086,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // godWeapons: fall-through, Impaling, removeConflicts
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsNonDamageEnchantFallthrough(GameTestHelper helper) {
         // non-damage enchantments retain vanilla compatibility
 
@@ -2171,9 +2094,9 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("god_weapons", true);
             try {
-                helper.assertTrue(ETTestHelper.canAccept(Enchantments.SHARPNESS, Enchantments.UNBREAKING),
+                helper.assertTrue(areCompatible(helper, Enchantments.SHARPNESS, Enchantments.UNBREAKING),
                     "Sharpness should still accept Unbreaking (non-DamageEnchantment fall-through)");
-                helper.assertTrue(ETTestHelper.canAccept(Enchantments.SHARPNESS, Enchantments.FIRE_ASPECT),
+                helper.assertTrue(areCompatible(helper, Enchantments.SHARPNESS, Enchantments.FIRE_ASPECT),
                     "Sharpness should still accept Fire Aspect (non-DamageEnchantment fall-through)");
             } finally {
                 ETTestHelper.setFeature("god_weapons", false);
@@ -2185,8 +2108,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsImpaling(GameTestHelper helper) {
         // impaling combines with other damage enchantments
         // it never combines with itself
@@ -2195,11 +2117,11 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("god_weapons", true);
             try {
-                helper.assertTrue(ETTestHelper.canAccept(Enchantments.SHARPNESS, Enchantments.IMPALING),
+                helper.assertTrue(areCompatible(helper, Enchantments.SHARPNESS, Enchantments.IMPALING),
                     "Sharpness accepts Impaling");
-                helper.assertTrue(ETTestHelper.canAccept(Enchantments.IMPALING, Enchantments.SMITE),
+                helper.assertTrue(areCompatible(helper, Enchantments.IMPALING, Enchantments.SMITE),
                     "Impaling accepts Smite");
-                helper.assertFalse(ETTestHelper.canAccept(Enchantments.IMPALING, Enchantments.IMPALING),
+                helper.assertFalse(areCompatible(helper, Enchantments.IMPALING, Enchantments.IMPALING),
                     "Impaling must NOT accept itself");
             } finally {
                 ETTestHelper.setFeature("god_weapons", false);
@@ -2211,17 +2133,16 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void godWeaponsRemoveConflicts(GameTestHelper helper) {
-        EnchantmentInstance picked = new EnchantmentInstance(Enchantments.SMITE, 1);
+        EnchantmentInstance picked = new EnchantmentInstance(enchantHolder(helper, Enchantments.SMITE), 1);
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("god_weapons");
         try {
             ETTestHelper.setFeature("god_weapons", true);
             try {
                 List<EnchantmentInstance> list = new ArrayList<>();
-                list.add(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+                list.add(new EnchantmentInstance(enchantHolder(helper, Enchantments.SHARPNESS), 1));
                 EnchantmentHelper.filterCompatibleEnchantments(list, picked);
                 helper.assertTrue(list.size() == 1,
                     "Sharpness should survive removeConflicts against Smite when god_weapons on (size " + list.size()
@@ -2233,7 +2154,7 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("god_weapons", false);
             try {
                 List<EnchantmentInstance> list = new ArrayList<>();
-                list.add(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+                list.add(new EnchantmentInstance(enchantHolder(helper, Enchantments.SHARPNESS), 1));
                 EnchantmentHelper.filterCompatibleEnchantments(list, picked);
                 helper.assertTrue(list.isEmpty(),
                     "Sharpness should be removed by removeConflicts against Smite when god_weapons off (size "
@@ -2250,8 +2171,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // infiniteMending: real anvil merge
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void infiniteMendingAnvilMerge(GameTestHelper helper) {
         // infinity and mending must combine through a real anvil
 
@@ -2260,17 +2180,16 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("infinite_mending", true);
             try {
                 ItemStack bow = new ItemStack(Items.BOW);
-                bow.enchant(Enchantments.INFINITY, 1);
-                ItemStack mendingBook = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.MENDING, 1));
+                enchant(helper, bow, Enchantments.INFINITY, 1);
+                ItemStack mendingBook = enchantedBook(helper, Enchantments.MENDING, 1);
                 ItemStack out = anvilCombine(helper, bow, mendingBook);
                 helper.assertFalse(out.isEmpty(), "Infinity and Mending anvil merge must produce an output");
-                helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.INFINITY, out) == 1,
+                helper.assertTrue(enchantLevel(out, Enchantments.INFINITY) == 1,
                     "Merged bow should keep Infinity 1 (got "
-                        + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.INFINITY, out) + ")");
-                helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, out) == 1,
+                        + enchantLevel(out, Enchantments.INFINITY) + ")");
+                helper.assertTrue(enchantLevel(out, Enchantments.MENDING) == 1,
                     "Merged bow should gain Mending 1 (got "
-                        + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, out) + ")");
+                        + enchantLevel(out, Enchantments.MENDING) + ")");
             } finally {
                 ETTestHelper.setFeature("infinite_mending", false);
             }
@@ -2281,17 +2200,15 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void infiniteMendingAnvilMergeDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("infinite_mending");
         try {
             ETTestHelper.setFeature("infinite_mending", false);
             ItemStack bow = new ItemStack(Items.BOW);
-            bow.enchant(Enchantments.INFINITY, 1);
-            ItemStack mendingBook = EnchantedBookItem
-                .createForEnchantment(new EnchantmentInstance(Enchantments.MENDING, 1));
+            enchant(helper, bow, Enchantments.INFINITY, 1);
+            ItemStack mendingBook = enchantedBook(helper, Enchantments.MENDING, 1);
             ItemStack out = anvilCombine(helper, bow, mendingBook);
             helper.assertTrue(out.isEmpty(), "Disabled Infinity and Mending anvil operation should produce no output");
             helper.succeed();
@@ -2301,8 +2218,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void infiniteMendingNoOverApplication(GameTestHelper helper) {
         // only infinity and mending compatibility changes
 
@@ -2310,11 +2226,11 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("infinite_mending", true);
             try {
-                helper.assertFalse(ETTestHelper.canAccept(Enchantments.INFINITY, Enchantments.INFINITY),
+                helper.assertFalse(areCompatible(helper, Enchantments.INFINITY, Enchantments.INFINITY),
                     "Infinity must NOT accept itself");
-                helper.assertTrue(ETTestHelper.canAccept(Enchantments.INFINITY, Enchantments.POWER),
+                helper.assertTrue(areCompatible(helper, Enchantments.INFINITY, Enchantments.POWER),
                     "Infinity should still accept Power");
-                helper.assertTrue(ETTestHelper.canAccept(Enchantments.INFINITY, Enchantments.PUNCH),
+                helper.assertTrue(areCompatible(helper, Enchantments.INFINITY, Enchantments.PUNCH),
                     "Infinity should still accept Punch");
             } finally {
                 ETTestHelper.setFeature("infinite_mending", false);
@@ -2328,8 +2244,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // noMendingUnbreaking: real anvil combine
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void noMendingUnbreakingAnvilBlocks(GameTestHelper helper) {
         // unbreaking cannot transfer to a mending pickaxe
 
@@ -2338,9 +2253,8 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("no_mending_unbreaking", true);
             try {
                 ItemStack pick = new ItemStack(Items.DIAMOND_PICKAXE);
-                pick.enchant(Enchantments.MENDING, 1);
-                ItemStack unbreakingBook = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.UNBREAKING, 3));
+                enchant(helper, pick, Enchantments.MENDING, 1);
+                ItemStack unbreakingBook = enchantedBook(helper, Enchantments.UNBREAKING, 3);
                 ItemStack out = anvilCombine(helper, pick, unbreakingBook);
                 helper.assertTrue(out.isEmpty(),
                     "Blocked Mending and Unbreaking anvil operation should produce no output");
@@ -2354,25 +2268,23 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void noMendingUnbreakingAnvilAllowsWhenDisabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("no_mending_unbreaking");
         try {
             ETTestHelper.setFeature("no_mending_unbreaking", false);
             ItemStack pick = new ItemStack(Items.DIAMOND_PICKAXE);
-            pick.enchant(Enchantments.MENDING, 1);
-            ItemStack unbreakingBook = EnchantedBookItem
-                .createForEnchantment(new EnchantmentInstance(Enchantments.UNBREAKING, 3));
+            enchant(helper, pick, Enchantments.MENDING, 1);
+            ItemStack unbreakingBook = enchantedBook(helper, Enchantments.UNBREAKING, 3);
             ItemStack out = anvilCombine(helper, pick, unbreakingBook);
             helper.assertFalse(out.isEmpty(), "Vanilla Mending and Unbreaking anvil merge must produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, out) == 1,
+            helper.assertTrue(enchantLevel(out, Enchantments.MENDING) == 1,
                 "Vanilla anvil should keep Mending 1 (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, out) + ")");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.UNBREAKING, out) == 3,
+                    + enchantLevel(out, Enchantments.MENDING) + ")");
+            helper.assertTrue(enchantLevel(out, Enchantments.UNBREAKING) == 3,
                 "Vanilla anvil should add Unbreaking 3 (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.UNBREAKING, out) + ")");
+                    + enchantLevel(out, Enchantments.UNBREAKING) + ")");
             helper.succeed();
 
         } finally {
@@ -2380,8 +2292,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void noMendingUnbreakingFallthroughUnrelated(GameTestHelper helper) {
         // unrelated enchantments still merge with mending items
 
@@ -2390,17 +2301,16 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("no_mending_unbreaking", true);
             try {
                 ItemStack pick = new ItemStack(Items.DIAMOND_PICKAXE);
-                pick.enchant(Enchantments.MENDING, 1);
-                ItemStack efficiencyBook = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.EFFICIENCY, 3));
+                enchant(helper, pick, Enchantments.MENDING, 1);
+                ItemStack efficiencyBook = enchantedBook(helper, Enchantments.EFFICIENCY, 3);
                 ItemStack out = anvilCombine(helper, pick, efficiencyBook);
                 helper.assertFalse(out.isEmpty(), "Mending and Efficiency anvil merge must produce an output");
-                helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, out) == 1,
+                helper.assertTrue(enchantLevel(out, Enchantments.MENDING) == 1,
                     "Mending should be preserved (got "
-                        + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, out) + ")");
-                helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.EFFICIENCY, out) == 3,
+                        + enchantLevel(out, Enchantments.MENDING) + ")");
+                helper.assertTrue(enchantLevel(out, Enchantments.EFFICIENCY) == 3,
                     "Efficiency should merge (unrelated pair) (got "
-                        + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.EFFICIENCY, out) + ")");
+                        + enchantLevel(out, Enchantments.EFFICIENCY) + ")");
             } finally {
                 ETTestHelper.setFeature("no_mending_unbreaking", false);
             }
@@ -2413,8 +2323,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // disableEnchantments: generation paths
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsGetPossibleEntries(GameTestHelper helper) {
         // disabled enchantments are absent from enchanting table entries
         ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
@@ -2425,8 +2334,7 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
             try {
-                List<EnchantmentInstance> entries = EnchantmentHelper
-                    .getAvailableEnchantmentResults(helper.getLevel().enabledFeatures(), 30, sword, true);
+                List<EnchantmentInstance> entries = EnchantmentHelper.getAvailableEnchantmentResults(30, sword, allEnchantHolders(helper));
                 helper.assertFalse(containsEnchant(entries, Enchantments.SHARPNESS),
                     "Disabled Sharpness must be absent from enchant-table entries");
                 helper.assertTrue(containsEnchant(entries, Enchantments.SMITE),
@@ -2436,8 +2344,8 @@ public class TweakGameTest implements FabricGameTest {
                 ETTestHelper.setFeature("disable_enchantments_enabled", false);
             }
             // feature-off mirror: Sharpness returns
-            List<EnchantmentInstance> mirror = EnchantmentHelper
-                .getAvailableEnchantmentResults(helper.getLevel().enabledFeatures(), 30, sword, true);
+            List<EnchantmentInstance> mirror = EnchantmentHelper.getAvailableEnchantmentResults(30, sword,
+                allEnchantHolders(helper));
             helper.assertTrue(containsEnchant(mirror, Enchantments.SHARPNESS),
                 "Sharpness should be present again once the feature is off");
             helper.succeed();
@@ -2447,8 +2355,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsMultiEntry(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("disable_enchantments",
@@ -2457,9 +2364,9 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             ETTestHelper.setConfigValue("disable_enchantments", "sharpness,mending");
             try {
-                helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 0, "Sharpness disabled (maxLevel 0)");
-                helper.assertTrue(Enchantments.MENDING.getMaxLevel() == 0, "Mending disabled (maxLevel 0)");
-                helper.assertTrue(Enchantments.SMITE.getMaxLevel() > 0, "Smite unaffected");
+                helper.assertTrue(maxLevel(helper, Enchantments.SHARPNESS) == 0, "Sharpness disabled (maxLevel 0)");
+                helper.assertTrue(maxLevel(helper, Enchantments.MENDING) == 0, "Mending disabled (maxLevel 0)");
+                helper.assertTrue(maxLevel(helper, Enchantments.SMITE) > 0, "Smite unaffected");
             } finally {
                 ETTestHelper.setConfigValue("disable_enchantments", "");
                 ETTestHelper.setFeature("disable_enchantments_enabled", false);
@@ -2471,8 +2378,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsBookFactory(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("disable_enchantments_enabled",
             "disable_enchantments");
@@ -2483,31 +2389,27 @@ public class TweakGameTest implements FabricGameTest {
             try {
                 ETTestHelper.setFeature("disable_enchantments_enabled", true);
                 ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
-                Entity anchor = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
-                RandomSource random = RandomSource.create(0L);
-                Class<?> cls = Class.forName("net.minecraft.village.TradeOffers$EnchantBookFactory");
-                Constructor<?> ctor = cls.getDeclaredConstructor(int.class);
-                ctor.setAccessible(true);
-                Object factory = ctor.newInstance(1);
-                Method create = cls.getDeclaredMethod("create", Entity.class, RandomSource.class);
-                create.setAccessible(true);
+                // villager book trades are data-driven in 26.2: they apply a
+                // random EnchantRandomlyFunction to a book, which filters
+                // disabled entries before sampling
+                LootParams parameters = new LootParams.Builder(helper.getLevel()).create(LootContextParamSets.EMPTY);
+                LootItemFunction function = EnchantRandomlyFunction.randomEnchantment().build();
                 boolean sawSharpness = false;
                 boolean sawNonSharpness = false;
                 for (int i = 0; i < 500; i++) {
-                    MerchantOffer offer = (MerchantOffer) create.invoke(factory, anchor, random);
-                    var enchants = EnchantmentHelper.getEnchantmentsForCrafting(offer.getResult());
-                    if (enchants.getLevel(Enchantments.SHARPNESS) > 0) {
+                    LootContext context = new LootContext.Builder(parameters).withOptionalRandomSeed(i)
+                        .create(Optional.empty());
+                    ItemStack result = function.apply(new ItemStack(Items.BOOK), context);
+                    if (ADUtils.getEnchantmentLevel(result, Enchantments.SHARPNESS) > 0) {
                         sawSharpness = true;
-                    } else if (!enchants.isEmpty()) {
+                    } else if (!EnchantmentHelper.getEnchantmentsForCrafting(result).isEmpty()) {
                         sawNonSharpness = true;
                     }
                 }
                 helper.assertFalse(sawSharpness,
-                    "A fresh EnchantBookFactory built after disabling Sharpness must never offer a Sharpness book");
+                    "A fresh book-trade roll after disabling Sharpness must never offer a Sharpness book");
                 helper.assertTrue(sawNonSharpness,
-                    "The deterministic factory fixture should still generate non-disabled enchanted-book offers");
-            } catch (ReflectiveOperationException e) {
-                throw new RuntimeException(e);
+                    "The deterministic trade fixture should still generate non-disabled enchanted-book offers");
             } finally {
                 ETTestHelper.restoreConfig(originalConfig);
             }
@@ -2518,8 +2420,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsWhitespaceTrimming(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("disable_enchantments",
@@ -2528,9 +2429,9 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             ETTestHelper.setConfigValue("disable_enchantments", " sharpness , , mending ,");
             try {
-                helper.assertFalse(Enchantments.SHARPNESS.isDiscoverable(), "Trimmed 'sharpness' disabled");
-                helper.assertFalse(Enchantments.MENDING.isDiscoverable(), "Trimmed 'mending' disabled");
-                helper.assertTrue(Enchantments.SMITE.isDiscoverable(), "Smite still available");
+                helper.assertFalse(isAvailableForSelection(helper, Enchantments.SHARPNESS), "Trimmed 'sharpness' disabled");
+                helper.assertFalse(isAvailableForSelection(helper, Enchantments.MENDING), "Trimmed 'mending' disabled");
+                helper.assertTrue(isAvailableForSelection(helper, Enchantments.SMITE), "Smite still available");
             } finally {
                 ETTestHelper.setConfigValue("disable_enchantments", "");
                 ETTestHelper.setFeature("disable_enchantments_enabled", false);
@@ -2542,8 +2443,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsNamespacedAndUnknown(GameTestHelper helper) {
         // full identifiers match exactly and unknown entries do nothing
 
@@ -2553,11 +2453,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", true);
             try {
                 ETTestHelper.setConfigValue("disable_enchantments", "minecraft:sharpness");
-                helper.assertFalse(Enchantments.SHARPNESS.isDiscoverable(),
+                helper.assertFalse(isAvailableForSelection(helper, Enchantments.SHARPNESS),
                     "minecraft:sharpness should disable the exact namespaced enchantment");
 
                 ETTestHelper.setConfigValue("disable_enchantments", "notarealenchant");
-                helper.assertTrue(Enchantments.SHARPNESS.isDiscoverable(), "An unknown id should be a harmless no-op");
+                helper.assertTrue(isAvailableForSelection(helper, Enchantments.SHARPNESS), "An unknown id should be a harmless no-op");
             } finally {
                 ETTestHelper.setConfigValue("disable_enchantments", "");
                 ETTestHelper.setFeature("disable_enchantments_enabled", false);
@@ -2569,8 +2469,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsFeatureGateOff(GameTestHelper helper) {
         // disabling remains inactive when the master switch is off
 
@@ -2580,9 +2479,9 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("disable_enchantments_enabled", false);
             ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
             try {
-                helper.assertTrue(Enchantments.SHARPNESS.isDiscoverable(),
+                helper.assertTrue(isAvailableForSelection(helper, Enchantments.SHARPNESS),
                     "Sharpness must stay available when the master switch is off");
-                helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() > 0,
+                helper.assertTrue(maxLevel(helper, Enchantments.SHARPNESS) > 0,
                     "Sharpness max level must be normal when the master switch is off");
             } finally {
                 ETTestHelper.setConfigValue("disable_enchantments", "");
@@ -2596,8 +2495,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // xpScaling: real leveling + boundaries
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingRealLeveling(GameTestHelper helper) {
         // real experience gains use the configured level requirements
 
@@ -2629,8 +2527,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingZeroBoundary(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("xp_scaling", "xp_scaling_base",
@@ -2657,8 +2554,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingLevelZero(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("xp_scaling", "xp_scaling_base",
@@ -2682,8 +2578,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingDefaultFallback(GameTestHelper helper) {
         // invalid bases fall back to the default value
 
@@ -2710,8 +2605,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingBeyondIntRange(GameTestHelper helper) {
         // out-of-range steps fall back to the default value
 
@@ -2739,8 +2633,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void xpScalingOffGateMidTier(GameTestHelper helper) {
         // disabled scaling uses the vanilla mid-tier formula
 
@@ -2760,8 +2653,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // loyalVoidTridents: real void positions
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void loyalVoidTridentsAboveBottomNotRescued(GameTestHelper helper) {
         // tridents above the world bottom are not rescued
 
@@ -2771,11 +2663,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("loyal_void_tridents", true);
             ServerLevel world = helper.getLevel();
             ItemStack tridentStack = new ItemStack(Items.TRIDENT);
-            tridentStack.enchant(Enchantments.LOYALTY, 1);
-            Zombie owner = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+            enchant(helper, tridentStack, Enchantments.LOYALTY, 1);
+            Zombie owner = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             trident = new ThrownTrident(world, owner, tridentStack);
             BlockPos abs = helper.absolutePos(new BlockPos(0, 0, 0));
-            double startY = world.getMinBuildHeight() + 10.0;
+            double startY = world.getMinY() + 10.0;
             trident.setPosRaw(abs.getX(), startY, abs.getZ());
             trident.setDeltaMovement(0, -1.0, 0);
             world.addFreshEntity(trident);
@@ -2801,8 +2693,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void loyalVoidTridentsDisabledLostToVoid(GameTestHelper helper) {
         // feature OFF: a loyalty trident dropped below the void-kill plane
         // is discarded by vanilla on the next tick
@@ -2813,11 +2704,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("loyal_void_tridents", false);
             ServerLevel world = helper.getLevel();
             ItemStack tridentStack = new ItemStack(Items.TRIDENT);
-            tridentStack.enchant(Enchantments.LOYALTY, 1);
-            Zombie owner = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+            enchant(helper, tridentStack, Enchantments.LOYALTY, 1);
+            Zombie owner = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             trident = new ThrownTrident(world, owner, tridentStack);
             BlockPos abs = helper.absolutePos(new BlockPos(0, 0, 0));
-            trident.setPosRaw(abs.getX(), world.getMinBuildHeight() - 65.0, abs.getZ());
+            trident.setPosRaw(abs.getX(), world.getMinY() - 65.0, abs.getZ());
             world.addFreshEntity(trident);
             trident.tick();
             try {
@@ -2835,8 +2726,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void loyalVoidTridentsEnabledSurvivesVoid(GameTestHelper helper) {
         // loyalty tridents at the bottom survive and return
 
@@ -2846,11 +2736,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("loyal_void_tridents", true);
             ServerLevel world = helper.getLevel();
             ItemStack tridentStack = new ItemStack(Items.TRIDENT);
-            tridentStack.enchant(Enchantments.LOYALTY, 3);
-            Zombie owner = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+            enchant(helper, tridentStack, Enchantments.LOYALTY, 3);
+            Zombie owner = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             trident = new ThrownTrident(world, owner, tridentStack);
             BlockPos abs = helper.absolutePos(new BlockPos(0, 0, 0));
-            double startY = world.getMinBuildHeight() - 1.0;
+            double startY = world.getMinY() - 1.0;
             trident.setPosRaw(abs.getX(), startY, abs.getZ());
             trident.setDeltaMovement(0, -2.0, 0);
             world.addFreshEntity(trident);
@@ -2873,8 +2763,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void loyalVoidTridentsExactBoundary(GameTestHelper helper) {
         // the world-bottom boundary triggers rescue
 
@@ -2884,11 +2773,11 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("loyal_void_tridents", true);
             ServerLevel world = helper.getLevel();
             ItemStack tridentStack = new ItemStack(Items.TRIDENT);
-            tridentStack.enchant(Enchantments.LOYALTY, 1);
-            Zombie owner = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+            enchant(helper, tridentStack, Enchantments.LOYALTY, 1);
+            Zombie owner = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
             trident = new ThrownTrident(world, owner, tridentStack);
             BlockPos abs = helper.absolutePos(new BlockPos(0, 0, 0));
-            trident.setPosRaw(abs.getX(), world.getMinBuildHeight(), abs.getZ());
+            trident.setPosRaw(abs.getX(), world.getMinY(), abs.getZ());
             world.addFreshEntity(trident);
             trident.tick();
             try {
@@ -2912,8 +2801,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // bowInfinityFix: short-draw bail
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowInfinityFixShortDrawBail(GameTestHelper helper) {
         // insufficient bow draw prevents all firing logic
 
@@ -2926,14 +2814,14 @@ public class TweakGameTest implements FabricGameTest {
             BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
             player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
             ItemStack bow = new ItemStack(Items.BOW);
-            bow.enchant(Enchantments.INFINITY, 1);
+            enchant(helper, bow, Enchantments.INFINITY, 1);
             player.getInventory().setItem(0, bow);
             AABB search = player.getBoundingBox().inflate(64.0);
             int arrowsBefore = world.getEntitiesOfClass(AbstractArrow.class, search, e -> true).size();
             try {
                 bow.getItem().use(world, player, InteractionHand.MAIN_HAND);
                 // immediate release keeps pull progress below 0.1
-                bow.getItem().releaseUsing(bow, world, player, bow.getUseDuration());
+                bow.getItem().releaseUsing(bow, world, player, bow.getUseDuration(player));
                 int arrowsAfter = world.getEntitiesOfClass(AbstractArrow.class, search, e -> true).size();
                 helper.assertTrue(arrowsAfter == arrowsBefore, "A barely-drawn Infinity bow must NOT fire (before="
                     + arrowsBefore + ", after=" + arrowsAfter + ")");
@@ -2951,8 +2839,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // villagerTradeLimits: most-restrictive-wins + more real paths
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsMostRestrictiveWins(GameTestHelper helper) {
         // multi-enchant trades use the lowest configured limit
 
@@ -2964,8 +2851,8 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setConfigValue("trade_sharpness", "5");
             ETTestHelper.setConfigValue("trade_looting", "2");
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
-            sword.enchant(Enchantments.SHARPNESS, 1);
-            sword.enchant(Enchantments.LOOTING, 1);
+            enchant(helper, sword, Enchantments.SHARPNESS, 1);
+            enchant(helper, sword, Enchantments.LOOTING, 1);
             MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), sword, 12, 1, 0.2f);
             try {
                 offer.increaseUses();
@@ -2985,8 +2872,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsGlobalFallbackParticipatesInMinimum(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("enchant_trade_max_uses", "trade_looting",
@@ -2997,8 +2883,8 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setConfigValue("trade_sharpness", "50");
             ETTestHelper.setConfigValue("trade_looting", "-1");
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
-            sword.enchant(Enchantments.SHARPNESS, 1);
-            sword.enchant(Enchantments.LOOTING, 1);
+            enchant(helper, sword, Enchantments.SHARPNESS, 1);
+            enchant(helper, sword, Enchantments.LOOTING, 1);
             MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), sword, 12, 1, 0.2f);
             try {
                 offer.increaseUses();
@@ -3019,8 +2905,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsMostRestrictiveZeroDisables(GameTestHelper helper) {
         // any per-enchant limit of 0 disables the whole multi-enchant trade
 
@@ -3032,8 +2917,8 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setConfigValue("trade_sharpness", "5");
             ETTestHelper.setConfigValue("trade_looting", "0");
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
-            sword.enchant(Enchantments.SHARPNESS, 1);
-            sword.enchant(Enchantments.LOOTING, 1);
+            enchant(helper, sword, Enchantments.SHARPNESS, 1);
+            enchant(helper, sword, Enchantments.LOOTING, 1);
             MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), sword, 12, 1, 0.2f);
             try {
                 helper.assertTrue(offer.isOutOfStock(),
@@ -3050,8 +2935,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsGlobalZeroDisablesAll(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("enchant_trade_max_uses",
@@ -3059,7 +2943,7 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("villager_trade_limits", true);
             ETTestHelper.setConfigValue("enchant_trade_max_uses", "0");
-            ItemStack book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+            ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
             MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
             try {
                 helper.assertTrue(offer.isOutOfStock(),
@@ -3075,8 +2959,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsOverridesVanillaMaxUses(GameTestHelper helper) {
         // per-enchantment limits replace vanilla offer limits
 
@@ -3086,7 +2969,7 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setFeature("villager_trade_limits", true);
             ETTestHelper.setConfigValue("enchant_trade_max_uses", "-1");
             ETTestHelper.setConfigValue("trade_sharpness", "50");
-            ItemStack book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+            ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
             MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
             try {
                 for (int i = 0; i < 49; i++)
@@ -3106,8 +2989,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsUnderLimitEnabled(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("enchant_trade_max_uses",
@@ -3115,7 +2997,7 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("villager_trade_limits", true);
             ETTestHelper.setConfigValue("enchant_trade_max_uses", "3");
-            ItemStack book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+            ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
             MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
             offer.increaseUses();
             offer.increaseUses();
@@ -3132,8 +3014,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsResetUsesFeatureOff(GameTestHelper helper) {
         // disabled limits preserve vanilla restocking behavior
 
@@ -3142,7 +3023,7 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("villager_trade_limits", false);
             ETTestHelper.setConfigValue("enchant_trade_restock", "false");
-            ItemStack book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+            ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
             MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
             offer.increaseUses();
             offer.increaseUses();
@@ -3160,8 +3041,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsNoRestockListEdges(GameTestHelper helper) {
         // list parsing trims entries and ignores empty values
 
@@ -3172,12 +3052,12 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setConfigValue("enchant_trade_restock", "true");
             ETTestHelper.setConfigValue("enchant_trade_no_restock", " mending , sharpness ,, ");
             MerchantOffer mending = new MerchantOffer(new ItemCost(Items.EMERALD, 10),
-                EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.MENDING, 1)), 12, 1, 0.2f);
+                enchantedBook(helper, Enchantments.MENDING, 1), 12, 1, 0.2f);
             MerchantOffer sharpness = new MerchantOffer(new ItemCost(Items.EMERALD, 10),
-                EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1)), 12, 1,
+                enchantedBook(helper, Enchantments.SHARPNESS, 1), 12, 1,
                 0.2f);
             MerchantOffer looting = new MerchantOffer(new ItemCost(Items.EMERALD, 10),
-                EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.LOOTING, 1)), 12, 1, 0.2f);
+                enchantedBook(helper, Enchantments.LOOTING, 1), 12, 1, 0.2f);
             mending.increaseUses();
             mending.resetUses();
             sharpness.increaseUses();
@@ -3202,8 +3082,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsGarbagePerEnchant(GameTestHelper helper) {
         // invalid per-enchantment limits use the global default
 
@@ -3212,7 +3091,7 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("villager_trade_limits", true);
             ETTestHelper.setConfigValue("enchant_trade_max_uses", "-1");
-            ItemStack book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+            ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
             try {
                 ETTestHelper.setConfigValue("trade_sharpness", "-5");
                 MerchantOffer neg = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book.copy(), 12, 1, 0.2f);
@@ -3240,8 +3119,7 @@ public class TweakGameTest implements FabricGameTest {
         }
     }
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsRealPurchasability(GameTestHelper helper) {
         // disabled trades leave the merchant output slot empty
 
@@ -3250,7 +3128,7 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("villager_trade_limits", true);
             Player player = helper.makeMockPlayer(GameType.SURVIVAL);
-            ItemStack book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+            ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
             try {
                 ETTestHelper.setConfigValue("enchant_trade_max_uses", "0");
                 MerchantContainer disabledInv = buildMerchantInventory(player, book.copy());
@@ -3276,8 +3154,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // betterMending: recursive leftover-XP must not over-repair
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void betterMendingLeftoverXpNoOverRepair(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("better_mending", "more_mending");
@@ -3286,15 +3163,16 @@ public class TweakGameTest implements FabricGameTest {
             // keep more mending disabled for vanilla repair costs
             ETTestHelper.setFeature("more_mending", false);
             ServerLevel world = helper.getLevel();
-            Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+            // repairPlayerItems requires a ServerPlayer in 26.2
+            ServerPlayer player = ETTestHelper.createServerPlayer(helper, GameType.SURVIVAL);
             // mainhand repairs first and leaves experience
             ItemStack mainhand = new ItemStack(Items.DIAMOND_SWORD);
-            mainhand.enchant(Enchantments.MENDING, 1);
+            enchant(helper, mainhand, Enchantments.MENDING, 1);
             mainhand.setDamageValue(4);
             player.getInventory().setItem(0, mainhand);
             // inventory repairs use only the remaining experience
             ItemStack inv = new ItemStack(Items.DIAMOND_SWORD);
-            inv.enchant(Enchantments.MENDING, 1);
+            enchant(helper, inv, Enchantments.MENDING, 1);
             inv.setDamageValue(100);
             player.getInventory().setItem(20, inv);
 
@@ -3321,33 +3199,32 @@ public class TweakGameTest implements FabricGameTest {
 
     // bowLooting: enchant-table reach
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowLootingEnchantTablePresence(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("bow_looting");
         try {
             ETTestHelper.setFeature("bow_looting", true);
             try {
-                List<EnchantmentInstance> bowEntries = EnchantmentHelper.getAvailableEnchantmentResults(
-                    helper.getLevel().enabledFeatures(), 30, new ItemStack(Items.BOW), false);
+                List<EnchantmentInstance> bowEntries = EnchantmentHelper.getAvailableEnchantmentResults(30, new ItemStack(Items.BOW),
+                    allEnchantHolders(helper));
                 helper.assertTrue(containsEnchant(bowEntries, Enchantments.LOOTING),
                     "Looting must be offered on a bow from the enchant table when bow_looting is on");
-                List<EnchantmentInstance> crossbowEntries = EnchantmentHelper.getAvailableEnchantmentResults(
-                    helper.getLevel().enabledFeatures(), 30, new ItemStack(Items.CROSSBOW), false);
+                List<EnchantmentInstance> crossbowEntries = EnchantmentHelper.getAvailableEnchantmentResults(30, new ItemStack(Items.CROSSBOW),
+                    allEnchantHolders(helper));
                 helper.assertTrue(containsEnchant(crossbowEntries, Enchantments.LOOTING),
                     "Looting must be offered on a crossbow from the enchant table when bow_looting is on");
                 // pickaxes never gain bow looting enchantment entries
-                List<EnchantmentInstance> pickEntries = EnchantmentHelper.getAvailableEnchantmentResults(
-                    helper.getLevel().enabledFeatures(), 30, new ItemStack(Items.DIAMOND_PICKAXE), false);
+                List<EnchantmentInstance> pickEntries = EnchantmentHelper.getAvailableEnchantmentResults(30, new ItemStack(Items.DIAMOND_PICKAXE),
+                    allEnchantHolders(helper));
                 helper.assertFalse(containsEnchant(pickEntries, Enchantments.LOOTING),
                     "Looting must NOT be offered on a pickaxe via bow_looting");
             } finally {
                 ETTestHelper.setFeature("bow_looting", false);
             }
             // disabled bow looting leaves vanilla table entries
-            List<EnchantmentInstance> offEntries = EnchantmentHelper.getAvailableEnchantmentResults(
-                helper.getLevel().enabledFeatures(), 30, new ItemStack(Items.BOW), false);
+            List<EnchantmentInstance> offEntries = EnchantmentHelper.getAvailableEnchantmentResults(30,
+                new ItemStack(Items.BOW), allEnchantHolders(helper));
             helper.assertFalse(containsEnchant(offEntries, Enchantments.LOOTING),
                 "Looting must be absent from bow enchant-table entries when bow_looting is off");
             helper.succeed();
@@ -3359,8 +3236,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // tridentWeapons: all granted sword enchantments reach the enchanting table
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tridentWeaponsEnchantTablePresence(GameTestHelper helper) {
         ItemStack trident = new ItemStack(Items.TRIDENT);
 
@@ -3368,8 +3244,7 @@ public class TweakGameTest implements FabricGameTest {
         try {
             ETTestHelper.setFeature("trident_weapons", true);
             try {
-                List<EnchantmentInstance> entries = EnchantmentHelper
-                    .getAvailableEnchantmentResults(helper.getLevel().enabledFeatures(), 30, trident, false);
+                List<EnchantmentInstance> entries = EnchantmentHelper.getAvailableEnchantmentResults(30, trident, allEnchantHolders(helper));
                 helper.assertTrue(containsEnchant(entries, Enchantments.FIRE_ASPECT),
                     "Fire Aspect must appear on a trident from the table");
                 helper.assertTrue(containsEnchant(entries, Enchantments.KNOCKBACK),
@@ -3382,16 +3257,16 @@ public class TweakGameTest implements FabricGameTest {
                     "Smite must appear on a trident from the table");
                 helper.assertTrue(containsEnchant(entries, Enchantments.BANE_OF_ARTHROPODS),
                     "Bane must appear on a trident from the table");
-                helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.SHARPNESS, trident),
+                helper.assertTrue(canEnchant(helper, Enchantments.SHARPNESS, trident),
                     "Sharpness must remain anvil-acceptable on a trident");
-                helper.assertTrue(ETTestHelper.isAcceptableItem(Enchantments.LOOTING, trident),
+                helper.assertTrue(canEnchant(helper, Enchantments.LOOTING, trident),
                     "Looting must remain anvil-acceptable on a trident");
             } finally {
                 ETTestHelper.setFeature("trident_weapons", false);
             }
             // disabled trident weapons leave vanilla table entries
-            List<EnchantmentInstance> off = EnchantmentHelper
-                .getAvailableEnchantmentResults(helper.getLevel().enabledFeatures(), 30, trident, false);
+            List<EnchantmentInstance> off = EnchantmentHelper.getAvailableEnchantmentResults(30, trident,
+                allEnchantHolders(helper));
             helper.assertFalse(containsEnchant(off, Enchantments.FIRE_ASPECT),
                 "Fire Aspect absent from trident table when trident_weapons off");
             helper.assertFalse(containsEnchant(off, Enchantments.KNOCKBACK),
@@ -3413,8 +3288,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // disableEnchantments: anvil application blocked
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void disableEnchantmentsAnvilBlocked(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("disable_enchantments",
@@ -3424,8 +3298,7 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setConfigValue("disable_enchantments", "sharpness");
             try {
                 ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
-                ItemStack sharpBook = EnchantedBookItem
-                    .createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+                ItemStack sharpBook = enchantedBook(helper, Enchantments.SHARPNESS, 1);
                 ItemStack out = anvilCombine(helper, sword, sharpBook);
                 helper.assertTrue(out.isEmpty(), "Disabled Sharpness anvil operation should produce no output");
             } finally {
@@ -3434,13 +3307,12 @@ public class TweakGameTest implements FabricGameTest {
             }
             // disabled enchantments apply normally when the feature is off
             ItemStack sword2 = new ItemStack(Items.DIAMOND_SWORD);
-            ItemStack sharpBook2 = EnchantedBookItem
-                .createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+            ItemStack sharpBook2 = enchantedBook(helper, Enchantments.SHARPNESS, 1);
             ItemStack out2 = anvilCombine(helper, sword2, sharpBook2);
             helper.assertFalse(out2.isEmpty(), "Sharpness anvil merge with feature off must produce an output");
-            helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS, out2) == 1,
+            helper.assertTrue(enchantLevel(out2, Enchantments.SHARPNESS) == 1,
                 "With the feature off, Sharpness 1 should transfer onto the anvil output (got "
-                    + EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS, out2) + ")");
+                    + enchantLevel(out2, Enchantments.SHARPNESS) + ")");
             helper.succeed();
 
         } finally {
@@ -3450,8 +3322,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // bowInfinityFix: onStoppedUsing infinity guard (real fire path)
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void bowInfinityFixNoInfinityDoesNotFireArrow(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("bow_infinity_fix", "more_infinity");
@@ -3488,8 +3359,7 @@ public class TweakGameTest implements FabricGameTest {
 
     // villagerTradeLimits: master switch gates both facets
 
-    @GameTest(
-        template = EMPTY_STRUCTURE)
+    @GameTest(structure = "fabric-gametest-api-v1:empty")
     public void tradeLimitsMasterSwitchGatesBothFacets(GameTestHelper helper) {
 
         Map<String, String> wave3OriginalConfig = ETTestHelper.snapshotConfig("enchant_trade_max_uses",
@@ -3499,7 +3369,7 @@ public class TweakGameTest implements FabricGameTest {
             ETTestHelper.setConfigValue("enchant_trade_max_uses", "1");
             ETTestHelper.setConfigValue("enchant_trade_restock", "false");
             ETTestHelper.setConfigValue("enchant_trade_no_restock", "sharpness");
-            ItemStack book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 1));
+            ItemStack book = enchantedBook(helper, Enchantments.SHARPNESS, 1);
             MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 10), book, 12, 1, 0.2f);
             try {
                 offer.increaseUses();
@@ -3539,7 +3409,7 @@ public class TweakGameTest implements FabricGameTest {
      * spawns a fully healed zombie with protection four armor
      */
     private static Zombie spawnProtectedZombie(GameTestHelper helper) {
-        Zombie entity = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(0, 2, 0));
+        Zombie entity = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(0, 2, 0));
         for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS,
                 EquipmentSlot.FEET}) {
             ItemStack armor = new ItemStack(switch (slot) {
@@ -3549,7 +3419,7 @@ public class TweakGameTest implements FabricGameTest {
                 case FEET -> Items.DIAMOND_BOOTS;
                 default -> Items.DIAMOND_HELMET;
             });
-            armor.enchant(Enchantments.PROTECTION, 4);
+            enchant(helper, armor, Enchantments.PROTECTION, 4);
             entity.setItemSlot(slot, armor);
         }
         entity.setHealth(entity.getMaxHealth());
@@ -3563,12 +3433,91 @@ public class TweakGameTest implements FabricGameTest {
         return before - zombie.getHealth();
     }
 
-    private static boolean containsEnchant(List<EnchantmentInstance> entries, Enchantment enchantment) {
+    private static boolean containsEnchant(List<EnchantmentInstance> entries, ResourceKey<Enchantment> key) {
         for (EnchantmentInstance entry : entries) {
-            if (entry.enchantment == enchantment)
+            if (ADUtils.isEnchantment(entry.enchantment(), key))
                 return true;
         }
         return false;
+    }
+
+    /**
+     * resolves an enchantment key to its registry holder
+     */
+    private static Holder<Enchantment> enchantHolder(GameTestHelper helper, ResourceKey<Enchantment> key) {
+        Registry<Enchantment> registry = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        return registry.getOrThrow(key);
+    }
+
+    /**
+     * all registered enchantments as candidate holders for table rolls
+     */
+    private static Stream<Holder<Enchantment>> allEnchantHolders(GameTestHelper helper) {
+        Registry<Enchantment> registry = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        return registry.listElements().map(reference -> (Holder<Enchantment>) reference);
+    }
+
+    /**
+     * enchants a stack without registry access at the call site
+     */
+    private static void enchant(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key, int level) {
+        stack.enchant(enchantHolder(helper, key), level);
+    }
+
+    /**
+     * creates an enchanted book without registry access at the call site
+     */
+    private static ItemStack enchantedBook(GameTestHelper helper, ResourceKey<Enchantment> key, int level) {
+        return EnchantmentHelper.createBook(new EnchantmentInstance(enchantHolder(helper, key), level));
+    }
+
+    /**
+     * checks mutual compatibility through the data-driven areCompatible hook
+     */
+    private static boolean areCompatible(GameTestHelper helper, ResourceKey<Enchantment> first,
+        ResourceKey<Enchantment> second) {
+        return Enchantment.areCompatible(enchantHolder(helper, first), enchantHolder(helper, second));
+    }
+
+    /**
+     * checks anvil acceptability through the data-driven canEnchant hook
+     */
+    private static boolean canEnchant(GameTestHelper helper, ResourceKey<Enchantment> key, ItemStack stack) {
+        return enchantHolder(helper, key).value().canEnchant(stack);
+    }
+
+    /**
+     * reads an enchantment level without registry access at the call site
+     */
+    private static int enchantLevel(ItemStack stack, ResourceKey<Enchantment> key) {
+        return ADUtils.getEnchantmentLevel(stack, key);
+    }
+
+    /**
+     * reads an enchantment max level through the data-driven getMaxLevel hook
+     */
+    private static int maxLevel(GameTestHelper helper, ResourceKey<Enchantment> key) {
+        return enchantHolder(helper, key).value().getMaxLevel();
+    }
+
+    /**
+     * checks random-selection availability through the data-driven
+     * isPrimaryItem hook on a diamond sword
+     */
+    private static boolean isAvailableForSelection(GameTestHelper helper, ResourceKey<Enchantment> key) {
+        return enchantHolder(helper, key).value().isPrimaryItem(new ItemStack(Items.DIAMOND_SWORD));
+    }
+
+    /**
+     * counts matching items across the player's carried inventory
+     */
+    private static int countItems(Player player, Item item) {
+        int total = 0;
+        for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
+            if (stack.is(item))
+                total += stack.getCount();
+        }
+        return total;
     }
 
     /**

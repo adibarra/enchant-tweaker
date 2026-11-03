@@ -41,10 +41,10 @@ jobs:
       - name: Build
         run: ./gradlew build --console=plain
       - name: Run client gametest
-        run: ./gradlew runClientGameTest --console=plain
+        run: xvfb-run -a ./gradlew runClientGameTest --console=plain
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: junit-results
-          path: build/junit.xml
+          path: build/**/*.xml

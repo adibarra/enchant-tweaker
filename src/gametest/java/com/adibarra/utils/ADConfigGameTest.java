@@ -5,15 +5,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 
-public class ADConfigGameTest implements FabricGameTest {
+public class ADConfigGameTest {
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void valueMigrationPersistsAcrossReload(GameTestHelper helper) {
         Path configPath;
         try {

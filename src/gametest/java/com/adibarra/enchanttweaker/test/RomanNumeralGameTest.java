@@ -1,17 +1,16 @@
 package com.adibarra.enchanttweaker.test;
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
-import net.minecraft.gametest.framework.GameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 
 import com.adibarra.utils.ADRoman;
 
-public class RomanNumeralGameTest implements FabricGameTest {
+public class RomanNumeralGameTest {
 
     // toRoman basic numerals
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void toRomanBasics(GameTestHelper helper) {
         helper.assertTrue(ADRoman.toRoman(1).equals("I"), "1 should be I");
         helper.assertTrue(ADRoman.toRoman(4).equals("IV"), "4 should be IV");
@@ -23,7 +22,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // toRoman tens/hundreds/thousands
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void toRomanTens(GameTestHelper helper) {
         helper.assertTrue(ADRoman.toRoman(40).equals("XL"), "40 should be XL");
         helper.assertTrue(ADRoman.toRoman(90).equals("XC"), "90 should be XC");
@@ -36,7 +35,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // toRoman large composites
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void toRomanLarge(GameTestHelper helper) {
         helper.assertTrue(ADRoman.toRoman(3999).equals("MMMCMXCIX"), "3999 should be MMMCMXCIX");
         helper.assertTrue(ADRoman.toRoman(2024).equals("MMXXIV"), "2024 should be MMXXIV");
@@ -46,7 +45,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // toRoman non-positive
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void toRomanNonPositive(GameTestHelper helper) {
         helper.assertTrue(ADRoman.toRoman(0).equals(""), "0 should be an empty string");
         helper.assertTrue(ADRoman.toRoman(-5).equals(""), "-5 should be an empty string");
@@ -56,7 +55,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // toRoman upper clamp (pathological input)
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void toRomanUpperClamp(GameTestHelper helper) {
         helper.assertTrue(ADRoman.toRoman(3999).equals("MMMCMXCIX"),
             "3999 stays MMMCMXCIX (clamp boundary, unchanged)");
@@ -72,7 +71,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // enchantmentLevelOverride gating
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void levelOverrideGating(GameTestHelper helper) {
         helper.assertTrue("0".equals(ADRoman.enchantmentLevelOverride(0)), "level 0 should override to \"0\"");
         helper.assertTrue(ADRoman.enchantmentLevelOverride(1) == null, "level 1 should defer to vanilla (null)");
@@ -88,7 +87,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // levelKeyOverride translation-key gate
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void levelKeyOverrideGate(GameTestHelper helper) {
         // mixin injectors use prefix and parseInt guards
         helper.assertTrue("XI".equals(ADRoman.levelKeyOverride("enchantment.level.11")),
@@ -112,7 +111,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // toRoman remaining single digits
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void toRomanOneThroughTen(GameTestHelper helper) {
         // complements basic coverage with remaining single digits
         helper.assertTrue(ADRoman.toRoman(2).equals("II"), "2 should be II");
@@ -129,7 +128,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // toRoman extreme negative boundaries
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void toRomanExtremeNegative(GameTestHelper helper) {
         // non-positive inputs return before sign handling
         // including Integer.MIN_VALUE
@@ -141,7 +140,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // toRoman output length stays bounded
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void toRomanBoundedLength(GameTestHelper helper) {
         helper.assertTrue(ADRoman.toRoman(3888).equals("MMMDCCCLXXXVIII"),
             "3888 should be MMMDCCCLXXXVIII (longest standard numeral)");
@@ -154,7 +153,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // enchantmentLevelOverride int-extreme boundaries
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void levelOverrideExtremes(GameTestHelper helper) {
         // covers sign and overflow boundaries omitted above
         helper.assertTrue(ADRoman.enchantmentLevelOverride(-1) == null, "level -1 should defer to vanilla (null)");
@@ -168,7 +167,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // levelKeyOverride null and large values
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void levelKeyOverrideNullAndLarge(GameTestHelper helper) {
         // null keys return before startsWith runs
         helper.assertTrue(ADRoman.levelKeyOverride(null) == null,
@@ -188,7 +187,7 @@ public class RomanNumeralGameTest implements FabricGameTest {
     // levelKeyOverride Integer.parseInt quirks
 
     @GameTest(
-        template = EMPTY_STRUCTURE)
+        structure = "fabric-gametest-api-v1:empty")
     public void levelKeyOverrideParseQuirks(GameTestHelper helper) {
         // parseInt accepts leading zeros
         helper.assertTrue("XI".equals(ADRoman.levelKeyOverride("enchantment.level.011")),
