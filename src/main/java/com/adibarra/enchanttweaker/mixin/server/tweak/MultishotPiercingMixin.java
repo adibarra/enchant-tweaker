@@ -1,9 +1,8 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.MultishotEnchantment;
-import net.minecraft.enchantment.PiercingEnchantment;
-import net.minecraft.registry.Registries;
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,23 +15,19 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = {MultishotEnchantment.class, PiercingEnchantment.class})
+    value = Enchantment.class)
 public abstract class MultishotPiercingMixin {
 
     @Inject(
-        method = "canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
+        method = "areCompatible(Lnet/minecraft/core/Holder;Lnet/minecraft/core/Holder;)Z",
         at = @At("HEAD"),
         cancellable = true)
-    private void enchanttweaker$multishotPiercing$allowCoexist(Enchantment other, CallbackInfoReturnable<Boolean> cir) {
+    private static void enchanttweaker$multishotPiercing$allowCoexist(Holder<Enchantment> first,
+        Holder<Enchantment> second, CallbackInfoReturnable<Boolean> cir) {
         if (!ETMixinPlugin.getMixinConfig("MultishotPiercingMixin"))
             return;
-        String selfId = Registries.ENCHANTMENT.getKey((Enchantment) (Object) this).map(key -> key.getValue().toString())
-            .orElse(null);
-        String otherId = Registries.ENCHANTMENT.getKey(other).map(key -> key.getValue().toString()).orElse(null);
-        if (selfId == null || otherId == null)
-            return;
-        if ((selfId.equals("minecraft:multishot") && otherId.equals("minecraft:piercing"))
-            || (selfId.equals("minecraft:piercing") && otherId.equals("minecraft:multishot"))) {
+        if ((first.is(Enchantments.MULTISHOT) && second.is(Enchantments.PIERCING))
+            || (first.is(Enchantments.PIERCING) && second.is(Enchantments.MULTISHOT))) {
             cir.setReturnValue(true);
         }
     }

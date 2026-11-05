@@ -5,16 +5,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.test.GameTest;
-import net.minecraft.test.TestContext;
+import net.minecraft.gametest.framework.GameTestHelper;
 
-public class ADConfigGameTest implements FabricGameTest {
+public class ADConfigGameTest {
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void valueMigrationPersistsAcrossReload(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void valueMigrationPersistsAcrossReload(GameTestHelper helper) {
         Path configPath;
         try {
             configPath = Files.createTempFile(FabricLoader.getInstance().getConfigDir(), "et-migvalue-test-",
@@ -44,7 +43,7 @@ public class ADConfigGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(configPath);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     private static void deleteQuietly(Path path) {

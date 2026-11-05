@@ -1,6 +1,6 @@
 package com.adibarra.enchanttweaker;
 
-import net.minecraft.inventory.Inventory;
+import net.minecraft.world.Container;
 
 /**
  * duck interface for communication between grindstone mixins avoids referencing
@@ -9,5 +9,5 @@ import net.minecraft.inventory.Inventory;
 public interface GrindstoneDisenchantAccess {
     int enchanttweaker$getBookSlot();
 
-    Inventory enchanttweaker$getInput();
+    Container enchanttweaker$getInput();
 }

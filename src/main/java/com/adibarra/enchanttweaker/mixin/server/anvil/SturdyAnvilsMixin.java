@@ -1,6 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.anvil;
 
-import net.minecraft.screen.AnvilScreenHandler;
+import net.minecraft.world.inventory.AnvilMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -12,11 +12,11 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = AnvilScreenHandler.class)
+    value = AnvilMenu.class)
 public abstract class SturdyAnvilsMixin {
 
     @ModifyConstant(
-        method = "method_24922(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V",
+        method = "lambda$onTake$0(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V",
         constant = @Constant(
             floatValue = 0.12f,
             ordinal = 0))

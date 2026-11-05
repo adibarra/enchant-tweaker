@@ -1,6 +1,6 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,14 +15,14 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = PlayerEntity.class)
+    value = Player.class)
 public abstract class XpScalingMixin {
 
     @Shadow
     public int experienceLevel;
 
     @Inject(
-        method = "getNextLevelExperience()I",
+        method = "getXpNeededForNextLevel()I",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$xpScaling$linearize(CallbackInfoReturnable<Integer> cir) {

@@ -1,5 +1,5 @@
 {
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "package": "com.adibarra.enchanttweaker.mixin",
   "plugin": "com.adibarra.enchanttweaker.ETMixinPlugin",
   "required": true,

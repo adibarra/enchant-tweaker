@@ -1,21 +1,22 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.EntityHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.FlameLevelAccess;
+import com.adibarra.utils.ADUtils;
 
 /**
  * @description scales flame burn time by enchantment level adds two seconds per
@@ -23,7 +24,7 @@ import com.adibarra.enchanttweaker.FlameLevelAccess;
  * @environment server
  */
 @Mixin(
-    value = PersistentProjectileEntity.class)
+    value = AbstractArrow.class)
 public abstract class MoreFlameMixin implements FlameLevelAccess {
 
     @Unique
@@ -31,14 +32,6 @@ public abstract class MoreFlameMixin implements FlameLevelAccess {
 
     @Unique
     private int enchanttweaker$flameLevel = 0;
-
-    @Inject(
-        method = "applyEnchantmentEffects(Lnet/minecraft/entity/LivingEntity;F)V",
-        at = @At("HEAD"))
-    private void enchanttweaker$moreFlame$captureMobWeaponLevel(LivingEntity shooter, float damageModifier,
-        CallbackInfo ci) {
-        enchanttweaker$setFlameLevel(EnchantmentHelper.getEquipmentLevel(Enchantments.FLAME, shooter));
-    }
 
     @Override
     @Unique
@@ -53,41 +46,42 @@ public abstract class MoreFlameMixin implements FlameLevelAccess {
     }
 
     @Inject(
-        method = "writeCustomDataToNbt(Lnet/minecraft/nbt/NbtCompound;)V",
-        at = @At("TAIL"))
-    private void enchanttweaker$moreFlame$writeLevel(NbtCompound nbt, CallbackInfo ci) {
-        if (enchanttweaker$flameLevel > 0) {
-            nbt.putInt(FLAME_LEVEL_NBT_KEY, enchanttweaker$flameLevel);
-        } else {
-            nbt.remove(FLAME_LEVEL_NBT_KEY);
+        method = "onHitEntity(Lnet/minecraft/world/phys/EntityHitResult;)V",
+        at = @At("HEAD"))
+    private void enchanttweaker$moreFlame$captureWeaponLevel(EntityHitResult result, CallbackInfo ci) {
+        // weaponless arrows keep the level captured at firing or restored from nbt
+        ItemStack weapon = ((AbstractArrow) (Object) this).getWeaponItem();
+        if (weapon != null) {
+            enchanttweaker$setFlameLevel(ADUtils.getEnchantmentLevel(weapon, Enchantments.FLAME));
         }
     }
 
     @Inject(
-        method = "readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V",
+        method = "addAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueOutput;)V",
         at = @At("TAIL"))
-    private void enchanttweaker$moreFlame$readLevel(NbtCompound nbt, CallbackInfo ci) {
-        enchanttweaker$setFlameLevel(nbt.getInt(FLAME_LEVEL_NBT_KEY));
+    private void enchanttweaker$moreFlame$writeLevel(ValueOutput output, CallbackInfo ci) {
+        if (enchanttweaker$flameLevel > 0) {
+            output.putInt(FLAME_LEVEL_NBT_KEY, enchanttweaker$flameLevel);
+        }
+    }
+
+    @Inject(
+        method = "readAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueInput;)V",
+        at = @At("TAIL"))
+    private void enchanttweaker$moreFlame$readLevel(ValueInput input, CallbackInfo ci) {
+        enchanttweaker$setFlameLevel(input.getIntOr(FLAME_LEVEL_NBT_KEY, 0));
     }
 
     @ModifyConstant(
-        method = "onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
-        slice = @Slice(
-            from = @At(
-                value = "INVOKE",
-                target = "Lnet/minecraft/entity/Entity;getFireTicks()I"),
-            to = @At(
-                value = "INVOKE",
-                target = "Lnet/minecraft/entity/Entity;setOnFireFor(I)V")),
+        method = "onHitEntity(Lnet/minecraft/world/phys/EntityHitResult;)V",
         constant = @Constant(
-            intValue = 5,
+            floatValue = 5.0f,
             ordinal = 0))
-    private int enchanttweaker$moreFlame$modifyBurnTime(int orig) {
+    private float enchanttweaker$moreFlame$modifyBurnTime(float orig) {
         if (!ETMixinPlugin.getMixinConfig("MoreFlameMixin"))
             return orig;
         int perLevel = ETMixinPlugin.getConfig().getOrDefault("more_flame_per_level", 2);
-        long extra = (long) Math.max(0, perLevel) * Math.max(0L, (long) enchanttweaker$flameLevel - 1);
-        long seconds = (long) orig + extra;
-        return (int) Math.clamp(seconds, orig, Integer.MAX_VALUE / 20);
+        float seconds = orig + (float) Math.max(0, perLevel) * Math.max(0, enchanttweaker$flameLevel - 1);
+        return Math.clamp(seconds, orig, Integer.MAX_VALUE / 20f);
     }
 }

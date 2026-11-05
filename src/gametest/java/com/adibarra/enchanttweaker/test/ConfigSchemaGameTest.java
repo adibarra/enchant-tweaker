@@ -11,23 +11,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.test.GameTest;
-import net.minecraft.test.TestContext;
+import net.minecraft.gametest.framework.GameTestHelper;
 
 import com.adibarra.enchanttweaker.ETConfigSchema;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.adibarra.utils.ADConfig;
 
-public class ConfigSchemaGameTest implements FabricGameTest {
+public class ConfigSchemaGameTest {
 
     // typeOf inference
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaTypeInference(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaTypeInference(GameTestHelper helper) {
         helper.assertTrue(ETConfigSchema.typeOf("cheap_names") == ETConfigSchema.ValueType.BOOLEAN,
             "cheap_names should infer BOOLEAN");
         helper.assertTrue(ETConfigSchema.typeOf("nte_max_cost") == ETConfigSchema.ValueType.INTEGER,
@@ -36,14 +35,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             "anvil_damage_chance should infer DECIMAL");
         helper.assertTrue(ETConfigSchema.typeOf("disable_enchantments") == ETConfigSchema.ValueType.LIST,
             "disable_enchantments should infer LIST");
-        helper.complete();
+        helper.succeed();
     }
 
     // public schema lookups normalize config keys
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaKeyLookupsNormalize(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaKeyLookupsNormalize(GameTestHelper helper) {
         helper.assertTrue(ETConfigSchema.typeOf(" CHEAP_NAMES ") == ETConfigSchema.ValueType.BOOLEAN,
             "typeOf should trim and lowercase keys");
         helper.assertTrue(ETConfigSchema.isValid(" CHEAP_NAMES ", "true"), "isValid should normalize keys");
@@ -57,14 +56,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             "categoryOf should normalize keys");
         helper.assertTrue(ETConfigSchema.keysIn(" ANVIL_TWEAKS ").equals(ETConfigSchema.keysIn("anvil_tweaks")),
             "keysIn should normalize category slugs");
-        helper.complete();
+        helper.succeed();
     }
 
     // isValid per type
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaIsValid(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaIsValid(GameTestHelper helper) {
         // boolean accepts only true/false
         helper.assertTrue(ETConfigSchema.isValid("cheap_names", "true"), "cheap_names=true should be valid");
         helper.assertTrue(ETConfigSchema.isValid("cheap_names", "false"), "cheap_names=false should be valid");
@@ -90,35 +89,35 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.assertTrue(ETConfigSchema.isValid("disable_enchantments", "sharpness,mending"),
             "list value should be valid");
         helper.assertTrue(ETConfigSchema.isValid("disable_enchantments", ""), "empty list value should be valid");
-        helper.complete();
+        helper.succeed();
     }
 
     // unknown key is allowed
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaUnknownKey(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaUnknownKey(GameTestHelper helper) {
         helper.assertTrue(ETConfigSchema.typeOf("not_a_real_key") == null, "unknown key should have a null type");
         helper.assertTrue(ETConfigSchema.isValid("not_a_real_key", "anything"),
             "unknown key should be permissively valid");
-        helper.complete();
+        helper.succeed();
     }
 
     // expected() hints
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaExpectedHints(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaExpectedHints(GameTestHelper helper) {
         helper.assertTrue(!ETConfigSchema.expected("cheap_names").isEmpty(), "boolean key should have a hint");
         helper.assertTrue(!ETConfigSchema.expected("nte_max_cost").isEmpty(), "integer key should have a hint");
         helper.assertTrue(!ETConfigSchema.expected("anvil_damage_chance").isEmpty(), "decimal key should have a hint");
         helper.assertTrue(!ETConfigSchema.expected("disable_enchantments").isEmpty(), "list key should have a hint");
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaDescriptions(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaDescriptions(GameTestHelper helper) {
         helper.assertTrue(ETConfigSchema.descriptionOf("cheap_names").contains("nineteen levels"),
             "cheap_names should expose its bundled setting description");
         helper.assertTrue(ETConfigSchema.descriptionOf("nte_max_cost").contains("40 levels"),
@@ -130,14 +129,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             "capmod description should not include the prior category");
         helper.assertTrue(ETConfigSchema.descriptionOf("not_a_real_key").isEmpty(),
             "unknown keys should have an empty description");
-        helper.complete();
+        helper.succeed();
     }
 
     // reserved keys
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaReservedKeys(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaReservedKeys(GameTestHelper helper) {
         helper.assertTrue(ETConfigSchema.isReserved("config_version"), "config_version should be reserved");
         helper.assertTrue(!ETConfigSchema.isReserved("cheap_names"), "cheap_names should not be reserved");
 
@@ -145,14 +144,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             "defaults() should exclude reserved keys");
         helper.assertTrue(!ETConfigSchema.keysIn("internal").contains("config_version"),
             "keysIn() should exclude reserved keys");
-        helper.complete();
+        helper.succeed();
     }
 
     // bundled defaults
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaDefaults(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaDefaults(GameTestHelper helper) {
         helper.assertTrue("false".equals(ETConfigSchema.defaultOf("cheap_names")),
             "cheap_names default should be false");
         helper.assertTrue("2147483647".equals(ETConfigSchema.defaultOf("nte_max_cost")),
@@ -160,28 +159,28 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.assertTrue("1.33".equals(ETConfigSchema.defaultOf("pw_cost_multiplier")),
             "pw_cost_multiplier default should be 1.33");
         helper.assertTrue(ETConfigSchema.defaultOf("not_a_real_key") == null, "unknown key should have a null default");
-        helper.complete();
+        helper.succeed();
     }
 
     // categories in file order
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaCategories(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaCategories(GameTestHelper helper) {
         List<String> expected = List.of("master_switch", "anvil_tweaks", "enhanced_enchantments", "other_tweaks",
             "villager_trade_limits", "modify_max_enchantment_levels");
         helper.assertTrue(ETConfigSchema.categories().equals(expected),
             "categories() should equal " + expected + " but was " + ETConfigSchema.categories());
         helper.assertTrue(!ETConfigSchema.categories().contains("internal"),
             "internal category should be hidden (no non-reserved keys)");
-        helper.complete();
+        helper.succeed();
     }
 
     // keys within a category
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaKeysIn(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaKeysIn(GameTestHelper helper) {
         List<String> anvil = ETConfigSchema.keysIn("anvil_tweaks");
         List<String> expectedAnvil = List.of("cheap_names", "not_too_expensive", "nte_max_cost", "prior_work_cheaper",
             "pw_cost_multiplier", "prior_work_free", "sturdy_anvils", "anvil_damage_chance", "anvil_repair",
@@ -192,14 +191,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             "trade_mending should be in villager_trade_limits");
         helper.assertTrue(ETConfigSchema.keysIn("not_a_real_slug").isEmpty(),
             "unknown slug should yield an empty list");
-        helper.complete();
+        helper.succeed();
     }
 
     // migration ordering
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void migrationOrdering(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void migrationOrdering(GameTestHelper helper) {
         // version one renames old_name to new_name
         // version two rewrites color
         // trace confirms ascending migration application
@@ -226,14 +225,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.assertTrue("AB".equals(config.get("trace")),
             "migrations should apply in ascending toVersion order (trace=AB)");
         helper.assertTrue("2".equals(config.get(ADConfig.VERSION_KEY)), "VERSION_KEY should be stamped 2");
-        helper.complete();
+        helper.succeed();
     }
 
     // migration skip / downgrade
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void migrationSkip(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void migrationSkip(GameTestHelper helper) {
         ADConfig.Migration m1 = new ADConfig.Migration(1, map -> map.put("new_name", map.remove("old_name")));
         ADConfig.Migration m2 = new ADConfig.Migration(2, map -> map.put("color", "green"));
         List<ADConfig.Migration> migrations = List.of(m1, m2);
@@ -262,25 +261,25 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.assertTrue("red".equals(c.get("color")), "newer config: values should be kept as-is");
         helper.assertTrue("3".equals(c.get(ADConfig.VERSION_KEY)),
             "newer config: VERSION_KEY should remain at the stored version (3)");
-        helper.complete();
+        helper.succeed();
     }
 
     // live config version
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void liveConfigVersion(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void liveConfigVersion(GameTestHelper helper) {
         // bundled migration updates the gametest run-directory configuration
         helper.assertTrue(ETMixinPlugin.getConfig().getOrDefault("config_version", 0) == 1,
             "loaded config_version should be 1");
-        helper.complete();
+        helper.succeed();
     }
 
     // isolated migrateConfig key-diff
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void migrateConfigKeyDiff(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void migrateConfigKeyDiff(GameTestHelper helper) {
         Path tmp = createConfigFixture("et-migdiff-test-");
         try {
             Files.writeString(tmp, "cheap_names=true\nobsolete_key=stale_value\n");
@@ -308,12 +307,12 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void migrateConfigPreservesNewerSchema(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void migrateConfigPreservesNewerSchema(GameTestHelper helper) {
         Path tmp = null;
         String futureConfig = "config_version=999\nfuture_option=keep\ncheap_names=true\n";
         try {
@@ -332,14 +331,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // isolated applyVersionMigrations live caller + stamp
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void migrateConfigVersionStamp(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void migrateConfigVersionStamp(GameTestHelper helper) {
         Path tmp = createConfigFixture("et-migver-test-");
         try {
             String bundled = readResourceText(REAL_BUNDLED);
@@ -358,14 +357,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // isolated version parse + machinery-disabled paths
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void migrateConfigParsePaths(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void migrateConfigParsePaths(GameTestHelper helper) {
         // non-numeric versions parse as zero and migrate
         Path tmpA = createConfigFixture("et-migparse-abc-");
         try {
@@ -401,14 +400,14 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmpB);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // schema immutability contracts
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaImmutability(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaImmutability(GameTestHelper helper) {
         boolean threw = false;
         try {
             ETConfigSchema.defaults().put("junk_key", "junk_value");
@@ -424,26 +423,26 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         helper.assertTrue(!b.contains("junk_key"), "mutating one keysIn() result must not affect another");
         helper.assertTrue(!ETConfigSchema.keysIn("anvil_tweaks").contains("junk_key"),
             "mutating a keysIn() result must not affect the schema's internal state");
-        helper.complete();
+        helper.succeed();
     }
 
     // schema minor fallbacks
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaFallbacks(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaFallbacks(GameTestHelper helper) {
         helper.assertTrue(ETConfigSchema.expected("not_a_real_key").isEmpty(),
             "expected() for an unknown key should be empty");
         helper.assertTrue(ETConfigSchema.categoryOf("not_a_real_key") == null,
             "categoryOf() for an unknown key should be null");
         helper.assertTrue("internal".equals(ETConfigSchema.categoryOf("config_version")),
             "categoryOf(config_version) should be 'internal' even though config_version is reserved");
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void schemaLiveConfigParity(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void schemaLiveConfigParity(GameTestHelper helper) {
         // a verbatim bundled copy prevents key-diff rewrites
         // loaded keys match the bundled configuration
         Path tmp = createConfigFixture("et-parity-test-");
@@ -488,12 +487,12 @@ public class ConfigSchemaGameTest implements FabricGameTest {
             helper.assertTrue(ETConfigSchema.typeOf(cfgKey) != null,
                 "CLIENT_LOCAL_KEY '" + cfgKey + "' has no schema entry");
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void parseRobustness(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void parseRobustness(GameTestHelper helper) {
         Path tmp = createConfigFixture("et-parse-test-");
         try {
             String fixture = String.join("\r\n", "# comment=should_be_ignored", // '#' line -> comment, no key
@@ -552,12 +551,12 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void commentPrefixedKeysAreRejected(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void commentPrefixedKeysAreRejected(GameTestHelper helper) {
         Path tmp = createConfigFixture("et-comment-key-test-");
         try {
             Files.writeString(tmp, "safe=before\n#persisted=ignored\n");
@@ -580,12 +579,12 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void getOrDefaultNormalizesKeyWhitespace(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void getOrDefaultNormalizesKeyWhitespace(GameTestHelper helper) {
         Path tmp = createConfigFixture("et-lookup-whitespace-test-");
         try {
             Files.writeString(tmp, "spaced_key=before\n");
@@ -600,12 +599,12 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void getOrDefaultCoercion(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void getOrDefaultCoercion(GameTestHelper helper) {
         Path tmp = createConfigFixture("et-coerce-test-");
         try {
             Files.writeString(tmp, "");
@@ -666,12 +665,12 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void configRejectsLineBreakValues(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void configRejectsLineBreakValues(GameTestHelper helper) {
         Path tmp = configDir().resolve("x");
         PathBackup original = null;
         boolean isolated = false;
@@ -704,12 +703,12 @@ public class ConfigSchemaGameTest implements FabricGameTest {
                 }
             }
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void migrationMissingVersionAppends(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void migrationMissingVersionAppends(GameTestHelper helper) {
         Path tmp = createConfigFixture("et-mignover-test-");
         try {
             String bundled = readResourceText(REAL_BUNDLED);
@@ -732,7 +731,7 @@ public class ConfigSchemaGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // isolated-migration helpers

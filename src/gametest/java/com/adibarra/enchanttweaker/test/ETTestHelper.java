@@ -8,19 +8,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.AnvilScreenHandler;
-import net.minecraft.screen.ForgingScreenHandler;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.test.TestContext;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.World;
+import net.minecraft.core.Holder;
+import net.minecraft.core.NonNullList;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AnvilMenu;
+import net.minecraft.world.inventory.ItemCombinerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 
@@ -59,28 +61,28 @@ class ETTestHelper {
         ETMixinPlugin.clearCaches();
     }
 
-    private static final Map<TestContext, List<ServerPlayerEntity>> CREATED_SERVER_PLAYERS = new IdentityHashMap<>();
+    private static final Map<GameTestHelper, List<ServerPlayer>> CREATED_SERVER_PLAYERS = new IdentityHashMap<>();
 
     @SuppressWarnings("removal")
-    static ServerPlayerEntity createServerPlayer(TestContext helper, GameMode mode) {
-        ServerPlayerEntity player = helper.createMockCreativeServerPlayerInWorld();
+    static ServerPlayer createServerPlayer(GameTestHelper helper, GameType mode) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
         trackServerPlayer(helper, player);
-        player.changeGameMode(mode);
+        player.setGameMode(mode);
         return player;
     }
 
-    private static void trackServerPlayer(TestContext helper, ServerPlayerEntity player) {
+    private static void trackServerPlayer(GameTestHelper helper, ServerPlayer player) {
         synchronized (CREATED_SERVER_PLAYERS) {
-            List<ServerPlayerEntity> players = CREATED_SERVER_PLAYERS.get(helper);
+            List<ServerPlayer> players = CREATED_SERVER_PLAYERS.get(helper);
             if (players != null) {
                 players.add(player);
                 return;
             }
 
             players = new ArrayList<>();
-            List<ServerPlayerEntity> trackedPlayers = players;
+            List<ServerPlayer> trackedPlayers = players;
             try {
-                helper.addFinalTask(() -> {
+                helper.succeedIf(() -> {
                     try {
                         removeServerPlayers(helper, trackedPlayers);
                     } finally {
@@ -102,42 +104,30 @@ class ETTestHelper {
         removeServerPlayers(helper, List.of(player));
     }
 
-    private static void removeServerPlayers(TestContext helper, List<ServerPlayerEntity> players) {
-        PlayerManager playerManager = helper.getWorld().getServer().getPlayerManager();
-        for (ServerPlayerEntity player : players) {
-            if (playerManager.getPlayer(player.getUuid()) == player) {
+    private static void removeServerPlayers(GameTestHelper helper, List<ServerPlayer> players) {
+        PlayerList playerManager = helper.getLevel().getServer().getPlayerList();
+        for (ServerPlayer player : players) {
+            if (playerManager.getPlayer(player.getUUID()) == player) {
                 playerManager.remove(player);
             } else {
-                ServerWorld world = player.getServerWorld();
+                ServerLevel world = (ServerLevel) player.level();
                 if (!player.isRemoved() && !world.getPlayers(entity -> entity == player).isEmpty()) {
                     // a player can have been removed from PlayerManager by a disconnect
                     // before this final task runs.
-                    world.removePlayer(player, Entity.RemovalReason.DISCARDED);
+                    world.removePlayerImmediately(player, Entity.RemovalReason.DISCARDED);
                 }
             }
         }
     }
 
-    /** calls the protected Enchantment.canAccept via reflection */
-    static boolean canAccept(Enchantment enchantment, Enchantment other) {
-        try {
-            Method m = Enchantment.class.getDeclaredMethod("canAccept", Enchantment.class);
-            m.setAccessible(true);
-            return (boolean) m.invoke(enchantment, other);
-        } catch (Exception e) {
-            throw new RuntimeException("canAccept reflection failed", e);
-        }
+    /** checks mutual exclusivity via the static compatibility API */
+    static boolean canAccept(Holder<Enchantment> first, Holder<Enchantment> second) {
+        return Enchantment.areCompatible(first, second);
     }
 
-    /** calls the protected Enchantment.isAcceptableItem via reflection */
+    /** checks item support via the instance compatibility API */
     static boolean isAcceptableItem(Enchantment enchantment, ItemStack stack) {
-        try {
-            Method m = Enchantment.class.getDeclaredMethod("isAcceptableItem", ItemStack.class);
-            m.setAccessible(true);
-            return (boolean) m.invoke(enchantment, stack);
-        } catch (Exception e) {
-            throw new RuntimeException("isAcceptableItem reflection failed", e);
-        }
+        return enchantment.canEnchant(stack);
     }
 
     /**
@@ -145,25 +135,25 @@ class ETTestHelper {
      * underlying SimpleInventory stacks list, bypassing the markDirty callback
      * chain that would otherwise NPE in sendContentUpdates during tests
      */
-    static void setAnvilInputs(AnvilScreenHandler handler, ItemStack first, ItemStack second) {
+    static void setAnvilInputs(AnvilMenu handler, ItemStack first, ItemStack second) {
         try {
-            Field inputField = ForgingScreenHandler.class.getDeclaredField("input");
+            Field inputField = ItemCombinerMenu.class.getDeclaredField("inputSlots");
             inputField.setAccessible(true);
             Object inv = inputField.get(handler);
             Field stacksField = null;
             for (Class<?> type = inv.getClass(); type != null; type = type.getSuperclass()) {
                 try {
-                    stacksField = type.getDeclaredField("heldStacks");
+                    stacksField = type.getDeclaredField("items");
                     break;
                 } catch (NoSuchFieldException ignored) {
                     // continue through the inventory class hierarchy
                 }
             }
             if (stacksField == null)
-                throw new NoSuchFieldException("heldStacks");
+                throw new NoSuchFieldException("items");
             stacksField.setAccessible(true);
             @SuppressWarnings("unchecked")
-            List<ItemStack> stacks = (List<ItemStack>) stacksField.get(inv);
+            NonNullList<ItemStack> stacks = (NonNullList<ItemStack>) stacksField.get(inv);
             stacks.set(0, first);
             stacks.set(1, second);
         } catch (ReflectiveOperationException e) {
@@ -171,23 +161,18 @@ class ETTestHelper {
         }
     }
 
-    /** calls static AnvilScreenHandler.getNextCost via reflection */
+    /** returns the increased repair cost for the next anvil operation */
     static int getNextAnvilCost(int cost) {
-        try {
-            Method m = AnvilScreenHandler.class.getDeclaredMethod("getNextCost", int.class);
-            m.setAccessible(true);
-            return (int) m.invoke(null, cost);
-        } catch (Exception e) {
-            throw new RuntimeException("getNextCost reflection failed", e);
-        }
+        return AnvilMenu.calculateIncreasedRepairCost(cost);
     }
 
     /**
-     * calls ExperienceOrbEntity.repairPlayerGears(PlayerEntity, int) via reflection
+     * calls ExperienceOrb.repairPlayerItems(ServerPlayer, int) via reflection
      */
-    static int repairPlayerGears(ExperienceOrbEntity orb, PlayerEntity player, int amount) {
+    static int repairPlayerGears(ExperienceOrb orb, Player player, int amount) {
         try {
-            Method m = ExperienceOrbEntity.class.getDeclaredMethod("repairPlayerGears", PlayerEntity.class, int.class);
+            Method m = ExperienceOrb.class.getDeclaredMethod("repairPlayerItems",
+                net.minecraft.server.level.ServerPlayer.class, int.class);
             m.setAccessible(true);
             return (int) m.invoke(orb, player, amount);
         } catch (Exception e) {
@@ -196,12 +181,11 @@ class ETTestHelper {
     }
 
     /**
-     * sets the newItemName field on AnvilScreenHandler via reflection (field is
-     * private)
+     * sets the itemName field on AnvilMenu via reflection (field is private)
      */
-    static void setAnvilNewName(AnvilScreenHandler handler, String name) {
+    static void setAnvilNewName(AnvilMenu handler, String name) {
         try {
-            Field f = AnvilScreenHandler.class.getDeclaredField("newItemName");
+            Field f = AnvilMenu.class.getDeclaredField("itemName");
             f.setAccessible(true);
             f.set(handler, name);
         } catch (ReflectiveOperationException e) {
@@ -209,10 +193,10 @@ class ETTestHelper {
         }
     }
 
-    /** calls the protected AnvilScreenHandler.onTakeOutput via reflection */
-    static void invokeOnTakeOutput(AnvilScreenHandler handler, PlayerEntity player, ItemStack stack) {
+    /** calls the protected AnvilMenu.onTake via reflection */
+    static void invokeOnTakeOutput(AnvilMenu handler, Player player, ItemStack stack) {
         try {
-            Method m = AnvilScreenHandler.class.getDeclaredMethod("onTakeOutput", PlayerEntity.class, ItemStack.class);
+            Method m = AnvilMenu.class.getDeclaredMethod("onTake", Player.class, ItemStack.class);
             m.setAccessible(true);
             m.invoke(handler, player, stack);
         } catch (ReflectiveOperationException e) {
@@ -220,24 +204,24 @@ class ETTestHelper {
         }
     }
 
-    /** sets the two input slots of a GrindstoneScreenHandler via reflection */
-    static void setGrindstoneInputs(net.minecraft.screen.GrindstoneScreenHandler handler, ItemStack first,
+    /** sets the two repair slots of a GrindstoneMenu via reflection */
+    static void setGrindstoneInputs(net.minecraft.world.inventory.GrindstoneMenu handler, ItemStack first,
         ItemStack second) {
         try {
-            Field inputField = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredField("input");
+            Field inputField = net.minecraft.world.inventory.GrindstoneMenu.class.getDeclaredField("repairSlots");
             inputField.setAccessible(true);
-            net.minecraft.inventory.Inventory inv = (net.minecraft.inventory.Inventory) inputField.get(handler);
-            inv.setStack(0, first);
-            inv.setStack(1, second);
+            net.minecraft.world.Container inv = (net.minecraft.world.Container) inputField.get(handler);
+            inv.setItem(0, first);
+            inv.setItem(1, second);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("setGrindstoneInputs reflection failed", e);
         }
     }
 
-    /** calls GrindstoneScreenHandler.updateResult() via reflection */
-    static void grindstoneUpdateResult(net.minecraft.screen.GrindstoneScreenHandler handler) {
+    /** calls GrindstoneMenu.createResult() via reflection */
+    static void grindstoneUpdateResult(net.minecraft.world.inventory.GrindstoneMenu handler) {
         try {
-            Method m = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredMethod("updateResult");
+            Method m = net.minecraft.world.inventory.GrindstoneMenu.class.getDeclaredMethod("createResult");
             m.setAccessible(true);
             m.invoke(handler);
         } catch (ReflectiveOperationException e) {
@@ -245,27 +229,27 @@ class ETTestHelper {
         }
     }
 
-    /** gets the result inventory from a GrindstoneScreenHandler via reflection */
-    static ItemStack getGrindstoneResult(net.minecraft.screen.GrindstoneScreenHandler handler) {
+    /** gets the result inventory from a GrindstoneMenu via reflection */
+    static ItemStack getGrindstoneResult(net.minecraft.world.inventory.GrindstoneMenu handler) {
         try {
-            Field resultField = net.minecraft.screen.GrindstoneScreenHandler.class.getDeclaredField("result");
+            Field resultField = net.minecraft.world.inventory.GrindstoneMenu.class.getDeclaredField("resultSlots");
             resultField.setAccessible(true);
-            net.minecraft.inventory.Inventory result = (net.minecraft.inventory.Inventory) resultField.get(handler);
-            return result.getStack(0);
+            net.minecraft.world.Container result = (net.minecraft.world.Container) resultField.get(handler);
+            return result.getItem(0);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("getGrindstoneResult reflection failed", e);
         }
     }
 
     /**
-     * calls protected LivingEntity.modifyAppliedDamage(DamageSource, float) via
-     * reflection
+     * calls protected LivingEntity.getDamageAfterMagicAbsorb(DamageSource, float)
+     * via reflection
      */
-    static float modifyAppliedDamage(net.minecraft.entity.LivingEntity entity,
-        net.minecraft.entity.damage.DamageSource source, float damage) {
+    static float modifyAppliedDamage(net.minecraft.world.entity.LivingEntity entity,
+        net.minecraft.world.damagesource.DamageSource source, float damage) {
         try {
-            Method m = net.minecraft.entity.LivingEntity.class.getDeclaredMethod("modifyAppliedDamage",
-                net.minecraft.entity.damage.DamageSource.class, float.class);
+            Method m = net.minecraft.world.entity.LivingEntity.class.getDeclaredMethod("getDamageAfterMagicAbsorb",
+                net.minecraft.world.damagesource.DamageSource.class, float.class);
             m.setAccessible(true);
             return (float) m.invoke(entity, source, damage);
         } catch (Exception e) {
@@ -273,11 +257,11 @@ class ETTestHelper {
         }
     }
 
-    static float[] snapshotRainGradient(ServerWorld world) {
+    static float[] snapshotRainGradient(ServerLevel world) {
         try {
-            Field rg = World.class.getDeclaredField("rainGradient");
+            Field rg = Level.class.getDeclaredField("rainLevel");
             rg.setAccessible(true);
-            Field rgp = World.class.getDeclaredField("rainGradientPrev");
+            Field rgp = Level.class.getDeclaredField("oRainLevel");
             rgp.setAccessible(true);
             return new float[]{rg.getFloat(world), rgp.getFloat(world)};
         } catch (ReflectiveOperationException e) {
@@ -285,12 +269,12 @@ class ETTestHelper {
         }
     }
 
-    static void restoreRainGradient(ServerWorld world, float[] gradients) {
+    static void restoreRainGradient(ServerLevel world, float[] gradients) {
         try {
-            Field rg = World.class.getDeclaredField("rainGradient");
+            Field rg = Level.class.getDeclaredField("rainLevel");
             rg.setAccessible(true);
             rg.setFloat(world, gradients[0]);
-            Field rgp = World.class.getDeclaredField("rainGradientPrev");
+            Field rgp = Level.class.getDeclaredField("oRainLevel");
             rgp.setAccessible(true);
             rgp.setFloat(world, gradients[1]);
         } catch (ReflectiveOperationException e) {
@@ -299,16 +283,16 @@ class ETTestHelper {
     }
 
     /**
-     * forces World.rainGradient so World.isRaining() immediately reflects the
-     * desired state `World.setWeather()` sets the rain flag but the gradient
-     * updates lazily one tick at a time
+     * forces Level.rainLevel so Level.isRaining() immediately reflects the desired
+     * state `ServerLevel.setWeather()` sets the rain flag but the level updates
+     * lazily one tick at a time
      */
-    static void forceRainGradient(ServerWorld world, float gradient) {
+    static void forceRainGradient(ServerLevel world, float gradient) {
         try {
-            Field rg = World.class.getDeclaredField("rainGradient");
+            Field rg = Level.class.getDeclaredField("rainLevel");
             rg.setAccessible(true);
             rg.setFloat(world, gradient);
-            Field rgp = World.class.getDeclaredField("rainGradientPrev");
+            Field rgp = Level.class.getDeclaredField("oRainLevel");
             rgp.setAccessible(true);
             rgp.setFloat(world, gradient);
         } catch (ReflectiveOperationException e) {

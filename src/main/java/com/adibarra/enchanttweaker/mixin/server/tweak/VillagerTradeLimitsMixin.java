@@ -5,11 +5,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.village.TradeOffer;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.item.trading.MerchantOffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -25,11 +25,11 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = TradeOffer.class)
+    value = MerchantOffer.class)
 public abstract class VillagerTradeLimitsMixin {
 
     @Shadow
-    public abstract ItemStack getSellItem();
+    public abstract ItemStack getResult();
 
     @Shadow
     public abstract int getUses();
@@ -41,13 +41,13 @@ public abstract class VillagerTradeLimitsMixin {
     private static volatile Map.Entry<String, Set<Identifier>> enchanttweaker$noRestockCache;
 
     @Inject(
-        method = "isDisabled()Z",
+        method = "isOutOfStock()Z",
         at = @At("HEAD"),
         cancellable = true)
     private void enchanttweaker$tradeLimits$isDisabled(CallbackInfoReturnable<Boolean> cir) {
         if (!ETMixinPlugin.getMixinConfig("VillagerTradeLimitsMixin"))
             return;
-        int effectiveMax = enchanttweaker$getEffectiveMaxUses(this.getSellItem());
+        int effectiveMax = enchanttweaker$getEffectiveMaxUses(this.getResult());
         if (effectiveMax < 0)
             return;
         cir.setReturnValue(effectiveMax == 0 || this.getUses() >= effectiveMax);
@@ -60,21 +60,21 @@ public abstract class VillagerTradeLimitsMixin {
     private void enchanttweaker$tradeLimits$resetUses(CallbackInfo ci) {
         if (!ETMixinPlugin.getMixinConfig("VillagerTradeLimitsMixin"))
             return;
-        if (!enchanttweaker$shouldRestock(this.getSellItem())) {
+        if (!enchanttweaker$shouldRestock(this.getResult())) {
             ci.cancel();
         }
     }
 
     @Unique
     private static int enchanttweaker$getEffectiveMaxUses(ItemStack sellItem) {
-        ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(sellItem);
+        ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(sellItem);
         if (enchants.isEmpty())
             return -1;
 
         int globalMax = ETMixinPlugin.getConfig().getOrDefault("enchant_trade_max_uses", -1);
         int effectiveMax = -1;
-        for (var entry : enchants.getEnchantmentsMap()) {
-            Identifier id = entry.getKey().getKey().map(k -> k.getValue()).orElse(null);
+        for (var entry : enchants.entrySet()) {
+            Identifier id = entry.getKey().unwrapKey().map(k -> k.identifier()).orElse(null);
             int candidate = id == null ? globalMax : enchanttweaker$getPerEnchantMax(id, globalMax);
             if (candidate >= 0)
                 effectiveMax = effectiveMax < 0 ? candidate : Math.min(effectiveMax, candidate);
@@ -117,7 +117,7 @@ public abstract class VillagerTradeLimitsMixin {
 
     @Unique
     private static boolean enchanttweaker$shouldRestock(ItemStack sellItem) {
-        ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(sellItem);
+        ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(sellItem);
         if (enchants.isEmpty())
             return true;
 
@@ -130,8 +130,8 @@ public abstract class VillagerTradeLimitsMixin {
             return true;
 
         Set<Identifier> noRestock = enchanttweaker$parseNoRestockList(noRestockConfig);
-        for (var entry : enchants.getEnchantmentsMap()) {
-            Identifier id = entry.getKey().getKey().map(k -> k.getValue()).orElse(null);
+        for (var entry : enchants.entrySet()) {
+            Identifier id = entry.getKey().unwrapKey().map(k -> k.identifier()).orElse(null);
             if (id != null && noRestock.contains(id))
                 return false;
         }

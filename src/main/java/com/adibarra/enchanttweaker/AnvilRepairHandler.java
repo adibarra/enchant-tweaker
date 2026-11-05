@@ -1,19 +1,20 @@
 package com.adibarra.enchanttweaker;
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.minecraft.block.AnvilBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LevelEvent;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 
 /** repairs damaged anvils with iron while sneaking */
 public final class AnvilRepairHandler {
@@ -33,57 +34,59 @@ public final class AnvilRepairHandler {
         return registered;
     }
 
-    private static ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hit) {
+    private static InteractionResult onUseBlock(Player player, Level world, InteractionHand hand, BlockHitResult hit) {
         // gate callback before spectator handling
-        if (hand != Hand.MAIN_HAND)
-            return ActionResult.PASS;
-        if (!player.isSneaking() || player.isSpectator())
-            return ActionResult.PASS;
+        if (hand != InteractionHand.MAIN_HAND)
+            return InteractionResult.PASS;
+        if (!player.isShiftKeyDown() || player.isSpectator())
+            return InteractionResult.PASS;
         // read the repair setting directly
         if (!ETMixinPlugin.getConfig().getOrDefault("anvil_repair", false))
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
 
         BlockPos pos = hit.getBlockPos();
         BlockState state = world.getBlockState(pos);
-        if (!state.isOf(Blocks.DAMAGED_ANVIL) && !state.isOf(Blocks.CHIPPED_ANVIL))
-            return ActionResult.PASS;
-        if (!world.canPlayerModifyAt(player, pos))
-            return ActionResult.PASS;
+        if (!state.is(Blocks.DAMAGED_ANVIL) && !state.is(Blocks.CHIPPED_ANVIL))
+            return InteractionResult.PASS;
+        if (!world.mayInteract(player, pos))
+            return InteractionResult.PASS;
 
-        ItemStack held = player.getMainHandStack();
+        ItemStack held = player.getMainHandItem();
         // a nonpositive cost disables repair
         int ingotCost = Math.max(0, ETMixinPlugin.getConfig().getOrDefault("anvil_repair_ingot_cost", 9));
         if (ingotCost <= 0)
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
 
         // iron blocks work only for costs divisible by nine
         int consumeCount;
-        if (held.isOf(Items.IRON_INGOT) && held.getCount() >= ingotCost) {
+        if (held.is(Items.IRON_INGOT) && held.getCount() >= ingotCost) {
             consumeCount = ingotCost;
-        } else if (held.isOf(Items.IRON_BLOCK) && ingotCost % 9 == 0 && held.getCount() >= ingotCost / 9) {
+        } else if (held.is(Items.IRON_BLOCK) && ingotCost % 9 == 0 && held.getCount() >= ingotCost / 9) {
             consumeCount = ingotCost / 9;
         } else {
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         }
 
         // swing client-side, repair server-side
-        if (world.isClient)
-            return ActionResult.SUCCESS;
+        if (world.isClientSide())
+            return InteractionResult.SUCCESS;
 
         BlockState repaired;
-        if (state.isOf(Blocks.DAMAGED_ANVIL)) {
-            repaired = Blocks.CHIPPED_ANVIL.getDefaultState().with(AnvilBlock.FACING, state.get(AnvilBlock.FACING));
+        if (state.is(Blocks.DAMAGED_ANVIL)) {
+            repaired = Blocks.CHIPPED_ANVIL.defaultBlockState().setValue(AnvilBlock.FACING,
+                state.getValue(AnvilBlock.FACING));
         } else {
-            repaired = Blocks.ANVIL.getDefaultState().with(AnvilBlock.FACING, state.get(AnvilBlock.FACING));
+            repaired = Blocks.ANVIL.defaultBlockState().setValue(AnvilBlock.FACING, state.getValue(AnvilBlock.FACING));
         }
 
-        world.setBlockState(pos, repaired, Block.NOTIFY_ALL);
-        world.syncWorldEvent(WorldEvents.ANVIL_USED, pos, 0);
+        world.setBlock(pos, repaired, Block.UPDATE_ALL);
+        if (world instanceof ServerLevel serverLevel)
+            serverLevel.levelEvent(null, LevelEvent.SOUND_ANVIL_USED, pos, 0);
 
-        if (!player.isInCreativeMode()) {
-            held.decrement(consumeCount);
+        if (!player.hasInfiniteMaterials()) {
+            held.shrink(consumeCount);
         }
 
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 }

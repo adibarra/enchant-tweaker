@@ -4,20 +4,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
-import net.minecraft.test.GameTest;
-import net.minecraft.test.TestContext;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
 
 import com.adibarra.enchanttweaker.ETConfigSchema;
 import com.adibarra.enchanttweaker.config.ETConfigScreenModel;
 
-public class ConfigScreenModelGameTest implements FabricGameTest {
-
-    private static final String EMPTY_STRUCTURE = "fabric-gametest-api-v1:empty";
+public class ConfigScreenModelGameTest {
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void screenModelPaginatesCategories(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void screenModelPaginatesCategories(GameTestHelper helper) {
         ETConfigScreenModel model = modelWithDefaults();
         helper.assertTrue(model.categories().equals(ETConfigSchema.categories()),
             "screen categories should preserve schema order");
@@ -33,12 +30,12 @@ public class ConfigScreenModelGameTest implements FabricGameTest {
         helper.assertTrue(model.pageIndex() == 0, "changing category should reset pagination");
         model.previousCategory();
         helper.assertTrue(model.categoryIndex() == 1, "previousCategory should return to the prior category");
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void screenModelValidatesAndTracksChanges(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void screenModelValidatesAndTracksChanges(GameTestHelper helper) {
         ETConfigScreenModel model = modelWithDefaults();
         helper.assertFalse(model.isDirty(), "fresh screen model should not be dirty");
         helper.assertFalse(model.setValue("nte_max_cost", "not-a-number"),
@@ -52,12 +49,12 @@ public class ConfigScreenModelGameTest implements FabricGameTest {
         helper.assertTrue(model.setValue("cheap_names", "true"), "ordinary boolean input should be accepted");
         helper.assertFalse(model.hasRestartRequiredChanges(),
             "feature switches other than mod_enabled should reload without a restart");
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void screenModelTogglesAndResetsCategory(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void screenModelTogglesAndResetsCategory(GameTestHelper helper) {
         Map<String, String> values = new LinkedHashMap<>(ETConfigSchema.defaults());
         values.put("mod_enabled", "true");
         ETConfigScreenModel model = new ETConfigScreenModel(values);
@@ -71,12 +68,12 @@ public class ConfigScreenModelGameTest implements FabricGameTest {
         helper.assertTrue(ETConfigSchema.defaultOf("mod_enabled").equals(model.value("mod_enabled")),
             "category reset should restore bundled defaults");
         helper.assertFalse(model.isDirty(), "resetting an otherwise-default category should clear its changes");
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void screenModelCanonicalizesLoadedValues(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void screenModelCanonicalizesLoadedValues(GameTestHelper helper) {
         Map<String, String> values = new LinkedHashMap<>(ETConfigSchema.defaults());
         values.put("mod_enabled", "TRUE");
         ETConfigScreenModel model = new ETConfigScreenModel(values);
@@ -88,12 +85,12 @@ public class ConfigScreenModelGameTest implements FabricGameTest {
         helper.assertTrue(model.toggle("mod_enabled"), "second toggle should succeed");
         helper.assertFalse(model.isDirty(), "boolean toggle round trip should restore the original value");
         helper.assertFalse(model.hasRestartRequiredChanges(), "boolean toggle round trip should not require a restart");
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void screenModelSearchesKeysAndDescriptions(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void screenModelSearchesKeysAndDescriptions(GameTestHelper helper) {
         ETConfigScreenModel model = modelWithDefaults();
         model.nextCategory();
         int categoryIndex = model.categoryIndex();
@@ -111,7 +108,7 @@ public class ConfigScreenModelGameTest implements FabricGameTest {
         model.setSearchQuery("no setting can possibly match this");
         helper.assertTrue(model.visibleKeys().isEmpty(), "unmatched search should return no settings");
         helper.assertTrue(model.pageCount() == 1, "empty search results should retain one display page");
-        helper.complete();
+        helper.succeed();
     }
 
     private static ETConfigScreenModel modelWithDefaults() {

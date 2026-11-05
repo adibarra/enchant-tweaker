@@ -6,18 +6,18 @@
 [<img alt="Fabric API" src="https://github.com/adibarra/enchant-tweaker/assets/93070681/0a730158-59ca-4cb0-a029-11337665328f" width="200"/>](https://modrinth.com/mod/P7dR8mSH)
 
 <!-- badges -->
-[<img alt="Modloader" src="https://img.shields.io/static/v1?color=00AF5C&amp;label=modloaders&amp;message=fabric/quilt&amp;style=for-the-badge"/>](https://fabricmc.net/use/installer)
+[<img alt="Modloader" src="https://img.shields.io/static/v1?color=00AF5C&amp;label=modloaders&amp;message=fabric&amp;style=for-the-badge"/>](https://fabricmc.net/use/installer)
 [<img alt="Modrinth Downloads" src="https://img.shields.io/modrinth/dt/enchant-tweaker?color=00AF5C&amp;label=modrinth&amp;style=for-the-badge&amp;logo=modrinth"/>](https://modrinth.com/mod/e4Vpm1dD)
 
 
 
 # Enchant Tweaker
-Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 139 configuration options.
+Tweak many enchantment related mechanics while keeping the vanilla feel. Currently, contains 147 configuration options.
 
 
 
 ## Installation
-Client-side install is required for singleplayer (the integrated server runs in the client) and recommended for multiplayer when using visual quality-of-life tweaks such as Not Too Expensive and Shiny Names. On multiplayer servers, the client mod is optional unless those visual tweaks are desired.
+Requires Minecraft 26.2, Fabric Loader 0.20 or newer, Fabric API, and Java 25. Client-side install is required for singleplayer (the integrated server runs in the client) and recommended for multiplayer when using visual quality-of-life tweaks such as Not Too Expensive and Shiny Names. On multiplayer servers, the client mod is optional unless those visual tweaks are desired.
 
 |              | Client-Side  | Server-Side  |
 |:------------:|:------------:|:------------:|

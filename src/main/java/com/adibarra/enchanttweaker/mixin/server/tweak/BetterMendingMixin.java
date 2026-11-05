@@ -2,12 +2,13 @@ package com.adibarra.enchanttweaker.mixin.server.tweak;
 
 import java.util.List;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
-import com.adibarra.enchanttweaker.MendingLevelAccess;
 import com.adibarra.utils.ADUtils;
 
 /**
@@ -25,31 +25,28 @@ import com.adibarra.utils.ADUtils;
  * @environment server
  */
 @Mixin(
-    value = ExperienceOrbEntity.class)
+    value = ExperienceOrb.class)
 public abstract class BetterMendingMixin {
 
     @Shadow
-    protected abstract int getMendingRepairAmount(int i);
-
-    @Shadow
-    protected abstract int getMendingRepairCost(int i);
-
-    @Shadow
-    protected abstract int repairPlayerGears(PlayerEntity player, int amount);
+    protected abstract int repairPlayerItems(ServerPlayer player, int amount);
 
     @Inject(
-        method = "repairPlayerGears(Lnet/minecraft/entity/player/PlayerEntity;I)I",
+        method = "repairPlayerItems(Lnet/minecraft/server/level/ServerPlayer;I)I",
         at = @At("HEAD"),
         cancellable = true)
-    private void enchanttweaker$betterMending$modifyRepairPlayerGears(PlayerEntity player, int amount,
+    private void enchanttweaker$betterMending$modifyRepairPlayerGears(ServerPlayer player, int amount,
         CallbackInfoReturnable<Integer> cir) {
         if (!ETMixinPlugin.getMixinConfig("BetterMendingMixin"))
             return;
-        PlayerInventory inv = player.getInventory();
+        Inventory inv = player.getInventory();
         ItemStack repairItem = ADUtils.getMatchingItem(
-            List.of(new ADUtils.Inventory(inv.getMainHandStack()), new ADUtils.Inventory(inv.offHand),
-                new ADUtils.Inventory(inv.armor), ADUtils.getPlayerHotbar(player), new ADUtils.Inventory(inv.main)),
-            (stack) -> EnchantmentHelper.getLevel(Enchantments.MENDING, stack) > 0 && stack.isDamaged());
+            List.of(new ADUtils.Inventory(player.getMainHandItem()), new ADUtils.Inventory(player.getOffhandItem()),
+                new ADUtils.Inventory(
+                    List.of(player.getItemBySlot(EquipmentSlot.FEET), player.getItemBySlot(EquipmentSlot.LEGS),
+                        player.getItemBySlot(EquipmentSlot.CHEST), player.getItemBySlot(EquipmentSlot.HEAD))),
+                ADUtils.getPlayerHotbar(player), new ADUtils.Inventory(inv.getNonEquipmentItems())),
+            (stack) -> ADUtils.getEnchantmentLevel(stack, Enchantments.MENDING) > 0 && stack.isDamaged());
 
         if (repairItem == null) {
             cir.setReturnValue(amount);
@@ -58,15 +55,16 @@ public abstract class BetterMendingMixin {
 
         // use the running `amount` (xp still available on this call), not the orb's
         // original this.amount
-        int i = Math.min(this.getMendingRepairAmount(amount), repairItem.getDamage());
-        repairItem.setDamage(repairItem.getDamage() - i);
-        // pass the repaired item's mending level to moremending
-        if ((Object) this instanceof MendingLevelAccess access) {
-            access.enchanttweaker$setMendingLevel(EnchantmentHelper.getLevel(Enchantments.MENDING, repairItem));
+        int durability = EnchantmentHelper.modifyDurabilityToRepairFromXp(player.level(), repairItem, amount);
+        if (durability <= 0) {
+            cir.setReturnValue(amount);
+            return;
         }
-        int experience = amount - this.getMendingRepairCost(i);
+        int repaired = Math.min(durability, repairItem.getDamageValue());
+        repairItem.setDamageValue(repairItem.getDamageValue() - repaired);
+        int experience = amount - repaired * amount / durability;
         if (experience > 0) {
-            cir.setReturnValue(this.repairPlayerGears(player, experience));
+            cir.setReturnValue(this.repairPlayerItems(player, experience));
             return;
         }
         cir.setReturnValue(0);

@@ -1,13 +1,10 @@
 package com.adibarra.enchanttweaker.mixin.server.enhanced;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.entity.projectile.TridentEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.level.storage.loot.predicates.WeatherCheck;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -18,25 +15,21 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = TridentEntity.class)
-public abstract class MoreChannelingMixin extends PersistentProjectileEntity {
-
-    @SuppressWarnings("unused")
-    protected MoreChannelingMixin(EntityType<? extends PersistentProjectileEntity> entityType, World world,
-        ItemStack stack) {
-        super(entityType, world, stack);
-    }
+    value = WeatherCheck.class)
+public abstract class MoreChannelingMixin {
 
     @ModifyExpressionValue(
-        method = "onEntityHit(Lnet/minecraft/util/hit/EntityHitResult;)V",
+        method = "test(Lnet/minecraft/world/level/storage/loot/LootContext;)Z",
         at = @At(
-            ordinal = 0,
             value = "INVOKE",
-            target = "Lnet/minecraft/world/World;isThundering()Z"))
-    private boolean enchanttweaker$moreChanneling$modifyOnHit(boolean orig) {
+            target = "Lnet/minecraft/server/level/ServerLevel;isThundering()Z"))
+    private boolean enchanttweaker$moreChanneling$modifyWeatherCheck(boolean orig, @Local(
+        argsOnly = true) LootContext context) {
         if (!ETMixinPlugin.getMixinConfig("MoreChannelingMixin"))
             return orig;
-        boolean isChannelingII = EnchantmentHelper.getLevel(Enchantments.CHANNELING, this.getItemStack()) > 1;
-        return orig || (isChannelingII && this.getWorld().hasRain(this.getBlockPos()));
+        if (orig)
+            return true;
+        Integer level = context.getOptionalParameter(LootContextParams.ENCHANTMENT_LEVEL);
+        return level != null && level > 1 && context.getLevel().isRaining();
     }
 }

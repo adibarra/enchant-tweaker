@@ -5,34 +5,33 @@ import java.util.Map;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.test.GameTest;
-import net.minecraft.test.TestContext;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.network.ConfigSyncPayload;
 
-public class PayloadGameTest implements FabricGameTest {
+public class PayloadGameTest {
 
     /** creates a registry-aware buffer for CODEC operations */
-    private static RegistryByteBuf newBuf(TestContext helper) {
-        return new RegistryByteBuf(Unpooled.buffer(), helper.getWorld().getRegistryManager());
+    private static RegistryFriendlyByteBuf newBuf(GameTestHelper helper) {
+        return new RegistryFriendlyByteBuf(Unpooled.buffer(), helper.getLevel().registryAccess());
     }
 
-    private static void release(RegistryByteBuf buf) {
+    private static void release(RegistryFriendlyByteBuf buf) {
         buf.release();
     }
 
     // round-trip encode/decode
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void payloadRoundTrip(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void payloadRoundTrip(GameTestHelper helper) {
         Map<String, String> sample = Map.of("cheap_names", "true", "nte_max_cost", "100", "disable_enchantments",
             "sharpness,mending");
 
-        RegistryByteBuf buf = newBuf(helper);
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             ConfigSyncPayload.CODEC.encode(buf, new ConfigSyncPayload(sample));
             ConfigSyncPayload decoded = ConfigSyncPayload.CODEC.decode(buf);
@@ -43,21 +42,21 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // version mismatch is consumed and ignored
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void payloadVersionMismatchGraceful(TestContext helper) {
-        RegistryByteBuf buf = newBuf(helper);
+        structure = "fabric-gametest-api-v1:empty")
+    public void payloadVersionMismatchGraceful(GameTestHelper helper) {
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             int mismatchedVersion = ConfigSyncPayload.PROTOCOL_VERSION + 1;
             buf.writeVarInt(mismatchedVersion);
             // a few junk bytes standing in for an unrecognized payload
             buf.writeVarInt(42);
-            buf.writeString("junk");
+            buf.writeUtf("junk");
 
             ConfigSyncPayload decoded = ConfigSyncPayload.CODEC.decode(buf);
 
@@ -67,25 +66,25 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // convenience constructor stamps PROTOCOL_VERSION
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void payloadConvenienceConstructor(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void payloadConvenienceConstructor(GameTestHelper helper) {
         ConfigSyncPayload payload = new ConfigSyncPayload(Map.of("cheap_names", "true"));
         helper.assertTrue(payload.version() == ConfigSyncPayload.PROTOCOL_VERSION,
             "convenience constructor should stamp PROTOCOL_VERSION");
         helper.assertTrue(ConfigSyncPayload.ID.id().getPath().endsWith("_v" + ConfigSyncPayload.PROTOCOL_VERSION),
             "payload ID should encode the wire protocol version");
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void payloadRejectsNullMap(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void payloadRejectsNullMap(GameTestHelper helper) {
         boolean rejected = false;
         try {
             new ConfigSyncPayload((Map<String, String>) null);
@@ -93,12 +92,12 @@ public class PayloadGameTest implements FabricGameTest {
             rejected = true;
         }
         helper.assertTrue(rejected, "payload construction must reject a null config map");
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void payloadRejectsNullEntries(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void payloadRejectsNullEntries(GameTestHelper helper) {
         Map<String, String> nullKey = new HashMap<>();
         nullKey.put(null, "true");
         Map<String, String> nullValue = new HashMap<>();
@@ -119,12 +118,12 @@ public class PayloadGameTest implements FabricGameTest {
 
         helper.assertTrue(nullKeyRejected, "payload construction must reject null config keys");
         helper.assertTrue(nullValueRejected, "payload construction must reject null config values");
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void payloadSnapshotsConfigMap(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void payloadSnapshotsConfigMap(GameTestHelper helper) {
         Map<String, String> source = new HashMap<>();
         source.put("cheap_names", "true");
 
@@ -151,7 +150,7 @@ public class PayloadGameTest implements FabricGameTest {
         ConfigSyncPayload oversizedPayload = new ConfigSyncPayload(oversized);
         oversized.clear();
 
-        RegistryByteBuf buf = newBuf(helper);
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             boolean rejected = false;
             try {
@@ -165,12 +164,12 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void getConfigMapStripsClientLocalKeys(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void getConfigMapStripsClientLocalKeys(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("roman_numerals", "shiny_name", "cheap_names");
         try {
             ETTestHelper.setConfigValue("roman_numerals", "true");
@@ -188,12 +187,12 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void syncConfigFromAppliesAndClearsFeatureCache(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void syncConfigFromAppliesAndClearsFeatureCache(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("mod_enabled", "cheap_names");
         try {
             ETTestHelper.setConfigValue("mod_enabled", "true");
@@ -210,12 +209,12 @@ public class PayloadGameTest implements FabricGameTest {
             ETMixinPlugin.restoreLocalConfig();
             ETTestHelper.restoreConfig(originalConfig);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void syncConfigFromPreservesClientLocalKeys(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void syncConfigFromPreservesClientLocalKeys(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("roman_numerals", "shiny_name", "cheap_names");
         try {
             ETTestHelper.setConfigValue("roman_numerals", "false");
@@ -232,12 +231,12 @@ public class PayloadGameTest implements FabricGameTest {
             ETMixinPlugin.restoreLocalConfig();
             ETTestHelper.restoreConfig(originalConfig);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void realWirePayloadRoundTrip(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void realWirePayloadRoundTrip(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("roman_numerals", "shiny_name");
         try {
             ETTestHelper.setConfigValue("roman_numerals", "true");
@@ -253,7 +252,7 @@ public class PayloadGameTest implements FabricGameTest {
             helper.assertTrue(real.size() > 100,
                 "real config map should carry the full config surface (got " + real.size() + " entries)");
 
-            RegistryByteBuf buf = newBuf(helper);
+            RegistryFriendlyByteBuf buf = newBuf(helper);
             try {
                 ConfigSyncPayload.CODEC.encode(buf, new ConfigSyncPayload(real));
                 ConfigSyncPayload decoded = ConfigSyncPayload.CODEC.decode(buf);
@@ -271,13 +270,13 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void encoderWritesRecordVersion(TestContext helper) {
-        RegistryByteBuf buf = newBuf(helper);
+        structure = "fabric-gametest-api-v1:empty")
+    public void encoderWritesRecordVersion(GameTestHelper helper) {
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             int mismatchedVersion = ConfigSyncPayload.PROTOCOL_VERSION + 1;
             ConfigSyncPayload.CODEC.encode(buf,
@@ -292,15 +291,15 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // syncConfigFrom clears the capmod cache
     // synced sharpness caps replace cached caps
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void syncConfigFromClearsCapmodCache(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void syncConfigFromClearsCapmodCache(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("capmod_enabled", "sharpness");
         try {
             ETTestHelper.setCapmod(true);
@@ -316,15 +315,15 @@ public class PayloadGameTest implements FabricGameTest {
             ETMixinPlugin.restoreLocalConfig();
             ETTestHelper.restoreConfig(originalConfig);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // restoreLocalConfig discards synced values and reloads disk
     // cheap_names reverts to the disk default
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void restoreLocalConfigReloadsDisk(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void restoreLocalConfigReloadsDisk(GameTestHelper helper) {
         try {
             ETMixinPlugin.syncConfigFrom(Map.of("cheap_names", "true"));
             helper.assertTrue(ETMixinPlugin.getConfig().getOrDefault("cheap_names", false),
@@ -338,15 +337,15 @@ public class PayloadGameTest implements FabricGameTest {
             // restore the pristine disk configuration
             ETMixinPlugin.restoreLocalConfig();
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // empty-map round trip
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void emptyMapRoundTrip(TestContext helper) {
-        RegistryByteBuf buf = newBuf(helper);
+        structure = "fabric-gametest-api-v1:empty")
+    public void emptyMapRoundTrip(GameTestHelper helper) {
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             ConfigSyncPayload.CODEC.encode(buf, new ConfigSyncPayload(Map.of()));
             ConfigSyncPayload decoded = ConfigSyncPayload.CODEC.decode(buf);
@@ -358,18 +357,18 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void decodeRejectsTrailingBytes(TestContext helper) {
-        RegistryByteBuf buf = newBuf(helper);
+        structure = "fabric-gametest-api-v1:empty")
+    public void decodeRejectsTrailingBytes(GameTestHelper helper) {
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             buf.writeVarInt(ConfigSyncPayload.PROTOCOL_VERSION);
             buf.writeVarInt(1);
-            buf.writeString("cheap_names");
-            buf.writeString("true");
+            buf.writeUtf("cheap_names");
+            buf.writeUtf("true");
             buf.writeByte(0x7F);
 
             boolean rejected = false;
@@ -382,22 +381,22 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // decode robustness: duplicate keys are rejected
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void decodeRejectsDuplicateKey(TestContext helper) {
-        RegistryByteBuf buf = newBuf(helper);
+        structure = "fabric-gametest-api-v1:empty")
+    public void decodeRejectsDuplicateKey(GameTestHelper helper) {
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             buf.writeVarInt(ConfigSyncPayload.PROTOCOL_VERSION);
             buf.writeVarInt(2); // two pairs use the same key
-            buf.writeString("cheap_names");
-            buf.writeString("false");
-            buf.writeString("cheap_names");
-            buf.writeString("true");
+            buf.writeUtf("cheap_names");
+            buf.writeUtf("false");
+            buf.writeUtf("cheap_names");
+            buf.writeUtf("true");
 
             boolean rejected = false;
             try {
@@ -410,18 +409,18 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void decodeTruncatedThrows(TestContext helper) {
-        RegistryByteBuf buf = newBuf(helper);
+        structure = "fabric-gametest-api-v1:empty")
+    public void decodeTruncatedThrows(GameTestHelper helper) {
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             buf.writeVarInt(ConfigSyncPayload.PROTOCOL_VERSION);
             buf.writeVarInt(5); // claims five pairs
-            buf.writeString("cheap_names"); // supplies one pair
-            buf.writeString("true");
+            buf.writeUtf("cheap_names"); // supplies one pair
+            buf.writeUtf("true");
 
             boolean truncated = false;
             try {
@@ -433,13 +432,13 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void decodeRejectsExcessiveEntryCount(TestContext helper) {
-        RegistryByteBuf buf = newBuf(helper);
+        structure = "fabric-gametest-api-v1:empty")
+    public void decodeRejectsExcessiveEntryCount(GameTestHelper helper) {
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             buf.writeVarInt(ConfigSyncPayload.PROTOCOL_VERSION);
             buf.writeVarInt(ConfigSyncPayload.MAX_CONFIG_ENTRIES + 1);
@@ -454,13 +453,13 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void decodeRejectsNegativeEntryCount(TestContext helper) {
-        RegistryByteBuf buf = newBuf(helper);
+        structure = "fabric-gametest-api-v1:empty")
+    public void decodeRejectsNegativeEntryCount(GameTestHelper helper) {
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             buf.writeVarInt(ConfigSyncPayload.PROTOCOL_VERSION);
             buf.writeVarInt(-1);
@@ -475,11 +474,11 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void payloadUnicodeAndEmptyValues(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void payloadUnicodeAndEmptyValues(GameTestHelper helper) {
         Map<String, String> sample = new HashMap<>();
         sample.put("accented", "café");
         sample.put("cjk", "日本語");
@@ -487,7 +486,7 @@ public class PayloadGameTest implements FabricGameTest {
         sample.put("empty_value", "");
         sample.put("unicode_key_日", "value");
 
-        RegistryByteBuf buf = newBuf(helper);
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             ConfigSyncPayload.CODEC.encode(buf, new ConfigSyncPayload(sample));
             ConfigSyncPayload decoded = ConfigSyncPayload.CODEC.decode(buf);
@@ -502,21 +501,21 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     // maximum-size map uses a multi-byte size varint
     // decoding preserves every entry and consumes all bytes
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void payloadMaximumMap(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void payloadMaximumMap(GameTestHelper helper) {
         Map<String, String> big = new HashMap<>();
         for (int i = 0; i < ConfigSyncPayload.MAX_CONFIG_ENTRIES; i++) {
             big.put("key_" + i, "value_" + i);
         }
 
-        RegistryByteBuf buf = newBuf(helper);
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             ConfigSyncPayload.CODEC.encode(buf, new ConfigSyncPayload(big));
             ConfigSyncPayload decoded = ConfigSyncPayload.CODEC.decode(buf);
@@ -528,17 +527,17 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void encoderRejectsExcessiveEntryCount(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void encoderRejectsExcessiveEntryCount(GameTestHelper helper) {
         Map<String, String> oversized = new HashMap<>();
         for (int i = 0; i <= ConfigSyncPayload.MAX_CONFIG_ENTRIES; i++)
             oversized.put("key_" + i, "value_" + i);
 
-        RegistryByteBuf buf = newBuf(helper);
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             boolean rejected = false;
             try {
@@ -552,12 +551,12 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void payloadVersionMismatchEmptyBody(TestContext helper) {
-        RegistryByteBuf buf = newBuf(helper);
+        structure = "fabric-gametest-api-v1:empty")
+    public void payloadVersionMismatchEmptyBody(GameTestHelper helper) {
+        RegistryFriendlyByteBuf buf = newBuf(helper);
         try {
             int mismatchedVersion = ConfigSyncPayload.PROTOCOL_VERSION + 1;
             buf.writeVarInt(mismatchedVersion); // bogus version, nothing after it
@@ -571,6 +570,6 @@ public class PayloadGameTest implements FabricGameTest {
         } finally {
             release(buf);
         }
-        helper.complete();
+        helper.succeed();
     }
 }

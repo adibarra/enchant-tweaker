@@ -1,7 +1,8 @@
 package com.adibarra.enchanttweaker.mixin.server.tweak;
 
-import net.minecraft.enchantment.DamageEnchantment;
-import net.minecraft.enchantment.Enchantment;
+import net.minecraft.core.Holder;
+import net.minecraft.tags.EnchantmentTags;
+import net.minecraft.world.item.enchantment.Enchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,19 +15,20 @@ import com.adibarra.enchanttweaker.ETMixinPlugin;
  * @environment server
  */
 @Mixin(
-    value = DamageEnchantment.class)
+    value = Enchantment.class)
 public abstract class GodWeaponsMixin {
 
     @Inject(
-        method = "canAccept(Lnet/minecraft/enchantment/Enchantment;)Z",
+        method = "areCompatible(Lnet/minecraft/core/Holder;Lnet/minecraft/core/Holder;)Z",
         at = @At("HEAD"),
         cancellable = true)
-    private void enchanttweaker$godWeapons$allowAllDamageEnchants(Enchantment other,
-        CallbackInfoReturnable<Boolean> cir) {
+    private static void enchanttweaker$godWeapons$allowAllDamageEnchants(Holder<Enchantment> first,
+        Holder<Enchantment> second, CallbackInfoReturnable<Boolean> cir) {
         if (!ETMixinPlugin.getMixinConfig("GodWeaponsMixin"))
             return;
-        if (other instanceof DamageEnchantment) {
-            cir.setReturnValue((Object) this != other);
+        if (!first.equals(second) && first.is(EnchantmentTags.DAMAGE_EXCLUSIVE)
+            && second.is(EnchantmentTags.DAMAGE_EXCLUSIVE)) {
+            cir.setReturnValue(true);
         }
     }
 }

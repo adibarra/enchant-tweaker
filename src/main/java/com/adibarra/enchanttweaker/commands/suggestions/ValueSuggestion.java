@@ -10,13 +10,13 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.damage.DamageType;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.util.Identifier;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.item.enchantment.Enchantment;
 
 import com.adibarra.enchanttweaker.ETConfigSchema;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
@@ -28,17 +28,17 @@ public final class ValueSuggestion {
         throw new IllegalStateException("Utility class. Do not instantiate.");
     }
 
-    public static final SuggestionProvider<ServerCommandSource> PROVIDER = (CommandContext<ServerCommandSource> context,
+    public static final SuggestionProvider<CommandSourceStack> PROVIDER = (CommandContext<CommandSourceStack> context,
         SuggestionsBuilder builder) -> {
         String key = StringArgumentType.getString(context, "key").toLowerCase(Locale.ROOT);
-        DynamicRegistryManager registryManager = context.getSource().getRegistryManager();
+        RegistryAccess registryManager = context.getSource().registryAccess();
         return buildSuggestions(builder, key, candidatesFor(key, registryManager));
     };
 
     /**
      * returns raw candidates independent of the typed prefix
      */
-    public static List<String> candidatesFor(String key, DynamicRegistryManager registryManager) {
+    public static List<String> candidatesFor(String key, RegistryAccess registryManager) {
         if (key == null)
             return List.of();
         key = key.toLowerCase(Locale.ROOT);
@@ -71,20 +71,20 @@ public final class ValueSuggestion {
         return out;
     }
 
-    private static List<String> enchantmentPaths(DynamicRegistryManager registryManager) {
+    private static List<String> enchantmentPaths(RegistryAccess registryManager) {
         if (registryManager == null)
             return List.of();
-        Registry<Enchantment> registry = registryManager.get(RegistryKeys.ENCHANTMENT);
-        return registry.getIds().stream()
+        Registry<Enchantment> registry = registryManager.lookupOrThrow(Registries.ENCHANTMENT);
+        return registry.keySet().stream()
             .map(id -> Identifier.DEFAULT_NAMESPACE.equals(id.getNamespace()) ? id.getPath() : id.toString()).sorted()
             .toList();
     }
 
-    private static List<String> damageTypePaths(DynamicRegistryManager registryManager) {
+    private static List<String> damageTypePaths(RegistryAccess registryManager) {
         if (registryManager == null)
             return List.of();
-        Registry<DamageType> registry = registryManager.get(RegistryKeys.DAMAGE_TYPE);
-        return registry.getIds().stream()
+        Registry<DamageType> registry = registryManager.lookupOrThrow(Registries.DAMAGE_TYPE);
+        return registry.keySet().stream()
             .map(id -> Identifier.DEFAULT_NAMESPACE.equals(id.getNamespace()) ? id.getPath() : id.toString()).sorted()
             .toList();
     }

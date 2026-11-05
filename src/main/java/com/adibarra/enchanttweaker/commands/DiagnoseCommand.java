@@ -8,9 +8,9 @@ import java.util.Set;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 
 import com.adibarra.enchanttweaker.AnvilRepairHandler;
 import com.adibarra.enchanttweaker.ETMixinPlugin;
@@ -18,12 +18,12 @@ import com.adibarra.utils.ADConfig;
 import com.adibarra.utils.ADText;
 
 /** reports active settings, conflicts, and config details */
-public class DiagnoseCommand implements Command<ServerCommandSource> {
+public class DiagnoseCommand implements Command<CommandSourceStack> {
 
     @Override
-    public int run(CommandContext<ServerCommandSource> context) {
+    public int run(CommandContext<CommandSourceStack> context) {
         ADConfig config = ETMixinPlugin.getConfig();
-        List<Text> msg = new ArrayList<>();
+        List<Component> msg = new ArrayList<>();
 
         boolean modEnabledNow = config.getOrDefault("mod_enabled", false);
         Map<String, String> activeCompat = ETMixinPlugin.getActiveCompatOverrides();
@@ -31,7 +31,7 @@ public class DiagnoseCommand implements Command<ServerCommandSource> {
         header(msg, "Mod Status");
         row(msg, "mod enabled", ADText.colorValue(String.valueOf(modEnabledNow)));
         row(msg, "applied mixins",
-            Text.literal(String.valueOf(ETMixinPlugin.getNumMixins())).formatted(Formatting.AQUA));
+            Component.literal(String.valueOf(ETMixinPlugin.getNumMixins())).withStyle(ChatFormatting.AQUA));
 
         header(msg, "Desynced Features");
         Set<String> seen = new HashSet<>();
@@ -54,22 +54,22 @@ public class DiagnoseCommand implements Command<ServerCommandSource> {
                     reason = "COMPAT override: " + activeCompat.get(configKey);
                 else
                     reason = "unknown";
-                msg.add(Text.literal("\n  "));
-                msg.add(Text.literal(configKey).formatted(Formatting.RED));
-                msg.add(Text.literal(" - " + reason).formatted(Formatting.GRAY));
+                msg.add(Component.literal("\n  "));
+                msg.add(Component.literal(configKey).withStyle(ChatFormatting.RED));
+                msg.add(Component.literal(" - " + reason).withStyle(ChatFormatting.GRAY));
             }
         }
         if (!anyDesynced)
-            msg.add(Text.literal("\n  (none)").formatted(Formatting.DARK_GRAY));
+            msg.add(Component.literal("\n  (none)").withStyle(ChatFormatting.DARK_GRAY));
 
         header(msg, "Active COMPAT Overrides");
         if (activeCompat.isEmpty()) {
-            msg.add(Text.literal("\n  (none)").formatted(Formatting.DARK_GRAY));
+            msg.add(Component.literal("\n  (none)").withStyle(ChatFormatting.DARK_GRAY));
         } else {
             for (Map.Entry<String, String> entry : activeCompat.entrySet()) {
-                msg.add(Text.literal("\n  "));
-                msg.add(Text.literal(entry.getKey()).formatted(Formatting.GOLD));
-                msg.add(Text.literal(" -> " + entry.getValue()).formatted(Formatting.GRAY));
+                msg.add(Component.literal("\n  "));
+                msg.add(Component.literal(entry.getKey()).withStyle(ChatFormatting.GOLD));
+                msg.add(Component.literal(" -> " + entry.getValue()).withStyle(ChatFormatting.GRAY));
             }
         }
 
@@ -85,25 +85,25 @@ public class DiagnoseCommand implements Command<ServerCommandSource> {
         } else {
             costNote = " (not block-payable)";
         }
-        row(msg, "cost", Text.literal(repairCost + " ingots" + costNote).formatted(Formatting.BLUE));
+        row(msg, "cost", Component.literal(repairCost + " ingots" + costNote).withStyle(ChatFormatting.BLUE));
         row(msg, "handler registered", ADText.colorValue(String.valueOf(AnvilRepairHandler.isRegistered())));
 
         header(msg, "Config File");
-        row(msg, "path", Text.literal(config.getConfigPath()).formatted(Formatting.AQUA));
-        row(msg, "keys", Text.literal(String.valueOf(config.getKeys().size())).formatted(Formatting.AQUA));
+        row(msg, "path", Component.literal(config.getConfigPath()).withStyle(ChatFormatting.AQUA));
+        row(msg, "keys", Component.literal(String.valueOf(config.getKeys().size())).withStyle(ChatFormatting.AQUA));
         row(msg, "config_version", ADText.colorValue(config.getOrDefault("config_version", "?")));
 
         CommandFeedback.feedback(context.getSource(), msg);
         return Command.SINGLE_SUCCESS;
     }
 
-    private static void header(List<Text> msg, String title) {
-        msg.add(
-            Text.literal("\n").append(Text.literal("== " + title + " ==").formatted(Formatting.AQUA, Formatting.BOLD)));
+    private static void header(List<Component> msg, String title) {
+        msg.add(Component.literal("\n")
+            .append(Component.literal("== " + title + " ==").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)));
     }
 
-    private static void row(List<Text> msg, String label, Text value) {
-        msg.add(Text.literal("\n  " + label + ": ").formatted(Formatting.GRAY));
+    private static void row(List<Component> msg, String label, Component value) {
+        msg.add(Component.literal("\n  " + label + ": ").withStyle(ChatFormatting.GRAY));
         msg.add(value);
     }
 }

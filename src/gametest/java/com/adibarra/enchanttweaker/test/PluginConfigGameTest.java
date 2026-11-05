@@ -9,33 +9,35 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.test.GameTest;
-import net.minecraft.test.TestContext;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 import com.adibarra.enchanttweaker.ETMixinPlugin;
 import com.adibarra.enchanttweaker.EnchantTweaker;
 import com.adibarra.utils.ADConfig;
 
-public class PluginConfigGameTest implements FabricGameTest {
+public class PluginConfigGameTest {
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void modDisabledGatesFeatureMixins(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void modDisabledGatesFeatureMixins(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper.snapshotConfig("cheap_names", "more_protection",
             "capmod_enabled", "sharpness", "mod_enabled");
         try {
+            Enchantment sharpness = resolveSharpness(helper);
             ETTestHelper.setConfigValue("mod_enabled", "true");
             ETTestHelper.setFeature("cheap_names", true);
             ETTestHelper.setFeature("more_protection", true);
             ETTestHelper.setCapmod(true);
             ETTestHelper.setEnchantCap("sharpness", 10);
 
-            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 10,
+            helper.assertTrue(sharpness.getMaxLevel() == 10,
                 "baseline: capmod should raise Sharpness getMaxLevel to 10 while mod_enabled=true (got "
-                    + Enchantments.SHARPNESS.getMaxLevel() + ")");
+                    + sharpness.getMaxLevel() + ")");
 
             // set this last to clear caches under mod_enabled=false
             ETTestHelper.setConfigValue("mod_enabled", "false");
@@ -46,9 +48,9 @@ public class PluginConfigGameTest implements FabricGameTest {
             helper.assertFalse(ETMixinPlugin.getMixinConfig("CapmodMixin"),
                 "capmod mixin should be gated off when mod_enabled=false");
 
-            helper.assertTrue(Enchantments.SHARPNESS.getMaxLevel() == 5,
+            helper.assertTrue(sharpness.getMaxLevel() == 5,
                 "mod_enabled=false must gate the capmod mixin: Sharpness getMaxLevel should fall back "
-                    + "to vanilla 5 (got " + Enchantments.SHARPNESS.getMaxLevel() + ")");
+                    + "to vanilla 5 (got " + sharpness.getMaxLevel() + ")");
 
             // this confirms getMixinConfig handles the mod_enabled gate
             helper.assertTrue(ETMixinPlugin.getCapmodLevel("sharpness", 5) == 10,
@@ -57,12 +59,12 @@ public class PluginConfigGameTest implements FabricGameTest {
         } finally {
             ETTestHelper.restoreConfig(originalConfig);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void setAllAndPersistWritesToDisk(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void setAllAndPersistWritesToDisk(GameTestHelper helper) {
         String path = ETMixinPlugin.getConfig().getConfigPath();
         helper.assertTrue(path != null, "config path should be resolvable");
         helper.assertTrue(ETMixinPlugin.getConfig().getKeys().contains("cheap_names"),
@@ -84,12 +86,12 @@ public class PluginConfigGameTest implements FabricGameTest {
             ETMixinPlugin.getConfig().setAllAndPersist(Map.of("cheap_names", originalCheapNames));
             ETMixinPlugin.clearCaches();
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void setAllAndPersistAppendsUnwrittenKey(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void setAllAndPersistAppendsUnwrittenKey(GameTestHelper helper) {
         String path = ETMixinPlugin.getConfig().getConfigPath();
         helper.assertTrue(path != null, "config path should be resolvable");
         Path configPath = Path.of(path);
@@ -138,12 +140,12 @@ public class PluginConfigGameTest implements FabricGameTest {
             ETMixinPlugin.getConfig().setAll(Map.of("sturdy_anvils", originalSturdyValue));
             ETMixinPlugin.clearCaches();
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void reloadClearsCaches(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void reloadClearsCaches(GameTestHelper helper) {
         Map<String, String> originalConfig = ETTestHelper
             .snapshotConfig(ETMixinPlugin.getConfig().getKeys().toArray(new String[0]));
         String configPath = ETMixinPlugin.getConfig().getConfigPath();
@@ -186,12 +188,12 @@ public class PluginConfigGameTest implements FabricGameTest {
             ETMixinPlugin.reloadConfig();
             ETTestHelper.restoreConfig(originalConfig);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void setAllAndPersistEdgeCases(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void setAllAndPersistEdgeCases(GameTestHelper helper) {
         Path tmp = null;
         try {
             tmp = Files.createTempFile(configDir(), "et-persist-edge-test-", ".properties");
@@ -271,12 +273,12 @@ public class PluginConfigGameTest implements FabricGameTest {
         } finally {
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     @GameTest(
-        templateName = EMPTY_STRUCTURE)
-    public void setAllAndPersistSerializesConcurrentUpdates(TestContext helper) {
+        structure = "fabric-gametest-api-v1:empty")
+    public void setAllAndPersistSerializesConcurrentUpdates(GameTestHelper helper) {
         Path tmp = null;
         Thread left = null;
         Thread right = null;
@@ -320,7 +322,7 @@ public class PluginConfigGameTest implements FabricGameTest {
             cleanupWorkers(left, right);
             deleteQuietly(tmp);
         }
-        helper.complete();
+        helper.succeed();
     }
 
     private static Thread concurrentUpdate(CountDownLatch start, AtomicReference<Throwable> failure, Runnable update) {
@@ -375,5 +377,10 @@ public class PluginConfigGameTest implements FabricGameTest {
         } catch (IOException ignored) {
             // best-effort cleanup
         }
+    }
+
+    private static Enchantment resolveSharpness(GameTestHelper helper) {
+        return helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+            .getOrThrow(Enchantments.SHARPNESS).value();
     }
 }

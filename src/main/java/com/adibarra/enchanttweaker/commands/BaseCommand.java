@@ -2,20 +2,20 @@ package com.adibarra.enchanttweaker.commands;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 
 import com.adibarra.enchanttweaker.ETCommands;
 import com.adibarra.utils.ADText;
 
-public class BaseCommand implements Command<ServerCommandSource> {
+public class BaseCommand implements Command<CommandSourceStack> {
 
     @Override
-    public int run(CommandContext<ServerCommandSource> context) {
-        CommandFeedback.feedback(context.getSource(), Text.literal("Try running ").formatted(Formatting.GRAY),
+    public int run(CommandContext<CommandSourceStack> context) {
+        CommandFeedback.feedback(context.getSource(), Component.literal("Try running ").withStyle(ChatFormatting.GRAY),
             ADText.buildCmdLink(ETCommands.BASE_CMD, "help"),
-            Text.literal(" for more information.").formatted(Formatting.GRAY));
+            Component.literal(" for more information.").withStyle(ChatFormatting.GRAY));
         return Command.SINGLE_SUCCESS;
     }
 }
